@@ -1,0 +1,9 @@
+recursive-include doc_src *
+recursive-include docs *
+
+recursive-include geocamTiePoint/media *
+recursive-include geocamTiePoint/templates *
+
+include LICENSE
+include README.rst
+include *.txt
