@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+      #map_canvas2 { height: 100% }
+      #map_canvas3 { height: 100% }
+    </style>
+    <script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=true">
+    </script>
+    <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"></script>
+    <script type="text/javascript">
+      
+      //OVERLAY
+      var overlay;
+      USGSOverlay.prototype = new google.maps.OverlayView();
+   
+      //MARKER MANAGER
+      var mgr;
+      var allmarkers= [];    
+ 
+      function initialize() {
+        var myLatLng = new google.maps.LatLng(37.7548025158956, -122.45542151199643);
+
+        //MAP 1  
+        var myOptions = {
+          center: myLatLng,
+          zoom: 11,
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        var map = new google.maps.Map(document.getElementById("map_canvas"),
+            myOptions);
+      
+        var swBound = new google.maps.LatLng(37.681819, -122.517132);
+        var neBound = new google.maps.LatLng(37.800471, -122.405608);
+        var bounds = new google.maps.LatLngBounds(swBound,neBound);
+      
+        //MAP 2
+         var myOptions2 = {
+          center: myLatLng,
+          zoom: 11,
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        };
+        var map2 = new google.maps.Map(document.getElementById("map_canvas2"),
+            myOptions2);
+
+        //MAP 3
+        var myOptions3 = {
+          center: myLatLng,
+          zoom: 11,
+          mapTypeId: google.maps.MapTypeId.TERRAIN
+        };
+        var map3 = new google.maps.Map(document.getElementById("map_canvas3"),
+            myOptions3);
+
+        //OVERLAY
+        var srcImage = 'images/sf_1920.jpg';
+        overlay = new USGSOverlay(bounds,srcImage,map3);
+
+        //MARKERS
+        var image = 'images/icn_tp_active.png';
+        var image2 = 'images/icn_tp_inactive.png';
+
+        google.maps.event.addListener(map, 'click', function(event) {
+          placeMarker(allmarkers, image, event.latLng, map);
+        });
+
+        google.maps.event.addListener(map2, 'click', function(event) {
+          placeMarker(allmarkers, image2, event.latLng, map2);
+        });
+      }
+
+      function USGSOverlay(bounds,image, map) {
+        this.bounds_ = bounds;
+        this.image_ = image;
+        this.map_ = map;
+
+        this.div_ = null;
+        this.setMap(map);
+      }
+
+      USGSOverlay.prototype.onAdd = function() {
+
+        // Note: an overlay's receipt of onAdd() indicates that
+        // the map's panes are now available for attaching
+        // the overlay to the map via the DOM.
+
+        // Create the DIV and set some basic attributes.
+        var div = document.createElement('div');
+        div.style.borderStyle = "none";
+        div.style.borderWidth = "0px";
+        div.style.position = "absolute";
+
+        // Create an IMG element and attach it to the DIV.
+        var img = document.createElement("img");
+        img.src = this.image_;
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.position = 'absolute';
+        div.appendChild(img);
+
+        // Set the overlay's div_ property to this DIV
+        this.div_ = div;
+
+        // We add an overlay to a map via one of the map's panes.
+        // We'll add this overlay to the overlayImage pane.
+        var panes = this.getPanes();
+        panes.overlayImage.appendChild(div);
+      }
+
+      USGSOverlay.prototype.draw = function() {
+
+        // Size and position the overlay. We use a southwest and northeast
+        // position of the overlay to peg it to the correct position and size.
+        // We need to retrieve the projection from this overlay to do this.
+        var overlayProjection = this.getProjection();
+
+        // Retrieve the southwest and northeast coordinates of this overlay
+        // in latlngs and convert them to pixels coordinates.
+        // We'll use these coordinates to resize the DIV.
+        var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
+        var ne = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
+
+        // Resize the image's DIV to fit the indicated dimensions.
+        var div = this.div_;
+        div.style.left = sw.x + 'px';
+        div.style.top = ne.y + 'px';
+        div.style.width = (ne.x - sw.x) + 'px';
+        div.style.height = (sw.y - ne.y) + 'px';
+      }
+
+      USGSOverlay.prototype.onRemove = function() {
+        this.div_.parentNode.removeChild(this.div_);
+        this.div_ = null;
+      }
+
+
+      function placeMarker(markers,image,position,map) {
+        var marker = new google.maps.Marker({
+          position: position,
+          map: map,
+          draggable: true,
+          icon: image
+        });
+
+        markers.push(marker);
+        map.panTo(position);
+      }
+    
+      function clearMarkers(){
+        if (allmarkers) {
+          for (var i = 0; i < allmarkers.length; i++ ) {
+            allmarkers[i].setMap(null);
+          }
+        }
+      }
+
+      function loadScript() {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "http://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&sensor=TRUE_OR_FALSE&callback=initialize";
+        document.body.appendChild(script);
+      }
+    
+    google.maps.event.addDomListener(window,'load',initialize); 
+    window.onload = loadScript();
+    </script>
+  </head>
+
+  <body onload="initialize()">
+    <input type = "button" onclick="clearMarkers()" value="clear all markers" />
+    <div id="map_canvas" style="width:50%; height:50%"></div>
+
+    <input type = "button" onclick="clearMarkers2()" value="clear all markers" />
+    <div id="map_canvas2" style="width:50%; height:50%"></div>
+
+    <input type = "button" onclick="saveOverlayedImg()" value="export & save" />
+    <div id="map_canvas3" style="width:50%; height:50%"></div>
+  </body>
+
+</html>
