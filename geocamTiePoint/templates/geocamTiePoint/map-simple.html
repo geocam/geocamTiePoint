@@ -16,7 +16,6 @@
     <script type="text/javascript">
 
       //SF MAP QUAD TREE
-      
       var sfMapTypeOptions = {
         getTileUrl: function(coord, zoom) {
           var normalizedCoord = getNormalizedCoord(coord, zoom);
@@ -40,6 +39,7 @@
       //MARKER MANAGER
       var mgr;
       var allmarkers= [];    
+      var allmarkers2= [];    
       
       //OVERLAY
       var overlay;
@@ -139,7 +139,7 @@
         });
 
         google.maps.event.addListener(map2, 'click', function(event) {
-          placeMarker(allmarkers, image2, event.latLng, map2);
+          placeMarker(allmarkers2, image2, event.latLng, map2);
         });
       }
 
@@ -216,9 +216,7 @@
         });
 
         markers.push(marker);
-        map.panTo(position);
       }
-    
       
       function getNormalizedCoord(coord, zoom) {
         var y = coord.y;
@@ -240,14 +238,22 @@
         };
       }
 
-      /*
+      
       function clearMarkers(){
         if (allmarkers) {
           for (var i = 0; i < allmarkers.length; i++ ) {
             allmarkers[i].setMap(null);
           }
         }
-      }*/
+      }
+
+      function clearMarkers2(){
+        if (allmarkers2) {
+          for (var i = 0; i < allmarkers2.length; i++ ) {
+            allmarkers2[i].setMap(null);
+          }
+        }
+      }
 
       function loadScript() {
         var script = document.createElement("script");
@@ -274,7 +280,6 @@
       <label for="changetype-geocode">Geocodes</lable>
     </div>
 
-    
     <div> <input type = "button" onclick="clearMarkers()" value="clear all markers"/> </div>
     <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
 
