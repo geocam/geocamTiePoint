@@ -4,9 +4,31 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <style type="text/css">
       html { height: 100% }
-      body { height: 100%; margin: 0; padding: 0 }
-      #map_canvas { height: 100% }
-      #map_canvas2 { height: 100% }
+      body { height: 100%; margin: 0; padding: 0}
+
+      #toptable td {
+        padding: 5px;
+        font-weight: bold;
+      }     
+       .topbuttonleft {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 10px;
+            float: left}
+      .topbuttonright {
+            padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 10px;
+            float: right}
+      
+      #map_canvas {
+        width:100%
+        height:100%
+      }
+      #map_canvas2 {
+        height:100%
+        width:100%
+      }
     </style>
     <script type="text/javascript"
       src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=false">
@@ -14,6 +36,12 @@
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"></script>
     <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"></script>
     <script type="text/javascript">
+      
+      /**
+       * Data for markers consisting of name, LatLng and a Index
+       **/
+      var numbers = [
+          ['red1', 0,0,1] ];
 
       //SF MAP QUAD TREE
       var sfMapTypeOptions = {
@@ -40,7 +68,7 @@
       var mgr;
       var allmarkers= [];    
       var allmarkers2= [];    
-      
+     
       //OVERLAY
       var overlay;
       USGSOverlay.prototype = new google.maps.OverlayView();
@@ -60,7 +88,7 @@
         var swBound = new google.maps.LatLng(37.681819, -122.517132);
         var neBound = new google.maps.LatLng(37.800471, -122.405608);
         var bounds = new google.maps.LatLngBounds(swBound,neBound);
-      
+     
         //MAP 2
          var myOptions2 = {
           center: myLatLng,
@@ -125,94 +153,37 @@
         setupClickListener('changetype-all', []);
         setupClickListener('changetype-establishment', ['establishment']);
         setupClickListener('changetype-geocode', ['geocode']);
-        
-        //OVERLAY
-        var srcImage = 'images/sf_1920.jpg';
-        overlay = new USGSOverlay(bounds,srcImage,map2);
 
         //MARKERS
-        var image = 'images/icn_tp_active.png';
-        var image2 = 'images/icn_tp_inactive.png';
+        var redMarkers = ['images/numbers/r1.png', 'images/numbers/r2.png', 
+                          'images/numbers/r3.png', 'images/numbers/r4.png', 
+                          'images/numbers/r5.png', 'images/numbers/r6.png',
+                          'images/numbers/r7.png', 'images/numbers/r8.png',
+                          'images/numbers/r9.png'];
+
+        var blueMarkers = ['images/numbers/b1.png', 'images/numbers/b2.png', 
+                           'images/numbers/b3.png', 'images/numbers/b4.png', 
+                           'images/numbers/b5.png', 'images/numbers/b6.png',
+                           'images/numbers/b7.png', 'images/numbers/b8.png',
+                           'images/numbers/b9.png'];
+
+        var image = 'image/icon24.png';
 
         google.maps.event.addListener(map, 'click', function(event) {
-          placeMarker(allmarkers, image, event.latLng, map);
+          placeMarker(allmarkers, redMarkers[0], event.latLng, map);
         });
 
         google.maps.event.addListener(map2, 'click', function(event) {
-          placeMarker(allmarkers2, image2, event.latLng, map2);
+          placeMarker(allmarkers2, blueMarkers[0], event.latLng, map2);
         });
       }
 
-      function USGSOverlay(bounds,image, map) {
-        this.bounds_ = bounds;
-        this.image_ = image;
-        this.map_ = map;
-
-        this.div_ = null;
-        this.setMap(map);
-      }
-
-      USGSOverlay.prototype.onAdd = function() {
-
-        // Note: an overlay's receipt of onAdd() indicates that
-        // the map's panes are now available for attaching
-        // the overlay to the map via the DOM.
-
-        // Create the DIV and set some basic attributes.
-        var div = document.createElement('div');
-        div.style.borderStyle = "none";
-        div.style.borderWidth = "0px";
-        div.style.position = "absolute";
-
-        // Create an IMG element and attach it to the DIV.
-        var img = document.createElement("img");
-        img.src = this.image_;
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.position = 'absolute';
-        div.appendChild(img);
-
-        // Set the overlay's div_ property to this DIV
-        this.div_ = div;
-
-        // We add an overlay to a map via one of the map's panes.
-        // We'll add this overlay to the overlayImage pane.
-        var panes = this.getPanes();
-        panes.overlayImage.appendChild(div);
-      }
-
-      USGSOverlay.prototype.draw = function() {
-
-        // Size and position the overlay. We use a southwest and northeast
-        // position of the overlay to peg it to the correct position and size.
-        // We need to retrieve the projection from this overlay to do this.
-        var overlayProjection = this.getProjection();
-
-        // Retrieve the southwest and northeast coordinates of this overlay
-        // in latlngs and convert them to pixels coordinates.
-        // We'll use these coordinates to resize the DIV.
-        var sw = overlayProjection.fromLatLngToDivPixel(this.bounds_.getSouthWest());
-        var ne = overlayProjection.fromLatLngToDivPixel(this.bounds_.getNorthEast());
-
-        // Resize the image's DIV to fit the indicated dimensions.
-        var div = this.div_;
-        div.style.left = sw.x + 'px';
-        div.style.top = ne.y + 'px';
-        div.style.width = (ne.x - sw.x) + 'px';
-        div.style.height = (sw.y - ne.y) + 'px';
-      }
-
-      USGSOverlay.prototype.onRemove = function() {
-        this.div_.parentNode.removeChild(this.div_);
-        this.div_ = null;
-      }
-
-      function placeMarker(markers,image,position,map) {
+       function placeMarker(markers, iconImg, position,map) {
         var marker = new google.maps.Marker({
           position: position,
           map: map,
           draggable: true,
-          icon: image
+          icon: iconImg
         });
 
         markers.push(marker);
@@ -227,7 +198,7 @@
         if (y < 0 || y >= tileRange) {
           return null;
         }
-      
+     
         if (x < 0 || x >= tileRange) {
           x = (x % tileRange + tileRange) % tileRange;
         }
@@ -280,12 +251,22 @@
       <label for="changetype-geocode">Geocodes</lable>
     </div>
 
-    <div> <input type = "button" onclick="clearMarkers()" value="clear all markers"/> </div>
+    <br>
+    <div id="toptable">
+        <div class="topbuttonleft">
+            <input type = "button" onclick="clearMarkers()" value="clear all markers"/>
+        </div>
+        <div class="topbuttonright"> 
+            <input type = "button" onclick="clearMarkers2()" value="clear all markers"/>
+        </div>
+    </div>
+   
+    <br> 
+    <br> 
+    <br> 
     <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
-
-    <div> <input type = "button" onclick="clearMarkers2()" value="clear all markers"/> </div>
     <div id="map_canvas2" style="width:50%; height:50%; float:left "></div>
-
+    
     <input type = "button" onclick="saveOverlayedImg()" value="export & save" />
   </body>
 
