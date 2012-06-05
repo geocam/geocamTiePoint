@@ -19,8 +19,7 @@
             padding-top: 10px;
             padding-bottom: 10px;
             padding-left: 10px;
-            float: right}
-      
+            float: right}      
       #map_canvas {
         width:100%
         height:100%
@@ -29,20 +28,47 @@
         height:100%
         width:100%
       }
+      #shelf_left {position:fixed; 
+              top:20px; left:20px; 
+              height:50px;width:600px;
+              background:white;opacity:0.7; float:left}
+      #shelf_right {position:fixed; 
+              top:20px; left:20px; 
+              height:50px;width:600px;
+              background:white;opacity:0.7; float:right}
+      #draggableLft{width:30px; height:30px; z-index:1000000; }
+      #draggableRgt{width:30px; height:30px; z-index:1000000; }
+      #saveButton{ position:fixed; 
+                  top:20px; left:20px;float:left}
+
     </style>
     <script type="text/javascript"
       src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=false">
     </script>
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"></script>
     <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"></script>
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
     <script type="text/javascript">
-      
-      /**
-       * Data for markers consisting of name, LatLng and a Index
-       **/
-      var numbers = [
-          ['red1', 0,0,1] ];
+     
+      //OVERLAY
+      var overlay;
+      //USGSOverlay.prototype = new google.maps.OverlayView();
 
+      //MARKERS
+      var redMarkers = ['images/numbers/r1.png', 'images/numbers/r2.png', 
+                      'images/numbers/r3.png', 'images/numbers/r4.png', 
+                      'images/numbers/r5.png', 'images/numbers/r6.png',
+                      'images/numbers/r7.png', 'images/numbers/r8.png',
+                      'images/numbers/r9.png'];
+
+      var blueMarkers = ['images/numbers/b1.png', 'images/numbers/b2.png', 
+                       'images/numbers/b3.png', 'images/numbers/b4.png', 
+                       'images/numbers/b5.png', 'images/numbers/b6.png',
+                       'images/numbers/b7.png', 'images/numbers/b8.png',
+                       'images/numbers/b9.png'];
+          
       //SF MAP QUAD TREE
       var sfMapTypeOptions = {
         getTileUrl: function(coord, zoom) {
@@ -68,10 +94,6 @@
       var mgr;
       var allmarkers= [];    
       var allmarkers2= [];    
-     
-      //OVERLAY
-      var overlay;
-      USGSOverlay.prototype = new google.maps.OverlayView();
  
       function initialize() {
         var myLatLng = new google.maps.LatLng(37.7548025158956, -122.45542151199643);
@@ -84,11 +106,38 @@
         };
         var map = new google.maps.Map(document.getElementById("map_canvas"),
             myOptions);
+
+        overlay = new google.maps.OverlayView();
+        overlay.draw = function() {};
+        overlay.setMap(map);
       
         var swBound = new google.maps.LatLng(37.681819, -122.517132);
         var neBound = new google.maps.LatLng(37.800471, -122.405608);
         var bounds = new google.maps.LatLngBounds(swBound,neBound);
-     
+      
+        //DRAG AND DROP ICONS
+        var iconImg = redMarkers[0];
+        $(document).ready(function() {
+        $("#draggableLft").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers,iconImg,ll,map); //placeMarker(ll);
+              }
+        });
+        });
+
+        var iconImg2 = blueMarkers[0];
+        $(document).ready(function() {
+        $("#draggableRgt").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers2,iconImg2,ll,map2); //placeMarker(ll);
+              }
+        });
+        });
+
         //MAP 2
          var myOptions2 = {
           center: myLatLng,
@@ -154,31 +203,22 @@
         setupClickListener('changetype-establishment', ['establishment']);
         setupClickListener('changetype-geocode', ['geocode']);
 
-        //MARKERS
-        var redMarkers = ['images/numbers/r1.png', 'images/numbers/r2.png', 
-                          'images/numbers/r3.png', 'images/numbers/r4.png', 
-                          'images/numbers/r5.png', 'images/numbers/r6.png',
-                          'images/numbers/r7.png', 'images/numbers/r8.png',
-                          'images/numbers/r9.png'];
 
-        var blueMarkers = ['images/numbers/b1.png', 'images/numbers/b2.png', 
-                           'images/numbers/b3.png', 'images/numbers/b4.png', 
-                           'images/numbers/b5.png', 'images/numbers/b6.png',
-                           'images/numbers/b7.png', 'images/numbers/b8.png',
-                           'images/numbers/b9.png'];
 
         var image = 'image/icon24.png';
-
-        google.maps.event.addListener(map, 'click', function(event) {
-          placeMarker(allmarkers, redMarkers[0], event.latLng, map);
-        });
-
-        google.maps.event.addListener(map2, 'click', function(event) {
-          placeMarker(allmarkers2, blueMarkers[0], event.latLng, map2);
-        });
       }
 
-       function placeMarker(markers, iconImg, position,map) {
+      function placeMarker2(location) {
+        var marker = new google.maps.Marker({
+          position: location,
+          map: map,
+          draggable: true,
+        });
+
+        markers.push(marker);
+      }
+
+      function placeMarker(markers, iconImg, position, map) {
         var marker = new google.maps.Marker({
           position: position,
           map: map,
@@ -252,22 +292,47 @@
     </div>
 
     <br>
+
+    <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
+    <div id="map_canvas2" style="width:50%; height:50%; float:left "></div>
+
     <div id="toptable">
         <div class="topbuttonleft">
             <input type = "button" onclick="clearMarkers()" value="clear all markers"/>
         </div>
-        <div class="topbuttonright"> 
+        <div class="topbuttonleft">
+          <img id="draggableLft" src='images/numbers/r1.png'/>
+        </div>
+        <div class="topbuttonleft">
+          <img id="draggableLft" src='images/numbers/r2.png'/>
+        </div>
+        <div class="topbuttonleft">
+          <img id="draggableLft" src='images/numbers/r3.png'/>
+        </div>
+        <div class="topbuttonleft">
+          <img id="draggableLft" src='images/numbers/r4.png'/>
+        </div>
+
+        <div class="topbuttonright">
             <input type = "button" onclick="clearMarkers2()" value="clear all markers"/>
         </div>
+        <div class="topbuttonright">
+          <img id="draggableRgt" src='images/numbers/b4.png'/>
+        </div>
+        <div class="topbuttonright">
+          <img id="draggableRgt" src='images/numbers/b3.png'/>
+        </div>
+        <div class="topbuttonright">
+          <img id="draggableRgt" src='images/numbers/b2.png'/>
+        </div>
+        <div class="topbuttonright">
+          <img id="draggableRgt" src='images/numbers/b1.png'/>
+        </div>
+
     </div>
-   
-    <br> 
-    <br> 
-    <br> 
-    <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
-    <div id="map_canvas2" style="width:50%; height:50%; float:left "></div>
-    
-    <input type = "button" onclick="saveOverlayedImg()" value="export & save" />
+    <div id = "saveButton">
+      <input type = "button" onclick="saveOverlayedImg()" value="export & save" />
+    </div>
   </body>
 
 </html>
