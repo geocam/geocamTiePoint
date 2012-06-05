@@ -52,11 +52,9 @@
 <script type="text/javascript" src="StyledMarker.js"></script>
     <script type="text/javascript">
      
-      //OVERLAY
-      var overlay;
-      var overlay2;
       //USGSOverlay.prototype = new google.maps.OverlayView();
-
+      var labels = ["1","2","3","4","5","6","7","8","9"];
+      var i=0; var j=0;
           
       //SF MAP QUAD TREE
       var sfMapTypeOptions = {
@@ -86,7 +84,7 @@
  
       function initialize() {
         var myLatLng = new google.maps.LatLng(37.7548025158956, -122.45542151199643);
-
+      
         //MAP 1  
         var myOptions = {
           center: myLatLng,
@@ -96,14 +94,6 @@
         var map = new google.maps.Map(document.getElementById("map_canvas"),
             myOptions);
 
-        overlay = new google.maps.OverlayView();
-        overlay.draw = function() {};
-        overlay.setMap(map);
-
-        overlay2 = new google.maps.OverlayView();
-        overlay2.draw = function() {};
-        overlay2.setMap(map2);
-      
         var swBound = new google.maps.LatLng(37.681819, -122.517132);
         var neBound = new google.maps.LatLng(37.800471, -122.405608);
         var bounds = new google.maps.LatLngBounds(swBound,neBound);
@@ -161,13 +151,13 @@
 
         //MARKER
         google.maps.event.addListener(map, 'click', function(event) {
-          placeMarker(allmarkers, event.latLng, map);
+          placeMarker(allmarkers,labels[i++], event.latLng, map);
         });
 
         google.maps.event.addListener(map2, 'click', function(event) {
-          placeMarker(allmarkers2, event.latLng, map2);
+          placeMarker(allmarkers2,labels[j++], event.latLng, map2);
         });
-
+  
         // Sets a listener on a radio button to change the filter type on Places
         // Autocomplete.
         function setupClickListener(id, types) {
@@ -184,15 +174,15 @@
         var image = 'image/icon24.png';
       }
 
-      function placeMarker(markers, position, map) {
+      function placeMarker(markers, label, position, map) {
           var styleIconClass = new StyledIcon (
                             StyledIconTypes.CLASS,{color:"#ff0000"});
           var styleMaker1 = new StyledMarker(
                             {styleIcon:new StyledIcon
                             (StyledIconTypes.MARKER,
-                            {text:"A"},styleIconClass),
+                            {text:label},styleIconClass),
                             position:position,
-                            map:map});
+                            map:map,draggable:true});
 
           markers.push(styleMaker1);
       }
@@ -264,6 +254,14 @@
     <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
     <div id="map_canvas2" style="width:50%; height:50%; float:left "></div>
 
+    <div id="toptable">
+        <div class="topbuttonleft">
+            <input type = "button" onclick="clearMarkers()" value="clear all markers"/>
+        </div>
+        <div class="topbuttonright">
+            <input type = "button" onclick="clearMarkers2()" value="clear all markers"/>
+        </div>
+    </div>
     <div id = "saveButton">
       <input type = "button" onclick="saveOverlayedImg()" value="export & save" />
     </div>
