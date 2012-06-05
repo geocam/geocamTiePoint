@@ -36,8 +36,14 @@
               top:20px; left:20px; 
               height:50px;width:600px;
               background:white;opacity:0.7; float:right}
-      #draggableLft{width:30px; height:30px; z-index:1000000; }
-      #draggableRgt{width:30px; height:30px; z-index:1000000; }
+      #draggableLft1{width:30px; height:30px; z-index:1000000; }
+      #draggableLft2{width:30px; height:30px; z-index:1000000; }
+      #draggableLft3{width:30px; height:30px; z-index:1000000; }
+      #draggableLft4{width:30px; height:30px; z-index:1000000; }
+      #draggableRgt1{width:30px; height:30px; z-index:1000000; }
+      #draggableRgt2{width:30px; height:30px; z-index:1000000; }
+      #draggableRgt3{width:30px; height:30px; z-index:1000000; }
+      #draggableRgt4{width:30px; height:30px; z-index:1000000; }
       #saveButton{ position:fixed; 
                   top:20px; left:20px;float:left}
 
@@ -50,10 +56,12 @@
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" src="StyledMarker.js"></script>
     <script type="text/javascript">
      
       //OVERLAY
       var overlay;
+      var overlay2;
       //USGSOverlay.prototype = new google.maps.OverlayView();
 
       //MARKERS
@@ -110,33 +118,14 @@
         overlay = new google.maps.OverlayView();
         overlay.draw = function() {};
         overlay.setMap(map);
+
+        overlay2 = new google.maps.OverlayView();
+        overlay2.draw = function() {};
+        overlay2.setMap(map2);
       
         var swBound = new google.maps.LatLng(37.681819, -122.517132);
         var neBound = new google.maps.LatLng(37.800471, -122.405608);
         var bounds = new google.maps.LatLngBounds(swBound,neBound);
-      
-        //DRAG AND DROP ICONS
-        var iconImg = redMarkers[0];
-        $(document).ready(function() {
-        $("#draggableLft").draggable({helper: 'clone',
-        stop: function(e) {
-                var point=new google.maps.Point(e.pageX,e.pageY);
-                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
-                placeMarker(allmarkers,iconImg,ll,map); //placeMarker(ll);
-              }
-        });
-        });
-
-        var iconImg2 = blueMarkers[0];
-        $(document).ready(function() {
-        $("#draggableRgt").draggable({helper: 'clone',
-        stop: function(e) {
-                var point=new google.maps.Point(e.pageX,e.pageY);
-                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
-                placeMarker(allmarkers2,iconImg2,ll,map2); //placeMarker(ll);
-              }
-        });
-        });
 
         //MAP 2
          var myOptions2 = {
@@ -152,7 +141,88 @@
             myOptions2);
         map2.mapTypes.set('sf1920', sfMapType);
         map2.setMapTypeId('sf1920');
+      
+        //DRAG AND DROP ICONS TODO: shrink the code! Too much duplicates!
+        $(document).ready(function() {
+        $("#draggableLft1").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
+                var marker = 
+                placeMarker(allmarkers,redMarkers[0],ll,map);
+              }
+        });
+        });
 
+        $(document).ready(function() {
+        $("#draggableLft2").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers,redMarkers[1],ll,map);
+              }
+        });
+        });
+
+        $(document).ready(function() {
+        $("#draggableLft3").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers,redMarkers[2],ll,map);
+              }
+        });
+        });
+
+        $(document).ready(function() {
+        $("#draggableLft4").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers,redMarkers[3],ll,map);
+              }
+        });
+        });
+
+        $(document).ready(function() {
+        $("#draggableRgt4").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay2.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers2,blueMarkers[3],ll,map2);
+              }
+        });
+        });
+
+        $(document).ready(function() {
+        $("#draggableRgt3").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay2.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers2,blueMarkers[2],ll,map2);
+              }
+        });
+        });
+
+        $(document).ready(function() {
+        $("#draggableRgt2").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay2.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers2,blueMarkers[1],ll,map2);
+              }
+        });
+        });
+
+        $(document).ready(function() {
+        $("#draggableRgt1").draggable({helper: 'clone',
+        stop: function(e) {
+                var point=new google.maps.Point(e.pageX,e.pageY);
+                var ll=overlay2.getProjection().fromContainerPixelToLatLng(point);
+                placeMarker(allmarkers2,blueMarkers[0],ll,map2);
+              }
+        });
+        });
 
         //SEARCHBAR
         var input = document.getElementById('searchTextField');
@@ -206,16 +276,6 @@
 
 
         var image = 'image/icon24.png';
-      }
-
-      function placeMarker2(location) {
-        var marker = new google.maps.Marker({
-          position: location,
-          map: map,
-          draggable: true,
-        });
-
-        markers.push(marker);
       }
 
       function placeMarker(markers, iconImg, position, map) {
@@ -301,32 +361,32 @@
             <input type = "button" onclick="clearMarkers()" value="clear all markers"/>
         </div>
         <div class="topbuttonleft">
-          <img id="draggableLft" src='images/numbers/r1.png'/>
+          <img id="draggableLft1" src='images/numbers/r1.png'/>
         </div>
         <div class="topbuttonleft">
-          <img id="draggableLft" src='images/numbers/r2.png'/>
+          <img id="draggableLft2" src='images/numbers/r2.png'/>
         </div>
         <div class="topbuttonleft">
-          <img id="draggableLft" src='images/numbers/r3.png'/>
+          <img id="draggableLft3" src='images/numbers/r3.png'/>
         </div>
         <div class="topbuttonleft">
-          <img id="draggableLft" src='images/numbers/r4.png'/>
+          <img id="draggableLft4" src='images/numbers/r4.png'/>
         </div>
 
         <div class="topbuttonright">
             <input type = "button" onclick="clearMarkers2()" value="clear all markers"/>
         </div>
         <div class="topbuttonright">
-          <img id="draggableRgt" src='images/numbers/b4.png'/>
+          <img id="draggableRgt4" src='images/numbers/b4.png'/>
         </div>
         <div class="topbuttonright">
-          <img id="draggableRgt" src='images/numbers/b3.png'/>
+          <img id="draggableRgt3" src='images/numbers/b3.png'/>
         </div>
         <div class="topbuttonright">
-          <img id="draggableRgt" src='images/numbers/b2.png'/>
+          <img id="draggableRgt2" src='images/numbers/b2.png'/>
         </div>
         <div class="topbuttonright">
-          <img id="draggableRgt" src='images/numbers/b1.png'/>
+          <img id="draggableRgt1" src='images/numbers/b1.png'/>
         </div>
 
     </div>
