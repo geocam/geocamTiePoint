@@ -14,16 +14,35 @@ URLs:
 
 /tie get tie points
 /tform get transform points
-/images/id get an image
+/images get an image
 
 TODO:
 make some way of generating an image ID
 
 tie points:
 
-{"points":[array of points in the form of [x,y]]}
+{"command":"save", "points":[array of points in the form of [x,y]]} < to save
+
+{"result":"status", "id":1244328904} < response from server on save
+
+to retrieve:
+
+{"command":"retrieve", "id":901348901234890}
+
+{"result":"status", "points":[array of points], "tform_id":890134890134, "image_id":890243890234}
 
 transform points:
 
-{"points":[array of points in the form of [x,y]]}
+exactly the same as for tie points
 
+images:
+
+{"command":"save", "image_fname":"file name", "image_data":"base-64 encoded image data"}
+
+{"result":"status", "id":42890234890234}
+
+retrieve:
+
+{"command":"retrieve", "id":5925890}
+
+{"result":"status", "image_data":",.,,", "image_type":"..", "tform_id":58902890, "tie_id":5890890}
