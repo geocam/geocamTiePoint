@@ -1,0 +1,11 @@
+Base requirements:
+
+- Client is able to save tie points
+- Client is able to retrieve tie points
+- Client is able to save transform points
+- Client is able to retrieve transform points
+- Client is able to save image to overlay
+- Client is able to retrieve image to overlay
+
+- Implement both command structure in JSON as well
+  as in URL structure
