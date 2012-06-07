@@ -9,3 +9,21 @@ Base requirements:
 
 - Implement both command structure in JSON as well
   as in URL structure
+
+URLs:
+
+/tie get tie points
+/tform get transform points
+/images/id get an image
+
+TODO:
+make some way of generating an image ID
+
+tie points:
+
+{"points":[array of points in the form of [x,y]]}
+
+transform points:
+
+{"points":[array of points in the form of [x,y]]}
+
