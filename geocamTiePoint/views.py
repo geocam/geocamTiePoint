@@ -11,7 +11,7 @@ from django.http import HttpResponseNotAllowed, HttpResponseBadRequest
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-import json, base64
+import json, base64, os.path
 
 try:
     import cStringIO as StringIO
@@ -32,7 +32,8 @@ def overlayNew(request):
         form = forms.NewOverlayForm(request.POST, request.FILES)
         if form.is_valid():
             image = form.cleaned_data['image']
-            overlay = models.Overlay(image=image, imageType=image.content_type)
+            overlay = models.Overlay(image=image, imageType=image.content_type,
+                                     name=os.path.split(image.name)[-1])
             overlay.save()
             return render_to_response('new-overlay-result.html', 
                                       {'status':'success',
@@ -58,6 +59,8 @@ def overlayIdJson(request, key):
     elif request.method == 'POST':
         overlay = models.Overlay.objects.get(key=key)
         overlay.data = request.POST['data']
+        overlay.name = request.POST['name']
+        overlay.imageType = request.POST['imageType']
         overlay.save()
         return HttpResponse("")
     else:

@@ -11,10 +11,16 @@ def getNewImageFileName(instance, filename):
 
 class Overlay(models.Model):
     data = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to=getNewImageFileName,
-                              blank=True, null=True)
+    image = models.ImageField(upload_to=getNewImageFileName)
     imageType = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
     key = models.AutoField(primary_key=True, unique=True)
 
     class Meta:
         ordering = ['-key']
+
+    def __str__(self):
+        return str(self.name)
+
+    def __unicode__(self):
+        return unicode(self.name)
