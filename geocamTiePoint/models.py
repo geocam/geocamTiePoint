@@ -13,6 +13,7 @@ class Overlay(models.Model):
     data = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to=getNewImageFileName,
                               blank=True, null=True)
+    imageType = models.CharField(max_length=50)
     key = models.AutoField(primary_key=True, unique=True)
 
     class Meta:

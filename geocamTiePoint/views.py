@@ -31,10 +31,8 @@ def overlayNew(request):
     elif request.method == 'POST':
         form = forms.NewOverlayForm(request.POST, request.FILES)
         if form.is_valid():
-            print form.data
             image = form.cleaned_data['image']
-            print image
-            overlay = models.Overlay(image=image)
+            overlay = models.Overlay(image=image, imageType=image.content_type)
             overlay.save()
             return render_to_response('new-overlay-result.html', 
                                       {'status':'success',
@@ -76,7 +74,7 @@ def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
         overlay = models.Overlay.objects.get(key=key)
         fobject = overlay.image; fobject.open()
-        response = HttpResponse(fobject.read(), content_type="image/png")
+        response = HttpResponse(fobject.read(), content_type=overlay.imageType)
         return response
     else:
         return HttpResponseNotAllowed()

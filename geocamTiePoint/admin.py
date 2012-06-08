@@ -9,6 +9,6 @@ from django.contrib import admin
 from geocamTiePoint.models import Overlay
 
 class OverlayAdmin(admin.ModelAdmin):
-    list_display = ('data','image','key')
+    list_display = ('data','image','key','imageType')
 
 admin.site.register(Overlay, OverlayAdmin)
