@@ -7,5 +7,8 @@
 from django.conf.urls.defaults import url, patterns
 
 urlpatterns = patterns('',
-    url(r'^$', 'views.index', name='index'),
+    url(r'^$', 'geocamTiePoint.views.index'),
+    url(r'^tie$', 'geocamTiePoint.views.tie'),
+    url(r'^tform$', 'geocamTiePoint.views.tform'),
+    url(r'^images$', 'geocamTiePoint.views.images')
 )
