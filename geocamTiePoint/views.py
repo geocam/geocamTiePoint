@@ -27,11 +27,13 @@ def index(request):
 def overlayNew(request):
     if request.method == 'GET':
         form = forms.NewOverlayForm()
-        return render_to_response('new-overlay.html', {'form':form})
+        return render_to_response('new-overlay.html', RequestContext(request, {'form':form}))
     elif request.method == 'POST':
-        form = forms.NewOverlayForm(request.POST)
+        form = forms.NewOverlayForm(request.POST, request.FILES)
         if form.is_valid():
+            print form.data
             image = form.cleaned_data['image']
+            print image
             overlay = models.Overlay(image=image)
             overlay.save()
             return render_to_response('new-overlay-result.html', 
@@ -73,11 +75,9 @@ def overlayIdWarp(request, key):
 def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
         overlay = models.Overlay.objects.get(key=key)
-        fobject = overlay.image.open()
-        data = StringIO.StringIO()
-        base64.encode(fobject, data)
-        response = HttpResponse(data.getvalue(), content_type="image/png")
-        response['Content-Transfer-Encoding'] = 'base64'
+        fobject = overlay.image; fobject.open()
+        response = HttpResponse(fobject.read(), content_type="image/png")
+        return response
     else:
         return HttpResponseNotAllowed()
 

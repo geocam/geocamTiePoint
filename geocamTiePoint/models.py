@@ -7,7 +7,7 @@
 from django.db import models
 
 def getNewImageFileName(instance, filename):
-    return filename+str(instance.key)
+    return 'geocamTiePoint/overlay_images/'+filename
 
 class Overlay(models.Model):
     data = models.TextField(blank=True, null=True)
