@@ -1,48 +1,61 @@
 Base requirements:
 
-- Client is able to save tie points
-- Client is able to retrieve tie points
-- Client is able to save transform points
-- Client is able to retrieve transform points
+- Client is able to save tie point picker interface state
+  - (State includes tie points and transform type and parameters)
+- Client is able to retrieve tie point picker interface state
+
 - Client is able to save image to overlay
+  - Could be a very large image
 - Client is able to retrieve image to overlay
+  - (Nice to have, but note that usually the client will want tiles instead)
+
+- Client is able to retrieve subtiles of overlay image in Google Maps API quadtree tile format
+  - Support both:
+    - Original image (for tie point interface)
+    - Warped image (for use as a map layer after tie point picking is done)
+  - Better if client fetches tiles statically from 'data' directory to avoid Django overhead
+- Client is able to request image warping according to current transform parameters
+  - Note: warping might be updated several times depending on user interaction
+  - To ensure atomicity, generate new version in new directory, then rename directories
 
 - Implement both command structure in JSON as well
   as in URL structure
 
 URLs:
 
-/tie get tie points
-/tform get transform points
-/images get an image
+Refer to http://microformats.org/wiki/rest/urls
 
-TODO:
-make some way of generating an image ID
+ * /overlay/new/
+   * GET:
+     * returns an image upload form (html)
+   * POST:
+     * standard django form posting view, accepts multipart form
+     * returns human readable html response
 
-tie points:
+* /overlay/<id>.json
+  * GET: retrieve overlay interface state (json)
+  * POST: save overlay interface state (json)
 
-{"command":"save", "points":[array of points in the form of [x,y]]} < to save
+* /overlay/<id>/
+  * GET: retrieves tie point picker user interface for overlay (html)
+  * POST: n/a, http 405
 
-{"result":"status", "id":1244328904} < response from server on save
+* /overlay/<id>/warp/
+  * GET:
+    * returns a form with a button. clicking the button does the warp (html)
+    * interface code in the page submits the form via ajax
+  * POST: requests server apply current warping to the overlay image
+    * (empty params, uses transform from last save)
 
-to retrieve:
+* /overlay/<id>/image/<anyFileName>
+  * GET: retrieves entire overlay image (e.g. image/png)
+  * POST: n/a, http 405
 
-{"command":"retrieve", "id":901348901234890}
-
-{"result":"status", "points":[array of points], "tform_id":890134890134, "image_id":890243890234}
-
-transform points:
-
-exactly the same as for tie points
-
-images:
-
-{"command":"save", "image_fname":"file name", "image_data":"base-64 encoded image data"}
-
-{"result":"status", "id":42890234890234}
-
-retrieve:
-
-{"command":"retrieve", "id":5925890}
-
-{"result":"status", "image_data":",.,,", "image_type":"..", "tform_id":58902890, "tie_id":5890890}
+* [some static url in 'data' directory]
+  * directory -- image tiles are stored under the directory in Google Maps API quadtree format
+  * the url of the directory is specified in the json fields of the overlay object
+    * (client just pulls the url from json instead of calculating it)
+  * Two url fields in the json:
+    * 'tilesUrl' -- points to quadtree form of original image
+    * 'registeredTilesUrl' -- points to quadtree form of warped image
+      * not specified unless warping is complete

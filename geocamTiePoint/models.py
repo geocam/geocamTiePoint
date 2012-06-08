@@ -6,19 +6,14 @@
 
 from django.db import models
 
-class Point(models.Model):
-    x = models.FloatField()
-    y = models.FloatField()
-    key = models.FloatField(primary_key=True, unique=True)
+def getNewImageFileName(instance, filename):
+    return filename+str(instance.key)
 
-class TiePoints(models.Model):
-    points = models.ManyToManyField(Point)
-    key = models.FloatField(primary_key=True, unique=True)
+class Overlay(models.Model):
+    data = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to=getNewImageFileName,
+                              blank=True, null=True)
+    key = models.AutoField(primary_key=True, unique=True)
 
-class TransformPoints(models.Model):
-    points = models.ManyToManyField(Point)
-    key = models.FloatField(primary_key=True, unique=True)
-
-class ImageFile(models.Model):
-    image = models.FileField(upload_to=ImageFile.getNewFileName)
-    key = models.FloatField(primary_key=True, unique=True)
+    class Meta:
+        ordering = ['-key']

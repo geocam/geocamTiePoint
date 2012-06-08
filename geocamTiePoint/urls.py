@@ -8,7 +8,10 @@ from django.conf.urls.defaults import url, patterns
 
 urlpatterns = patterns('',
     url(r'^$', 'geocamTiePoint.views.index'),
-    url(r'^tie$', 'geocamTiePoint.views.tie'),
-    url(r'^tform$', 'geocamTiePoint.views.tform'),
-    url(r'^images$', 'geocamTiePoint.views.images')
+    url(r'^new$', 'geocamTiePoint.views.overlayNew'),
+    url(r'^(?P<key>\d+)$', 'geocamTiePoint.views.overlayId'),
+    url(r'^(?P<key>\d+).json$', 'geocamTiePoint.views.overlayIdJson'),
+    url(r'^(?P<key>\d+)/warp$', 'geocamTiePoint.views.overlayIdWarp'),
+    url(r'^(?P<key>\d+)/(?P<fileName>\w+)$',
+        'geocamTiePoint.views.overlayIdImageFileName'),
 )
