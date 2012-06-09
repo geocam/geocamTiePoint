@@ -58,12 +58,12 @@ MEDIA_URL = '/static/'
 # the site, but may need to be network-accessible, or be linked to from the
 # database. Examples: images, generate kml files, etc.
 # Example: "/data"
-# DATA_ROOT = os.path.join(PROJ_ROOT, 'data')
+DATA_ROOT = os.path.join(PROJ_ROOT, 'data')
 
 # URL that handles the data served from DATA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://data.lawrence.com", "http://example.com/data/"
-# DATA_URL = '/data/'
+DATA_URL = '/data/'
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.

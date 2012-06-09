@@ -18,7 +18,7 @@ try:
 except ImportError:
     import StringIO
 
-from geocamTiePoint import models, forms
+from geocamTiePoint import models, forms, settings
 
 def index(request):
     """ The main view """
@@ -32,8 +32,15 @@ def overlayNew(request):
         form = forms.NewOverlayForm(request.POST, request.FILES)
         if form.is_valid():
             image = form.cleaned_data['image']
+            preData = {}
             overlay = models.Overlay(image=image, imageType=image.content_type,
-                                     name=os.path.split(image.name)[-1])
+                                     name=os.path.split(image.name)[-1],
+                                     data=json.dumps(preData))
+            overlay.save()
+            preData['points'] = []
+            preData['url'] = '/'+settings.TIEPOINT_URL+'/'+str(overlay.key)+'.json'
+            preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
+            overlay.data = json.dumps(preData)
             overlay.save()
             return render_to_response('new-overlay-result.html', 
                                       {'status':'success',

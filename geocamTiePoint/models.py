@@ -5,13 +5,18 @@
 # __END_LICENSE__
 
 from django.db import models
+from geocamTiePoint import settings
+from django.core.files.storage import FileSystemStorage
+
+dataStorage = FileSystemStorage(location=settings.DATA_ROOT)
 
 def getNewImageFileName(instance, filename):
     return 'geocamTiePoint/overlay_images/'+filename
 
 class Overlay(models.Model):
-    data = models.TextField(blank=True, null=True)
-    image = models.ImageField(upload_to=getNewImageFileName)
+    data = models.TextField()
+    image = models.ImageField(upload_to=getNewImageFileName,
+                              storage=dataStorage)
     imageType = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     key = models.AutoField(primary_key=True, unique=True)

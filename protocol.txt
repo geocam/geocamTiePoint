@@ -59,3 +59,16 @@ Refer to http://microformats.org/wiki/rest/urls
     * 'tilesUrl' -- points to quadtree form of original image
     * 'registeredTilesUrl' -- points to quadtree form of warped image
       * not specified unless warping is complete
+
+JSON format for saving everything:
+
+{"points":[array of points in [x,y,xp,yp] form],
+ "transform":{
+	type: "similarity" or "affine" or "projective",
+	matrix: [r11,r12,...,r33],
+	}
+ "url":"url to overlay (/overlay/<id>.json)",
+ "tilesUrl":"url to tiles (/data/geocamTiePoint/tiles/<id>)",
+ "registeredTilesUrl":"url to warped tiles (/data/geocamTiePoint/registeredTiles/<id>)"
+}
+
