@@ -20,9 +20,28 @@ except ImportError:
 
 from geocamTiePoint import models, forms, settings
 
-def index(request):
-    """ The main view """
-    return HttpResponseForbidden()
+def overlayIndex(request):
+    if request.method == 'GET':
+        overlays = models.Overlay.objects.all()
+        return render_to_response('overlay-index.html', {'overlays':overlays})
+    else:
+        return HttpResponseNotAllowed(['GET','POST'])
+
+def overlayDelete(request, key):
+    if request.method == 'GET':
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
+        return render_to_response('overlay-delete.html', {'overlay':overlay,
+                                                          'index_url':'/'+settings.TIEPOINT_URL+'/'})
+    elif request.method == 'POST':
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
+        overlay.delete()
+        return HttpResponseRedirect("/"+settings.TIEPOINT_URL+'/')
 
 def overlayNew(request):
     if request.method == 'GET':
@@ -30,64 +49,78 @@ def overlayNew(request):
         return render_to_response('new-overlay.html', RequestContext(request, {'form':form}))
     elif request.method == 'POST':
         form = forms.NewOverlayForm(request.POST, request.FILES)
-        if form.is_valid():
-            image = form.cleaned_data['image']
-            preData = {}
-            overlay = models.Overlay(image=image, imageType=image.content_type,
-                                     name=os.path.split(image.name)[-1],
-                                     data=json.dumps(preData))
-            overlay.save()
-            preData['points'] = []
-            preData['url'] = '/'+settings.TIEPOINT_URL+'/'+str(overlay.key)+'.json'
-            preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
-            overlay.data = json.dumps(preData)
-            overlay.save()
-            return render_to_response('new-overlay-result.html', 
-                                      {'status':'success',
-                                       'id':overlay.key})
-        else:
+        if not form.is_valid():
             return HttpResponseBadRequest()
+        image = form.cleaned_data['image']
+        preData = {}
+        overlay = models.Overlay(image=image, imageType=image.content_type,
+                                 name=os.path.split(image.name)[-1],
+                                 data=json.dumps(preData))
+        overlay.save()
+        preData['points'] = []
+        preData['url'] = '/'+settings.TIEPOINT_URL+'/'+str(overlay.key)+'.json'
+        preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
+        overlay.data = json.dumps(preData)
+        overlay.save()
+        return render_to_response('new-overlay-result.html', 
+                                  {'status':'success',
+                                   'id':overlay.key})
     else:
-        return HttpResponseNotAllowed()
+        return HttpResponseNotAllowed(['GET','POST'])
 
 def overlayId(request, key):
     if request.method == 'GET':
         # this line maybe should be try/catched to check for non-existing overlays
-        overlay = models.Overlay.objects.get(key=key)
-        return render_to_response('map-simple.html',
-                                  {'overlay':overlay})
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
+        else:
+            return render_to_response('map-simple.html',
+                                      {'overlay':overlay})
     else:
-        return HttpResponseNotAllowed()
+        return HttpResponseNotAllowed(['GET'])
 
 def overlayIdJson(request, key):
     if request.method == 'GET':
-        overlay = models.Overlay.objects.get(key=key)
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
         return HttpResponse(overlay.data)
     elif request.method == 'POST':
-        overlay = models.Overlay.objects.get(key=key)
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
         overlay.data = request.POST['data']
         overlay.name = request.POST['name']
         overlay.imageType = request.POST['imageType']
         overlay.save()
         return HttpResponse("")
     else:
-        return HttpResponseNotAllowed()
+        return HttpResponseNotAllowed(['GET','POST'])
 
 def overlayIdWarp(request, key):
     if request.method == 'GET':
         return render_to_response('warp-form.html',{})
     elif request.method == 'POST':
         # "eventually"
-        pass
+        return HttpResponse()
+    else:
+        return HttpResponseNotAllowed(['GET','POST'])
 
 def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
-        overlay = models.Overlay.objects.get(key=key)
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
         fobject = overlay.image; fobject.open()
         response = HttpResponse(fobject.read(), content_type=overlay.imageType)
         return response
     else:
-        return HttpResponseNotAllowed()
+        return HttpResponseNotAllowed(['GET'])
 
 def splitArray(array, by):
     by = int(by)

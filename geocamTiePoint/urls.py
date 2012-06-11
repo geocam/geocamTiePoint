@@ -7,11 +7,12 @@
 from django.conf.urls.defaults import url, patterns
 
 urlpatterns = patterns('',
-    url(r'^$', 'geocamTiePoint.views.index'),
+    url(r'^$', 'geocamTiePoint.views.overlayIndex'),
     url(r'^new$', 'geocamTiePoint.views.overlayNew'),
-    url(r'^(?P<key>\d+)$', 'geocamTiePoint.views.overlayId'),
+    url(r'^(?P<key>\d+)/$', 'geocamTiePoint.views.overlayId'),
     url(r'^(?P<key>\d+).json$', 'geocamTiePoint.views.overlayIdJson'),
-    url(r'^(?P<key>\d+)/warp$', 'geocamTiePoint.views.overlayIdWarp'),
+    url(r'^(?P<key>\d+)/warp/$', 'geocamTiePoint.views.overlayIdWarp'),
+    url(r'^(?P<key>\d+)/delete/$', 'geocamTiePoint.views.overlayDelete'),
     url(r'^(?P<key>\d+)/(?P<fileName>\S+)$',
         'geocamTiePoint.views.overlayIdImageFileName'),
 )

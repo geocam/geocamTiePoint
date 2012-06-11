@@ -25,12 +25,27 @@ URLs:
 
 Refer to http://microformats.org/wiki/rest/urls
 
- * /overlay/new/
-   * GET:
-     * returns an image upload form (html)
-   * POST:
-     * standard django form posting view, accepts multipart form
-     * returns human readable html response
+* /overlay/
+  * GET:
+    * returns an index page of all the overlays
+    * click on entry, takes you to editor
+    * separate link to new overlay page
+  * POST:
+    * n/a, http 405
+
+* /overlay/<id>/delete/
+  * GET:
+    * returns confirmation page
+  * POST:
+    * deletes objects
+    * redirects to index
+
+* /overlay/new/
+  * GET:
+    * returns an image upload form (html)
+  * POST:
+    * standard django form posting view, accepts multipart form
+    * returns human readable html response
 
 * /overlay/<id>.json
   * GET: retrieve overlay interface state (json)
