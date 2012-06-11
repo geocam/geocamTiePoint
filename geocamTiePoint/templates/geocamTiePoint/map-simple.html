@@ -41,15 +41,15 @@
                   top:20px; left:20px;float:left}
 
     </style>
-    <script type="text/javascript"
+    <!--<script type="text/javascript"
       src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=false">
-    </script>
+    </script>-->
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"></script>
     <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"></script>
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-<script type="text/javascript" src="StyledMarker.js"></script>
+<script type="text/javascript" src="/static/geocamTiePoint/StyledMarker.js"></script>
     <script type="text/javascript">
      
       //USGSOverlay.prototype = new google.maps.OverlayView();
@@ -64,7 +64,7 @@
             return null;
           }
           var bound = Math.pow(2,zoom);
-          return "/Users/yeonjinlee/geocamTiePoint/geocamTiePoint/static/sf_1920"+
+          return "http://localhost:8000/data/geocamTiePoint/tiles/{{ overlay.key}}"+
                  "/" + zoom + "/" + normalizedCoord.x + "/" +
                  (bound - normalizedCoord.y - 1) + ".jpg";
         },

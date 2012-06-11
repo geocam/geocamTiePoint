@@ -8,6 +8,8 @@ from django.db import models
 from geocamTiePoint import settings
 from django.core.files.storage import FileSystemStorage
 
+import os, shutil
+
 dataStorage = FileSystemStorage(location=settings.DATA_ROOT)
 
 def getNewImageFileName(instance, filename):
@@ -29,3 +31,9 @@ class Overlay(models.Model):
 
     def __unicode__(self):
         return unicode(self.name)
+
+    def delete(self, *args, **kwargs):
+        dataStorage.delete(self.image)
+        if dataStorage.exists('geocamTiePoint/tiles/'+str(self.key)):
+            shutil.rmtree(dataStorage.path('geocamTiePoint/tiles/'+str(self.key)))
+        models.Model.delete(self, *args,**kwargs)

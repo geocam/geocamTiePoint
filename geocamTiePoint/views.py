@@ -11,12 +11,14 @@ from django.http import HttpResponseNotAllowed, HttpResponseBadRequest
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-import json, base64, os.path
+import json, base64, os.path, os, math
 
 try:
     import cStringIO as StringIO
 except ImportError:
     import StringIO
+
+from PIL import Image
 
 from geocamTiePoint import models, forms, settings
 
@@ -57,6 +59,9 @@ def overlayNew(request):
                                  name=os.path.split(image.name)[-1],
                                  data=json.dumps(preData))
         overlay.save()
+        image = Image.open(models.dataStorage.path(overlay.image))
+        basePath = models.dataStorage.path('geocamTiePoint/tiles/'+str(overlay.key))
+        generateQuadTree(image,basePath)
         preData['points'] = []
         preData['url'] = '/'+settings.TIEPOINT_URL+'/'+str(overlay.key)+'.json'
         preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
@@ -129,3 +134,21 @@ def splitArray(array, by):
     for i in range(0, int(float(len(array))/by)+1, by):
         newArray.append(array[i:i+by])
     return newArray
+
+def generateQuadTree(image, basePath):
+    if image.size[0] > image.size[1]:
+        maxZoom = int(math.ceil(math.log(image.size[0]/256.,2)))
+    else:
+        maxZoom = int(math.ceil(math.log(image.size[1]/256.,2)))
+
+    for i in xrange(maxZoom, -1, -1):
+        nx = int(math.ceil(image.size[0]/256.))
+        ny = int(math.ceil(image.size[1]/256.))
+        for ix in xrange(nx):
+            for iy in xrange(ny):
+                if not os.path.exists(basePath+'/%s/%s/' % (i,ix)):
+                    os.makedirs(basePath+'/%s/%s' % (i,ix))
+                newImage = image.crop([256*ix,256*iy,256*(ix+1),256*(iy+1)])
+                newImage.save(basePath+'/%s/%s/%s.jpg' % (i,ix,iy))
+        image = image.resize((int(math.ceil(image.size[0]/2.)),
+                              int(math.ceil(image.size[1]/2.))))
