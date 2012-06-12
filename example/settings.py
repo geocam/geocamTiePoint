@@ -14,6 +14,8 @@ APP = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 PROJ_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(APP)
 
+from django.conf import global_settings
+
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
@@ -47,11 +49,13 @@ USE_I18N = True
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = os.path.join(APP, 'geocamTiePoint', 'static')
+STATIC_ROOT = MEDIA_ROOT
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/static/'
+STATIC_URL = MEDIA_URL
 
 # Absolute path to the directory that holds data. This is different than media
 # in that it's uploaded/processed data that's not needed for the operation of
