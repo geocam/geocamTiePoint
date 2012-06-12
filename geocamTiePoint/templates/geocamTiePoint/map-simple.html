@@ -64,13 +64,13 @@
             return null;
           }
           var bound = Math.pow(2,zoom);
-          return "http://localhost:8000/data/geocamTiePoint/tiles/{{ overlay.key}}"+
+          return "http://localhost:8000/data/geocamTiePoint/tiles/{{ overlay.key }}"+
                  "/" + zoom + "/" + normalizedCoord.x + "/" +
-                 (bound - normalizedCoord.y - 1) + ".jpg";
+                 normalizedCoord.y + ".jpg";
         },
         tileSize: new google.maps.Size(256, 256),
-        maxZoom: 3,
-        minZoom: 0,
+        maxZoom: 8,
+        minZoom: 3,
         radius: 1738000,
         name: "SF1920"
       };
@@ -93,6 +93,7 @@
         };
         var map = new google.maps.Map(document.getElementById("map_canvas"),
             myOptions);
+        map.setCenter(new google.maps.LatLng(80,-170));
 
         var swBound = new google.maps.LatLng(37.681819, -122.517132);
         var neBound = new google.maps.LatLng(37.800471, -122.405608);
@@ -103,6 +104,7 @@
           center: myLatLng,
           zoom: 1,
           streetViewControl: false,
+          backgroundColor: "rgb(0,0,0)",
           mapTypeControlOptions: {
             mapTypeId: ["sf1920"]
           }
@@ -112,6 +114,7 @@
             myOptions2);
         map2.mapTypes.set('sf1920', sfMapType);
         map2.setMapTypeId('sf1920');
+        map2.setCenter(new google.maps.LatLng(80,-170));
       
         //SEARCHBAR
         var input = document.getElementById('searchTextField');
@@ -223,16 +226,6 @@
           }
         }
       }
-
-      function loadScript() {
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=FALSE&callback=initialize";
-        document.body.appendChild(script);
-      }
-    
-    google.maps.event.addDomListener(window,'load',initialize); 
-    window.onload = loadScript();
     </script>
   </head>
 
@@ -252,7 +245,7 @@
     <br>
 
     <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
-    <div id="map_canvas2" style="width:50%; height:50%; float:left "></div>
+    <div id="map_canvas2" style="width:50%; height:50%; float:left"></div>
 
     <div id="toptable">
         <div class="topbuttonleft">

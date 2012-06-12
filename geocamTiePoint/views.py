@@ -65,6 +65,7 @@ def overlayNew(request):
         preData['points'] = []
         preData['url'] = '/'+settings.TIEPOINT_URL+'/'+str(overlay.key)+'.json'
         preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
+        preData['imageSize'] = (overlay.image.width, overlay.image.height)
         overlay.data = json.dumps(preData)
         overlay.save()
         return render_to_response('new-overlay-result.html', 
@@ -136,6 +137,8 @@ def splitArray(array, by):
     return newArray
 
 def generateQuadTree(image, basePath):
+    zoomOffset = 3
+    yOffset = 2
     if image.size[0] > image.size[1]:
         maxZoom = int(math.ceil(math.log(image.size[0]/256.,2)))
     else:
@@ -146,9 +149,21 @@ def generateQuadTree(image, basePath):
         ny = int(math.ceil(image.size[1]/256.))
         for ix in xrange(nx):
             for iy in xrange(ny):
-                if not os.path.exists(basePath+'/%s/%s/' % (i,ix)):
-                    os.makedirs(basePath+'/%s/%s' % (i,ix))
+                if not os.path.exists(basePath+'/%s/%s/' % (i+zoomOffset,ix)):
+                    os.makedirs(basePath+'/%s/%s' % (i+zoomOffset,ix))
                 newImage = image.crop([256*ix,256*iy,256*(ix+1),256*(iy+1)])
-                newImage.save(basePath+'/%s/%s/%s.jpg' % (i,ix,iy))
+                newImage.save(basePath+'/%s/%s/%s.jpg' % (i+zoomOffset,ix,iy))
         image = image.resize((int(math.ceil(image.size[0]/2.)),
                               int(math.ceil(image.size[1]/2.))))
+
+def transformMapTileMatrix(tile):
+    zoom, x, y = tile
+    latSize = (180.) / (2 ** zoom)
+    pixelSize = 256.
+    s = pixelSize / latsize
+    lon0 = -180 + (x * latSize)
+    lat0 = 90 - (y * latSize)
+    return [s, 0, -s * lon0,
+            0, -s, s * lat0,
+            0, 0, 1]
+
