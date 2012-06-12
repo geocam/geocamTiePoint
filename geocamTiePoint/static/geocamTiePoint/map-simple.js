@@ -4,13 +4,17 @@ var i=0; var j=0;
 
 //var overlay = {{ overlay.data|safe }}
 
+var tileSize = 256;
+var initialResolution = 2 * Math.PI * 6378137 / tileSize;
+var originShift = 2 * Math.PI * 6378137 / 2.0;
+
 // find max zoom
-var maxZoom = 0;
+var maxZoom = 0; var offset = 3;
 if (overlay['imageSize'][0] > overlay['imageSize'][1]) {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][0] / 256., 2))+3;
+    maxZoom = Math.ceil(Math.log(overlay['imageSize'][0] / 256., 2))+offset;
     console.log(maxZoom);
 } else {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / 256., 2))+3;
+    maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / 256., 2))+offset;
     console.log(maxZoom);
 }
           
@@ -29,7 +33,7 @@ var sfMapTypeOptions = {
     },
     tileSize: new google.maps.Size(256, 256),
     maxZoom: maxZoom,
-    minZoom: 3,
+    minZoom: offset,
     radius: 1738000,
     name: "SF1920"
 };
@@ -136,6 +140,7 @@ function initialize() {
 }
 
 function placeMarker(markers, label, position, map) {
+    latLonToPixel(position);
     var styleIconClass = new StyledIcon (
 					 StyledIconTypes.CLASS,{color:"#ff0000"});
     var styleMaker1 = new StyledMarker(
@@ -183,4 +188,38 @@ function clearMarkers2(){
             allmarkers2[i].setMap(null);
 	}
     }
+}
+
+function latLonToMeters(latLon) {
+    var mx = latLon.lng() * originShift / 180;
+    var my = Math.log(Math.tan((90 + latLon.lat()) * Math.PI / 360)) /
+	(Math.PI / 180);
+    my = my * originShift / 180;
+    return {x:mx,
+	    y:my};
+}
+
+function metersToPixels(meters) {
+    var res = resolution(maxZoom);
+    var px = (meters.x + originShift) / res;
+    var py = (-meters.y + originShift) / res;
+    return {x:px, y:py};
+}
+
+function resolution(zoom) {
+    return initialResolution / (Math.pow(2,zoom));
+}
+
+function latLonToPixel(latLon) {
+    var meters = latLonToMeters(latLon);
+    console.log([meters.x, meters.y]);
+    var pixels = metersToPixels(meters);
+    console.log([pixels.x, pixels.y]);
+    return pixels;
+}
+
+function bound(value, opt_min, opt_max) {
+    if (opt_min != null) value = Math.max(value, opt_min);
+    if (opt_max != null) value = Math.min(value, opt_max);
+    return value;
 }
