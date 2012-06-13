@@ -10,11 +10,10 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 import os
 import sys
-APP = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+#APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+APP = "/Users/yeonjinlee/geocamTiePoint"
 PROJ_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(APP)
-
-from django.conf import global_settings
 
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
