@@ -22,6 +22,10 @@ from PIL import Image
 
 from geocamTiePoint import models, forms, settings
 
+TILE_SIZE = 256
+INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
+ORIGIN_SHIFT = 2 * math.pi * 6378137 / 2.
+
 def overlayIndex(request):
     if request.method == 'GET':
         overlays = models.Overlay.objects.all()
@@ -160,14 +164,40 @@ def generateQuadTree(image, basePath):
         image = image.resize((int(math.ceil(image.size[0]/2.)),
                               int(math.ceil(image.size[1]/2.))))
 
-def transformMapTileMatrix(tile):
-    zoom, x, y = tile
-    latSize = (180.) / (2 ** zoom)
-    pixelSize = 256.
-    s = pixelSize / latsize
-    lon0 = -180 + (x * latSize)
-    lat0 = 90 - (y * latSize)
-    return [s, 0, -s * lon0,
-            0, -s, s * lat0,
-            0, 0, 1]
+def latLonToMeters(latLon):
+    mx = latLon['lng'] * ORIGIN_SHIFT / 180.
+    my = math.log(math.tan((90 + latLon['lat']) * math.pi / 360.))
+    my = my * ORIGIN_SHIFT / 180.
+    return {'x':mx, 'y':my}
 
+def metersToLatLon(meters):
+    lat = (meters['x'] * 180) / ORIGIN_SHIFT
+    lng = (meters['y'] * 180) / ORIGIN_SHIFT
+    lng = ((math.atan(2 ** (lng * (math.pi / 180.))) * 360.) / math.pi) - 90
+    return {'lat':lat, 'lng':lng}
+
+def metersToPixels(meters, maxZoom):
+    res = resolution(maxZoom)
+    px = (meters['x'] + ORIGIN_SHIFT) / res
+    py = (meters['y'] + ORIGIN_SHIFT) / res
+    return {'x':int(math.floor(px)),
+            'y':int(math.floor(py))}
+
+def pixelsToMeters(pixels, maxZoom):
+    res = resolution(maxZoom)
+    x = (pixels['x'] * res) - ORIGIN_SHIFT
+    y = (pixels['y'] * res) - ORIGIN_SHIFT
+    return {'x':x, 'y':y}
+
+def resolution(zoom):
+    return initialResolution / 2 ** zoom
+
+def pixelToMap(x, y, zoom):
+    meters = pixelsToMeters({'x':x,'y':y},zoom)
+    latLon = metersToLatLon(meters)
+    return latLon
+
+def mapToPixel(lat, lng, zoom):
+    meters = latLonToMeters({'lat':lat,'lng':lng})
+    pixels = metersToPixels(meters, zoom)
+    return pixels
