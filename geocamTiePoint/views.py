@@ -12,6 +12,7 @@ from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 import json, base64, os.path, os, math
+import numpy
 
 try:
     import cStringIO as StringIO
@@ -22,9 +23,10 @@ from PIL import Image
 
 from geocamTiePoint import models, forms, settings
 
-TILE_SIZE = 256
+TILE_SIZE = 256.
 INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * 6378137 / 2.
+ZOOM_OFFSET = 3
 
 def overlayIndex(request):
     if request.method == 'GET':
@@ -146,58 +148,67 @@ def splitArray(array, by):
     return newArray
 
 def generateQuadTree(image, basePath):
-    zoomOffset = 3
-    if image.size[0] > image.size[1]:
-        maxZoom = int(math.ceil(math.log(image.size[0]/256.,2)))
-    else:
-        maxZoom = int(math.ceil(math.log(image.size[1]/256.,2)))
+    coords = ((0,0),(image.size[0],0),(0,image.size[1]),image.size)
+    makeQuadTree(image, coords, basePath)
 
+def makeQuadTree(image, coords, basePath):
+    if image.size[0] > image.size[1]:
+        maxZoom = int(math.ceil(math.log(image.size[0]/TILE_SIZE,2)))
+    else:
+        maxZoom = int(math.ceil(math.log(image.size[1]/TILE_SIZE,2)))
     for i in xrange(maxZoom, -1, -1):
-        nx = int(math.ceil(image.size[0]/256.))
-        ny = int(math.ceil(image.size[1]/256.))
         for ix in xrange(nx):
             for iy in xrange(ny):
-                if not os.path.exists(basePath+'/%s/%s/' % (i+zoomOffset,ix)):
-                    os.makedirs(basePath+'/%s/%s' % (i+zoomOffset,ix))
-                newImage = image.crop([256*ix,256*iy,256*(ix+1),256*(iy+1)])
-                newImage.save(basePath+'/%s/%s/%s.jpg' % (i+zoomOffset,ix,iy))
+                if testOutsideImage((TILE_SIZE*ix,TILE_SIZE*iy),coords) or\
+                        testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*iy),coords) or\
+                        testOutsideImage((TILE_SIZE*ix,TILE_SIZE*(iy+1)),coords) or\
+                        testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)),coords):
+                    continue
+                if not os.path.exists(basePath+'/%s/%s/' % (i+ZOOM_OFFSET,ix)):
+                    os.makedirs(basePath+'/%s/%s' % (i+ZOOM_OFFSET,ix))
+                newImage = image.crop([TILE_SIZE*ix,TILE_SIZE*iy,TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)])
+                newImage.save(basePath+'/%s/%s/%s.jpg' % (i+ZOOM_OFFSET,ix,iy))
         image = image.resize((int(math.ceil(image.size[0]/2.)),
-                              int(math.ceil(image.size[1]/2.))))
+                              int(math.ceil(image.size[1]/2.))),
+                             Image.ANTIALIAS)
+                    
 
-def latLonToMeters(latLon):
-    mx = latLon['lng'] * ORIGIN_SHIFT / 180.
-    my = math.log(math.tan((90 + latLon['lat']) * math.pi / 360.))
-    my = my * ORIGIN_SHIFT / 180.
-    return {'x':mx, 'y':my}
+def testOutsideImage(point, coords):
+    upperLeft, upperRight, lowerLeft, lowerRight = coords
+    if point[0] < min(upperLeft[0], lowerLeft[0]):
+        return True
+    if point[1] < min(upperLeft[1], upperRight[1]):
+        return True
+    if point[0] > max(upperRight[0], lowerRight[0]):
+        return True
+    if point[1] > max(lowerLeft[1], lowerRight[1]):
+        return True
+    if point[0] > max(upperLeft[0], lowerLeft[0]) and\
+            point[0] < min(upperRight[0], lowerRight[0]) and\
+            point[1] > max(lowerLeft[1], lowerRight[1]) and\
+            point[1] < min(upperRight[1], upperRight[1]):
+        return False
+    # just assuming it's in the image, even though it might not be
+    return False
 
-def metersToLatLon(meters):
-    lat = (meters['x'] * 180) / ORIGIN_SHIFT
-    lng = (meters['y'] * 180) / ORIGIN_SHIFT
-    lng = ((math.atan(2 ** (lng * (math.pi / 180.))) * 360.) / math.pi) - 90
-    return {'lat':lat, 'lng':lng}
+def generateWarpedQuadTree(image, method, data, basePath):
+    if method in ('similarity, affine'):
+        warpedImage = image.transform(image.size, Image.AFFINE, data)
+        
+    elif method in ('projective'):
+        warpedImage = image.transform(image.size, Image.QUAD, data)
+    else:
+        raise ValueError("Incorrect warp method")
+    
 
-def metersToPixels(meters, maxZoom):
-    res = resolution(maxZoom)
-    px = (meters['x'] + ORIGIN_SHIFT) / res
-    py = (meters['y'] + ORIGIN_SHIFT) / res
-    return {'x':int(math.floor(px)),
-            'y':int(math.floor(py))}
+def transformMapTileMatrix(tile):
+    zoom, x, y = tile
+    latSize = (180.) / (2 ** zoom)
+    pixelSize = 256.
+    s = pixelSize / latsize
+    lon0 = -180 + (x * latSize)
+    lat0 = 90 - (y * latSize)
+    return [s, 0, -s * lon0,
+            0, -s, s * lat0,
+            0, 0, 1]
 
-def pixelsToMeters(pixels, maxZoom):
-    res = resolution(maxZoom)
-    x = (pixels['x'] * res) - ORIGIN_SHIFT
-    y = (pixels['y'] * res) - ORIGIN_SHIFT
-    return {'x':x, 'y':y}
-
-def resolution(zoom):
-    return initialResolution / 2 ** zoom
-
-def pixelToMap(x, y, zoom):
-    meters = pixelsToMeters({'x':x,'y':y},zoom)
-    latLon = metersToLatLon(meters)
-    return latLon
-
-def mapToPixel(lat, lng, zoom):
-    meters = latLonToMeters({'lat':lat,'lng':lng})
-    pixels = metersToPixels(meters, zoom)
-    return pixels

@@ -77,7 +77,12 @@ Refer to http://microformats.org/wiki/rest/urls
 
 JSON format for saving everything:
 
-{"points":[array of points in [x,y,xp,yp] form],
+xp, yp in spherical mercator
+x, y in image coords
+
+matrix: mapping from image coordinates to spherical mercator coords
+
+{"points":[array of points in [xp,yp,x,y] form],
  "transform":{
 	type: "similarity" or "affine" or "projective",
 	matrix: [r11,r12,...,r33],
@@ -87,3 +92,41 @@ JSON format for saving everything:
  "registeredTilesUrl":"url to warped tiles (/data/geocamTiePoint/registeredTiles/<id>)"
 }
 
+Scheme for warping and tiling images (SWaTI)
+
+T is the transform from original image coords to spherical mercator
+Tinv is the inverse of T
+tileIndex(zoom, mercatorCoords) gives the x, y tile indices
+tileExtent(zoom, x, y) gives extent of tile in spherical mercator coords
+
+mercatorCorners = [T(corner) for corner in originalImageSize]
+bounds = BoundingBox()
+for corner in mercatorCorners:
+    bounds.extend(corner)
+
+maxZoom = calculateMaxZoom()
+for zoom in xrange(maxZoom):
+    bounds = BoundingBox()
+    for corner in mercatorCorners:
+	tileCoords = tileIndex(zoom, mercatorCorner)
+	bounds.extend(tileCoords)
+    xmin, ymin = tileIndex(zoom, (bounds.xmin, bounds.ymin))
+    xmax, ymax = tileIndex(zoom, (bounds.xmax, bounds.ymax))
+    (be careful about off-by-one on the high end of the bounds)
+    for x in xrange(xmin, xmax + 1?):
+        for y in xrange(ymin, ymax + 1?):
+	    corners = tileExtent(zoom, x, y)
+	    imageCorners = Tinv(corners)
+	    tileData = im.transform(imageCorners)
+	    if nonEmpty(tileData):
+	        writeTile(tileData)
+
+def calculateMaxZoom():
+    metersPerPixelX = (bounds.xmax - bounds.xmin) / image.width
+    metersPerPixelY = (bounds.ymax - bounds.ymin) / image.height
+    metersPerPixel = min(metersPerPixelX, metersPerPixelY)
+    # metersPerTile = C / 2**zoom
+    # originalImagePixelsPerTile = metersPerTile / metersPerPixel
+    # originalImagePixelsPerTile = (C / 2**zoom) / metersPerPixel
+    # choose zoom such that originalImagePixelsPerTile <= 256
+    zoom = ceil(solve(eqn)) + 1?
