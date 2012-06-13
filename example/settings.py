@@ -14,6 +14,8 @@ APP = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 PROJ_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(APP)
 
+from django.conf import global_settings
+
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
@@ -47,23 +49,25 @@ USE_I18N = True
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = os.path.join(APP, 'geocamTiePoint', 'static')
+STATIC_ROOT = MEDIA_ROOT
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/static/'
+STATIC_URL = MEDIA_URL
 
 # Absolute path to the directory that holds data. This is different than media
 # in that it's uploaded/processed data that's not needed for the operation of
 # the site, but may need to be network-accessible, or be linked to from the
 # database. Examples: images, generate kml files, etc.
 # Example: "/data"
-# DATA_ROOT = os.path.join(PROJ_ROOT, 'data')
+DATA_ROOT = os.path.join(PROJ_ROOT, 'data')
 
 # URL that handles the data served from DATA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://data.lawrence.com", "http://example.com/data/"
-# DATA_URL = '/data/'
+DATA_URL = '/data/'
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
@@ -92,6 +96,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    '../geocamTiePoint/templates/geocamTiePoint/',
 )
 
 INSTALLED_APPS = (

@@ -4,4 +4,11 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-# from django.contrib import admin
+from django.contrib import admin
+
+from geocamTiePoint.models import Overlay
+
+class OverlayAdmin(admin.ModelAdmin):
+    pass
+
+admin.site.register(Overlay, OverlayAdmin)

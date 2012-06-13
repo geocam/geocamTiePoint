@@ -41,199 +41,19 @@
                   top:20px; left:20px;float:left}
 
     </style>
-    <script type="text/javascript"
+    <!--<script type="text/javascript"
       src="http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=false">
-    </script>
+    </script>-->
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"></script>
     <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"></script>
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-<script type="text/javascript" src="StyledMarker.js"></script>
-    <script type="text/javascript">
-     
-      //USGSOverlay.prototype = new google.maps.OverlayView();
-      var labels = ["1","2","3","4","5","6","7","8","9"];
-      var i=0; var j=0;
-          
-      //SF MAP QUAD TREE
-      var sfMapTypeOptions = {
-        getTileUrl: function(coord, zoom) {
-          var normalizedCoord = getNormalizedCoord(coord, zoom);
-          if(!normalizedCoord) {
-            return null;
-          }
-          var bound = Math.pow(2,zoom);
-          return "/Users/yeonjinlee/geocamTiePoint/geocamTiePoint/static/sf_1920"+
-                 "/" + zoom + "/" + normalizedCoord.x + "/" +
-                 (bound - normalizedCoord.y - 1) + ".jpg";
-        },
-        tileSize: new google.maps.Size(256, 256),
-        maxZoom: 3,
-        minZoom: 0,
-        radius: 1738000,
-        name: "SF1920"
-      };
-
-      var sfMapType = new google.maps.ImageMapType(sfMapTypeOptions);      
-      
-      //MARKER MANAGER
-      var mgr;
-      var allmarkers= [];    
-      var allmarkers2= [];    
- 
-      function initialize() {
-        var myLatLng = new google.maps.LatLng(37.7548025158956, -122.45542151199643);
-      
-        //MAP 1  
-        var myOptions = {
-          center: myLatLng,
-          zoom: 11,
-          mapTypeId: google.maps.MapTypeId.ROADMAP
-        };
-        var map = new google.maps.Map(document.getElementById("map_canvas"),
-            myOptions);
-
-        var swBound = new google.maps.LatLng(37.681819, -122.517132);
-        var neBound = new google.maps.LatLng(37.800471, -122.405608);
-        var bounds = new google.maps.LatLngBounds(swBound,neBound);
-
-        //MAP 2
-         var myOptions2 = {
-          center: myLatLng,
-          zoom: 1,
-          streetViewControl: false,
-          mapTypeControlOptions: {
-            mapTypeId: ["sf1920"]
-          }
-        };
-
-        var map2 = new google.maps.Map(document.getElementById("map_canvas2"),
-            myOptions2);
-        map2.mapTypes.set('sf1920', sfMapType);
-        map2.setMapTypeId('sf1920');
-      
-        //SEARCHBAR
-        var input = document.getElementById('searchTextField');
-        var autocomplete = new google.maps.places.Autocomplete(input);
-
-        autocomplete.bindTo('bounds',map);
-
-        var infowindow = new google.maps.InfoWindow();
-        var marker = new google.maps.Marker({
-            map: map
-        });
-
-        google.maps.event.addListener(autocomplete, 'place_changed',function() {
-          infowindow.close();
-          var place = autocomplete.getPlace();
-          if (place.geometry.viewport) {
-            map.fitBounds(place.geometry.viewport)
-          } else {
-            map.setCenter(place.geometry.location);
-            map.setZoom(17);  
-          }
-          
-          var address = '';
-          if (place.address_components) {
-            address = [(place.address_components[0] &&
-                        place.address_components[0].short_name || ''),
-                        (place.address_components[1] &&
-                        place.address_components[1].short_name || ''),
-                        (place.address_components[2] &&
-                        place.address_components[2].short_name || '')
-                      ].join(' ');
-          }
-
-          infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
-          infowindow.open(map, marker);
-        });
-
-        //MARKER
-        google.maps.event.addListener(map, 'click', function(event) {
-          placeMarker(allmarkers,labels[i++], event.latLng, map);
-        });
-
-        google.maps.event.addListener(map2, 'click', function(event) {
-          placeMarker(allmarkers2,labels[j++], event.latLng, map2);
-        });
-  
-        // Sets a listener on a radio button to change the filter type on Places
-        // Autocomplete.
-        function setupClickListener(id, types) {
-          var radioButton = document.getElementById(id);
-          google.maps.event.addDomListener(radioButton, 'click', function() {
-          autocomplete.setTypes(types);
-          });
-        }
-
-        setupClickListener('changetype-all', []);
-        setupClickListener('changetype-establishment', ['establishment']);
-        setupClickListener('changetype-geocode', ['geocode']);
-
-        var image = 'image/icon24.png';
-      }
-
-      function placeMarker(markers, label, position, map) {
-          var styleIconClass = new StyledIcon (
-                            StyledIconTypes.CLASS,{color:"#ff0000"});
-          var styleMaker1 = new StyledMarker(
-                            {styleIcon:new StyledIcon
-                            (StyledIconTypes.MARKER,
-                            {text:label},styleIconClass),
-                            position:position,
-                            map:map,draggable:true});
-
-          markers.push(styleMaker1);
-      }
-      
-      function getNormalizedCoord(coord, zoom) {
-        var y = coord.y;
-        var x = coord.x;
-
-        var tileRange = 1 << zoom;
-
-        if (y < 0 || y >= tileRange) {
-          return null;
-        }
-     
-        if (x < 0 || x >= tileRange) {
-          x = (x % tileRange + tileRange) % tileRange;
-        }
-
-        return {
-          x: x,
-          y: y
-        };
-      }
-
-      
-      function clearMarkers(){
-        if (allmarkers) {
-          for (var i = 0; i < allmarkers.length; i++ ) {
-            allmarkers[i].setMap(null);
-          }
-        }
-      }
-
-      function clearMarkers2(){
-        if (allmarkers2) {
-          for (var i = 0; i < allmarkers2.length; i++ ) {
-            allmarkers2[i].setMap(null);
-          }
-        }
-      }
-
-      function loadScript() {
-        var script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "http://maps.googleapis.com/maps/api/js?key=AIzaSyBTKvfgQ562FIwKbSvddIqq2vqEJL9673M&sensor=FALSE&callback=initialize";
-        document.body.appendChild(script);
-      }
-    
-    google.maps.event.addDomListener(window,'load',initialize); 
-    window.onload = loadScript();
-    </script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/StyledMarker.js"></script>
+<script type="text/javascript">
+  var overlay = {{ overlay.data|safe }}
+</script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/map-simple.js"></script>
   </head>
 
   <body onload="initialize()">
@@ -252,7 +72,7 @@
     <br>
 
     <div id="map_canvas" style="width:50%; height:50%; float:left"></div>
-    <div id="map_canvas2" style="width:50%; height:50%; float:left "></div>
+    <div id="map_canvas2" style="width:50%; height:50%; float:left"></div>
 
     <div id="toptable">
         <div class="topbuttonleft">

@@ -4,4 +4,10 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-# from django import forms
+from django import forms
+from geocamTiePoint import models
+
+class NewOverlayForm(forms.ModelForm):
+    class Meta:
+        model = models.Overlay
+        fields = ('image',)

@@ -3,6 +3,7 @@
 *.egg-info
 *~
 /example/dev.db
+/example/data
 /docs/_build/
 /pip-log.txt
 /static/js/*.r*.js

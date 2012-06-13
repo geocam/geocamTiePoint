@@ -11,9 +11,13 @@ from django.conf import settings
 from django.contrib import admin
 admin.autodiscover()
 
+import geocamTiePoint
+
 urlpatterns = patterns('',
     # Example:
     # (r'^example/', include('example.foo.urls')),
+    (r'^'+geocamTiePoint.settings.TIEPOINT_URL+r'/',
+     include('geocamTiePoint.urls')),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
     # to INSTALLED_APPS to enable admin documentation:
@@ -27,6 +31,6 @@ urlpatterns = patterns('',
 urlpatterns = urlpatterns + patterns('',
     (r'^static/(?P<path>.*)$', 'django.views.static.serve',
         {'document_root': settings.MEDIA_ROOT}),
-#    (r'^data/(?P<path>.*)$', 'django.views.static.serve',
-#        {'document_root': settings.DATA_ROOT}),
+    (r'^data/(?P<path>.*)$', 'django.views.static.serve',
+        {'document_root': settings.DATA_ROOT}),
     )

@@ -1,0 +1,11 @@
+<html>
+  <head>
+    <title>Overlay Index</title>
+  </head>
+  <body>
+    <a href="new">New Overlay</a><br>
+    {% for overlay in overlays %}
+    <a href="{{ overlay.key }}">{{ overlay.name }}</a>  <a href="{{ overlay.key}}/delete/">delete</a><br>
+    {% endfor %}
+  </body>
+</html>
