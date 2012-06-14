@@ -11,7 +11,7 @@ TEMPLATE_DEBUG = DEBUG
 import os
 import sys
 #APP = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-APP = "/Users/yeonjinlee/geocamTiePoint"
+APP = ".."
 PROJ_ROOT = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(APP)
 

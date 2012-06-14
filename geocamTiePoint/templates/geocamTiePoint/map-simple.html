@@ -47,6 +47,13 @@
     <script src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=places"></script>
     <script src="http://gmaps-utility-library.googlecode.com/svn/trunk/markermanager/release/src/markermanager.js"></script>
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/StyledMarker.js"></script>
+<script type="text/javascript">
+var overlay = {{ overlay.data|safe }}
+</script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/map-simple.js"></script>
 
 </head>
 
