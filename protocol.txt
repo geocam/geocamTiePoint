@@ -124,9 +124,9 @@ for zoom in xrange(maxZoom):
 def calculateMaxZoom():
     metersPerPixelX = (bounds.xmax - bounds.xmin) / image.width
     metersPerPixelY = (bounds.ymax - bounds.ymin) / image.height
-    metersPerPixel = min(metersPerPixelX, metersPerPixelY)
+    metersPerOIPixel = min(metersPerPixelX, metersPerPixelY)
     # metersPerTile = C / 2**zoom
-    # originalImagePixelsPerTile = metersPerTile / metersPerPixel
-    # originalImagePixelsPerTile = (C / 2**zoom) / metersPerPixel
+    # originalImagePixelsPerTile = metersPerTile / metersPerOIPixel
+    # originalImagePixelsPerTile = (C / 2**zoom) / metersPerOIPixel
     # choose zoom such that originalImagePixelsPerTile <= 256
     zoom = ceil(solve(eqn)) + 1?

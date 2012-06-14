@@ -315,7 +315,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 print "size of y side"
                 print imageCorners[3]-imageCorners[1]
                 print "size of x side"
-                print imageCorners[6]-imageCorners[0]
+                print imageCorners[6y]-imageCorners[0]
                 tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
                                            imageCorners, Image.BICUBIC)
                 if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
