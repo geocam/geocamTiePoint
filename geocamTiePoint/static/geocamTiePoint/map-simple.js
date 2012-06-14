@@ -199,11 +199,26 @@ function latLonToMeters(latLon) {
 	    y:my};
 }
 
+function metersToLatLon(meters) {
+    var lng = meters.x * 180 / originShift;
+    var lat = meters.y * 180 / originShift;
+    lat = ((Math.atan(Math.pow(2, (meters.y * (Math.PI / 180)))) * 360) / Math.PI) - 90;
+    var latLng = new google.maps.LatLng({lat:lat,lng:lng});
+    return latLng;
+}
+
 function metersToPixels(meters) {
     var res = resolution(maxZoom);
     var px = (meters.x + originShift) / res;
     var py = (-meters.y + originShift) / res;
     return {x:px, y:py};
+}
+
+function pixelsToMeters(pixels) {
+    var res = resolution(maxZoom);
+    var mx = (pixels.x * res) - originShift;
+    var my = -(pixels.y * res) + originShift;
+    return {x:mx, y:my};
 }
 
 function resolution(zoom) {

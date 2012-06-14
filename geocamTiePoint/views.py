@@ -201,14 +201,29 @@ def generateWarpedQuadTree(image, method, data, basePath):
         raise ValueError("Incorrect warp method")
     
 
-def transformMapTileMatrix(tile):
-    zoom, x, y = tile
-    latSize = (180.) / (2 ** zoom)
-    pixelSize = 256.
-    s = pixelSize / latsize
-    lon0 = -180 + (x * latSize)
-    lat0 = 90 - (y * latSize)
-    return [s, 0, -s * lon0,
-            0, -s, s * lat0,
-            0, 0, 1]
+def resolution(zoom):
+    return INITIAL_RESOLUTION / (2 ** zoom)
 
+def latLonTometers(lat, lng):
+    mx = lng * ORIGIN_SHIFT / 180
+    my = math.log(math.tan((90 + lat) * math.pi / 360)) / (math.pi / 180)
+    my = my * ORIGIN_SHIFT / 180
+    return mx, my
+
+def metersToLatLon(x, y):
+    lng = x * 180 / originShift
+    lat = y * 180 / originShift
+    lat = ((math.atan(2 ** (y * (math.pi / 180))) * 360) / math.pi) - 90
+    return lat, lng
+
+def pixelsToMeters(x, y, zoom):
+    res = resolution(zoom)
+    mx = (x * res) - ORIGIN_SHIFT
+    my = -(y * res) + ORIGIN_SHIFT
+    return mx, my
+
+def metersToPixels(x, y, zoom):
+    res = resolution(zoom)
+    px = (x + ORIGIN_SHIFT) / res
+    py = (-y + ORIGIN_SHIFT) / res
+    return px, py
