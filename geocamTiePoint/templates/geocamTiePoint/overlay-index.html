@@ -3,9 +3,15 @@
     <title>Overlay Index</title>
   </head>
   <body>
-    <a href="new">New Overlay</a><br>
+    <h3>Your Overlays</h3>
+    <div style="margin-bottom:8px;">[<a href="new">New Overlay</a>]</div>
+    <table>
     {% for overlay in overlays %}
-    <a href="{{ overlay.key }}">{{ overlay.name }}</a>  <a href="{{ overlay.key}}/delete/">delete</a><br>
+    <tr>
+    <td><a href="{{ overlay.key }}">{{ overlay.name }}</a></td>
+    <td><a href="{{ overlay.key}}">edit</a></td>
+    <td><a href="{{ overlay.key}}/delete/">delete</a></td>
     {% endfor %}
+    </table>
   </body>
 </html>

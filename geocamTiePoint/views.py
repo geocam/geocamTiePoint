@@ -12,7 +12,7 @@ from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 import json, base64, os.path, os, math
-import numpy
+import numpy, numpy.linalg
 
 try:
     import cStringIO as StringIO
@@ -30,7 +30,7 @@ ZOOM_OFFSET = 3
 
 class Bounds(object):
     def __init__(self, *points):
-        self.bounds = (None, None, None, None)
+        self.bounds = [None, None, None, None]
         for point in points:
             self.extend(point)
 
@@ -42,6 +42,7 @@ class Bounds(object):
         else: return object.__getattribute__(self, name)
 
     def extend(self, point):
+        print point
         if self.bounds[0] == None:
             self.bounds[0] = point[0]
         if self.bounds[1] == None:
@@ -149,8 +150,16 @@ def overlayIdWarp(request, key):
         return render_to_response('warp-form.html',{},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
-        # "eventually"
-        return HttpResponse()
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
+        data = json.loads(overlay.data)
+        transformType = data['transform']['type']
+        transformMatrix = data['transform']['matrix']
+        basePath = models.dataStorage.path('geocamTiePoint/registeredTiles/'+str(overlay.key))
+        generateWarpedQuadTree(Image.open(overlay.image.path), transformType,
+                               transformMatrix, basePath)
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 
@@ -184,6 +193,8 @@ def makeQuadTree(image, coords, basePath):
     else:
         maxZoom = int(math.ceil(math.log(image.size[1]/TILE_SIZE,2)))
     for i in xrange(maxZoom, -1, -1):
+        nx = int(math.ceil(image.size[0]/TILE_SIZE))
+        ny = int(math.ceil(image.size[1]/TILE_SIZE))
         for ix in xrange(nx):
             for iy in xrange(ny):
                 if testOutsideImage((TILE_SIZE*ix,TILE_SIZE*iy),coords) or\
@@ -227,7 +238,7 @@ def calculateMaxZoom(bounds, image):
     return zoom
 
 def tileIndex(zoom, mercatorCoords):
-    coords = [metersToPixels(*c + (zoom,)) for c in mercatorCoords]
+    coords = metersToPixels(*mercatorCoords+type(mercatorCoords)([zoom,]))
     index = [math.floor(coord / TILE_SIZE * (2**zoom)) for coord in coords]
     return index
 
@@ -235,42 +246,44 @@ def tileExtent(zoom, x, y):
     corners = ((x,y),(x+1,y),(x,y+1),(x+1,y+1))
     pixelCorners = [(a * (TILE_SIZE * (2**zoom)), b * (TILE_SIZE * (2**zoom)))\
                         for a,b in corners]
-    mercatorCorners = [pixelsToMeters(pixels, zoom) for pixels in pixelCorners]
+    mercatorCorners = [pixelsToMeters(*pixels + (zoom,)) for pixels in pixelCorners]
     return mercatorCorners
 
 def generateWarpedQuadTree(image, method, matrix, basePath):
+    print [matrix[:3],matrix[3:6],matrix[6:]]
     matrix = numpy.matrix([matrix[:3],matrix[3:6],matrix[6:]])
-    matrixInverse = matrix ** -1
+    matrixInverse = numpy.linalg.inv(matrix)
     corners = [[0,0],[image.size[0],0],[0,image.size[1]],image.size]
     mercatorCorners = []
     for corner in corners:
-        corner += [1]
+        corner += (1,)
         corner = numpy.matrix(corner).reshape(3,1)
         output = (matrix * corner).reshape(1,3)
-        output = list(output)[:2]
+        output = output.tolist()[0][:2]
         mercatorCorners.append(output)
     bounds = Bounds()
     for corner in mercatorCorners:
         bounds.extend(corner)
 
-    maxZoom = calculateMaxZoom()
+    maxZoom = calculateMaxZoom(bounds, image)
     for zoom in xrange(maxZoom):
         bounds = Bounds()
         for corner in mercatorCorners:
-            tileCoords = tileIndex(zoom, mercatorCorner)
+            tileCoords = tileIndex(zoom, corner)
             bounds.extend(tileCoords)
         xmin, ymin = tileIndex(zoom, (bounds.xmin, bounds.ymin))
-        xmax, ymax = tileIndex(zoom, (bonuds.xmax, bounds.ymax))
+        xmax, ymax = tileIndex(zoom, (bounds.xmax, bounds.ymax))
         for x in xrange(xmin, xmax + 1):
-            for y in xrange(yimn, ymax + 1):
+            for y in xrange(ymin, ymax + 1):
                 corners = tileExtent(zoom, x, y)
                 imageCorners = []
                 for corner in corners:
-                    corner += [1]
-                    corner = numpymatrix(corner).reshape(3,1)
+                    corner += (1,)
+                    corner = numpy.matrix(corner).reshape(3,1)
                     output = (matrixInverse * corner).reshape(1,3)
-                    output = list(output)[:2]
+                    output = output.tolist()[0][:2]
                     imageCorners.extend(output)
+                    print imageCorners
                     tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
                                                imageCorners, Image.BICUBIC)
                     if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
