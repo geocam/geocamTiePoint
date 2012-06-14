@@ -241,7 +241,6 @@ def calculateMaxZoom(bounds, image):
     return zoom
 
 def tileIndex(zoom, mercatorCoords):
-<<<<<<< HEAD
     coords = metersToPixels(mercatorCoords[0], mercatorCoords[1], zoom)
     print "pixels"
     print coords
@@ -254,17 +253,6 @@ def tileExtent(zoom, x, y):
     corners = ((x,y),(x,y+1),(x+1,y+1),(x+1,y))
     pixelCorners = [tileIndexToPixels(*corner) for corner in corners]
     mercatorCorners = [pixelsToMeters(*(pixels + (zoom,))) for pixels in pixelCorners]
-=======
-    coords = metersToPixels(*mercatorCoords+type(mercatorCoords)([zoom,]))
-    index = [math.floor(coord / TILE_SIZE * (2**zoom)) for coord in coords]
-    return index
-
-def tileExtent(zoom, x, y):
-    corners = ((x,y),(x+1,y),(x,y+1),(x+1,y+1))
-    pixelCorners = [(a * (TILE_SIZE * (2**zoom)), b * (TILE_SIZE * (2**zoom)))\
-                        for a,b in corners]
-    mercatorCorners = [pixelsToMeters(*pixels + (zoom,)) for pixels in pixelCorners]
->>>>>>> parent of 777785b... Added print statements EVERYWHERE
     return mercatorCorners
 
 def tileIndexToPixels(x,y):
@@ -292,7 +280,6 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
         for corner in mercatorCorners:
             tileCoords = tileIndex(zoom, corner)
             bounds.extend(tileCoords)
-<<<<<<< HEAD
         xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
         xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
         print "bounds"
@@ -300,26 +287,16 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
         print xmax, ymax
         for x in xrange(int(xmin), int(xmax) + 1):
             for y in xrange(int(ymin), int(ymax) + 1):
-=======
-        xmin, ymin = tileIndex(zoom, (bounds.xmin, bounds.ymin))
-        xmax, ymax = tileIndex(zoom, (bounds.xmax, bounds.ymax))
-        for x in xrange(xmin, xmax + 1):
-            for y in xrange(ymin, ymax + 1):
->>>>>>> parent of 777785b... Added print statements EVERYWHERE
                 corners = tileExtent(zoom, x, y)
                 imageCorners = []
                 for corner in corners:
                     corner += (1,)
                     corner = numpy.matrix(corner).reshape(3,1)
                     output = (matrixInverse * corner).reshape(1,3)
-<<<<<<< HEAD
                     print "in pixels"
-=======
->>>>>>> parent of 777785b... Added print statements EVERYWHERE
                     output = output.tolist()[0][:2]
                     print output
                     imageCorners.extend(output)
-<<<<<<< HEAD
                 print imageCorners
                 print "size of y side"
                 print imageCorners[3]-imageCorners[1]
@@ -330,17 +307,6 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
                     os.makedirs(basePath+'/%s/%s' % (zoom,x))
                 tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,x,y))
-=======
-                    print imageCorners
-                    tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
-                                               imageCorners, Image.BICUBIC)
-                    if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
-                        os.makedirs(basePath+'/%s/%s' % (zoom,x))
-                    tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,x,y))
-        image = image.resize((int(math.ceil(image.size[0]/2.)),
-                              int(math.ceil(image.size[1]/2.))),
-                             Image.ANTIALIAS)
->>>>>>> parent of 777785b... Added print statements EVERYWHERE
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
