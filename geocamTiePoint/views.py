@@ -42,6 +42,7 @@ class Bounds(object):
         else: return object.__getattribute__(self, name)
 
     def extend(self, point):
+        print "extending by point"
         print point
         if self.bounds[0] == None:
             self.bounds[0] = point[0]
@@ -238,21 +239,29 @@ def calculateMaxZoom(bounds, image):
     return zoom
 
 def tileIndex(zoom, mercatorCoords):
-    coords = metersToPixels(*mercatorCoords+type(mercatorCoords)([zoom,]))
-    index = [math.floor(coord / TILE_SIZE * (2**zoom)) for coord in coords]
+    coords = metersToPixels(mercatorCoords[0], mercatorCoords[1], zoom)
+    print "pixels"
+    print coords
+    meters = pixelsToMeters(coords[0], coords[1], zoom)
+    print "back to meters"
+    print meters
+    index = [math.floor(coord / TILE_SIZE) for coord in coords]
     return index
 
 def tileExtent(zoom, x, y):
     corners = ((x,y),(x+1,y),(x,y+1),(x+1,y+1))
-    pixelCorners = [(a * (TILE_SIZE * (2**zoom)), b * (TILE_SIZE * (2**zoom)))\
+    pixelCorners = [(a * TILE_SIZE, b * TILE_SIZE)\
                         for a,b in corners]
     mercatorCorners = [pixelsToMeters(*pixels + (zoom,)) for pixels in pixelCorners]
     return mercatorCorners
 
 def generateWarpedQuadTree(image, method, matrix, basePath):
+    print "matrix"
     print [matrix[:3],matrix[3:6],matrix[6:]]
     matrix = numpy.matrix([matrix[:3],matrix[3:6],matrix[6:]])
     matrixInverse = numpy.linalg.inv(matrix)
+    print "matrix inverse"
+    print matrixInverse
     corners = [[0,0],[image.size[0],0],[0,image.size[1]],image.size]
     mercatorCorners = []
     for corner in corners:
@@ -264,34 +273,46 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
     bounds = Bounds()
     for corner in mercatorCorners:
         bounds.extend(corner)
+    print "generated bounds"
+    print bounds.bounds
 
     maxZoom = calculateMaxZoom(bounds, image)
-    for zoom in xrange(maxZoom):
+    print "zoom"
+    print maxZoom
+    for zoom in xrange(int(maxZoom), -1, -1):
         bounds = Bounds()
         for corner in mercatorCorners:
+            print "corner"
+            print corner
             tileCoords = tileIndex(zoom, corner)
+            print "tile coords"
+            print tileCoords
             bounds.extend(tileCoords)
         xmin, ymin = tileIndex(zoom, (bounds.xmin, bounds.ymin))
         xmax, ymax = tileIndex(zoom, (bounds.xmax, bounds.ymax))
-        for x in xrange(xmin, xmax + 1):
-            for y in xrange(ymin, ymax + 1):
+        print "bounds"
+        print xmin, ymin
+        print xmax, ymax
+        for x in xrange(int(xmin), int(xmax) + 1):
+            for y in xrange(int(ymin), int(ymax) + 1):
                 corners = tileExtent(zoom, x, y)
                 imageCorners = []
                 for corner in corners:
                     corner += (1,)
                     corner = numpy.matrix(corner).reshape(3,1)
+                    print "tile corner"
+                    print corner
                     output = (matrixInverse * corner).reshape(1,3)
+                    print "in pixels"
+                    print output
                     output = output.tolist()[0][:2]
                     imageCorners.extend(output)
-                    print imageCorners
-                    tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
-                                               imageCorners, Image.BICUBIC)
-                    if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
-                        os.makedirs(basePath+'/%s/%s' % (zoom,x))
-                    tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,x,y))
-        image = image.resize((int(math.ceil(image.size[0]/2.)),
-                              int(math.ceil(image.size[1]/2.))),
-                             Image.ANTIALIAS)
+                print imageCorners
+                tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
+                                           imageCorners, Image.BICUBIC)
+                if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
+                    os.makedirs(basePath+'/%s/%s' % (zoom,x))
+                tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,x,y))
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
@@ -303,8 +324,8 @@ def latLonTometers(lat, lng):
     return mx, my
 
 def metersToLatLon(x, y):
-    lng = x * 180 / originShift
-    lat = y * 180 / originShift
+    lng = x * 180 / ORIGIN_SHIFT
+    lat = y * 180 / ORIGIN_SHIFT
     lat = ((math.atan(2 ** (y * (math.pi / 180))) * 360) / math.pi) - 90
     return lat, lng
 
