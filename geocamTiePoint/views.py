@@ -28,6 +28,33 @@ INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * 6378137 / 2.
 ZOOM_OFFSET = 3
 
+class Bounds(object):
+    def __init__(self, *points):
+        self.bounds = (None, None, None, None)
+        for point in points:
+            self.extend(point)
+
+    def __getattribute__(self, name):
+        if name == 'xmin': return self.bounds[0]
+        elif name == 'xmax': return self.bounds[2]
+        elif name == 'ymin': return self.bounds[1]
+        elif name == 'ymax': return self.bounds[3]
+        else: return object.__getattribute__(self, name)
+
+    def extend(self, point):
+        if self.bounds[0] == None:
+            self.bounds[0] = point[0]
+        if self.bounds[1] == None:
+            self.bounds[1] = point[1]
+        if self.bounds[2] == None:
+            self.bounds[2] = point[0]
+        if self.bounds[3] == None:
+            self.bounds[3] = point[1]
+        self.bounds[0] = min(self.bounds[0],point[0])
+        self.bounds[1] = min(self.bounds[1],point[1])
+        self.bounds[2] = max(self.bounds[2],point[0])
+        self.bounds[3] = max(self.bounds[3],point[1])
+
 def overlayIndex(request):
     if request.method == 'GET':
         overlays = models.Overlay.objects.all()
@@ -191,15 +218,67 @@ def testOutsideImage(point, coords):
     # just assuming it's in the image, even though it might not be
     return False
 
-def generateWarpedQuadTree(image, method, data, basePath):
-    if method in ('similarity, affine'):
-        warpedImage = image.transform(image.size, Image.AFFINE, data)
-        
-    elif method in ('projective'):
-        warpedImage = image.transform(image.size, Image.QUAD, data)
-    else:
-        raise ValueError("Incorrect warp method")
-    
+def calculateMaxZoom(bounds, image):
+    metersPerPixelX = (bounds.xmax - bounds.xmin) / image.size[0]
+    metersPerPixelY = (bounds.ymax - bounds.ymin) / image.size[1]
+    metersPerPixel = min(metersPerPixelX, metersPerPixelY)
+    decimalZoom = math.log((INITIAL_RESOLUTION / (TILE_SIZE * metersPerPixel)), 2)
+    zoom = math.ceil(decimalZoom)
+    return zoom
+
+def tileIndex(zoom, mercatorCoords):
+    coords = [metersToPixels(*c + (zoom,)) for c in mercatorCoords]
+    index = [math.floor(coord / TILE_SIZE * (2**zoom)) for coord in coords]
+    return index
+
+def tileExtent(zoom, x, y):
+    corners = ((x,y),(x+1,y),(x,y+1),(x+1,y+1))
+    pixelCorners = [(a * (TILE_SIZE * (2**zoom)), b * (TILE_SIZE * (2**zoom)))\
+                        for a,b in corners]
+    mercatorCorners = [pixelsToMeters(pixels, zoom) for pixels in pixelCorners]
+    return mercatorCorners
+
+def generateWarpedQuadTree(image, method, matrix, basePath):
+    matrix = numpy.matrix([matrix[:3],matrix[3:6],matrix[6:]])
+    matrixInverse = matrix ** -1
+    corners = [[0,0],[image.size[0],0],[0,image.size[1]],image.size]
+    mercatorCorners = []
+    for corner in corners:
+        corner += [1]
+        corner = numpy.matrix(corner).reshape(3,1)
+        output = (matrix * corner).reshape(1,3)
+        output = list(output)[:2]
+        mercatorCorners.append(output)
+    bounds = Bounds()
+    for corner in mercatorCorners:
+        bounds.extend(corner)
+
+    maxZoom = calculateMaxZoom()
+    for zoom in xrange(maxZoom):
+        bounds = Bounds()
+        for corner in mercatorCorners:
+            tileCoords = tileIndex(zoom, mercatorCorner)
+            bounds.extend(tileCoords)
+        xmin, ymin = tileIndex(zoom, (bounds.xmin, bounds.ymin))
+        xmax, ymax = tileIndex(zoom, (bonuds.xmax, bounds.ymax))
+        for x in xrange(xmin, xmax + 1):
+            for y in xrange(yimn, ymax + 1):
+                corners = tileExtent(zoom, x, y)
+                imageCorners = []
+                for corner in corners:
+                    corner += [1]
+                    corner = numpymatrix(corner).reshape(3,1)
+                    output = (matrixInverse * corner).reshape(1,3)
+                    output = list(output)[:2]
+                    imageCorners.extend(output)
+                    tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
+                                               imageCorners, Image.BICUBIC)
+                    if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
+                        os.makedirs(basePath+'/%s/%s' % (zoom,x))
+                    tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,x,y))
+        image = image.resize((int(math.ceil(image.size[0]/2.)),
+                              int(math.ceil(image.size[1]/2.))),
+                             Image.ANTIALIAS)
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
