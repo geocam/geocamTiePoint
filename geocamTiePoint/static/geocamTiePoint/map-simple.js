@@ -27,7 +27,7 @@ var sfMapTypeOptions = {
             return null;
 	}
 	var bound = Math.pow(2,zoom);
-	return "http://localhost:8000/data/geocamTiePoint/tiles/"+ overlay['key'] +
+	return "/data/geocamTiePoint/tiles/"+ overlay['key'] +
 	"/" + zoom + "/" + normalizedCoord.x + "/" +
 	normalizedCoord.y + ".jpg";
     },

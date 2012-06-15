@@ -206,7 +206,9 @@ def makeQuadTree(image, coords, basePath):
                     continue
                 if not os.path.exists(basePath+'/%s/%s/' % (i+ZOOM_OFFSET,ix)):
                     os.makedirs(basePath+'/%s/%s' % (i+ZOOM_OFFSET,ix))
-                newImage = image.crop([TILE_SIZE*ix,TILE_SIZE*iy,TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)])
+                corners = [TILE_SIZE*ix,TILE_SIZE*iy,TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)]
+                corners = [int(round(x)) for x in corners]
+                newImage = image.crop(corners)
                 newImage.save(basePath+'/%s/%s/%s.jpg' % (i+ZOOM_OFFSET,ix,iy))
         image = image.resize((int(math.ceil(image.size[0]/2.)),
                               int(math.ceil(image.size[1]/2.))),
@@ -216,6 +218,7 @@ def makeQuadTree(image, coords, basePath):
 def testOutsideImage(point, coords):
     upperLeft, upperRight, lowerLeft, lowerRight = coords
     if point[0] < min(upperLeft[0], lowerLeft[0]):
+
         return True
     if point[1] < min(upperLeft[1], upperRight[1]):
         return True
@@ -275,7 +278,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
         bounds.extend(corner)
 
     maxZoom = calculateMaxZoom(bounds, image)
-    for zoom in xrange(maxZoom):
+    for zoom in xrange(int(maxZoom), -1, -1):
         bounds = Bounds()
         for corner in mercatorCorners:
             tileCoords = tileIndex(zoom, corner)
@@ -295,6 +298,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                     output = (matrixInverse * corner).reshape(1,3)
                     print "in pixels"
                     output = output.tolist()[0][:2]
+                    output = [int(round(x)) for x in output]
                     print output
                     imageCorners.extend(output)
                 print imageCorners
@@ -302,7 +306,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 print imageCorners[3]-imageCorners[1]
                 print "size of x side"
                 print imageCorners[6]-imageCorners[0]
-                tileData = image.transform((TILE_SIZE,)*2, Image.QUAD,
+                tileData = image.transform((int(TILE_SIZE),)*2, Image.QUAD,
                                            imageCorners, Image.BICUBIC)
                 if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
                     os.makedirs(basePath+'/%s/%s' % (zoom,x))
