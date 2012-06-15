@@ -276,6 +276,8 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
     bounds = Bounds()
     for corner in mercatorCorners:
         bounds.extend(corner)
+    print "bounds"
+    print bounds.bounds
 
     maxZoom = calculateMaxZoom(bounds, image)
     for zoom in xrange(int(maxZoom), -1, -1):
@@ -288,9 +290,10 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
         print "bounds"
         print xmin, ymin
         print xmax, ymax
-        for x in xrange(int(xmin), int(xmax) + 1):
-            for y in xrange(int(ymin), int(ymax) + 1):
-                corners = tileExtent(zoom, x, y)
+        for nx in xrange(int(xmin), int(xmax) + 1):
+            print "x: %s" % nx
+            for ny in xrange(int(ymin), int(ymax) + 1):
+                corners = tileExtent(zoom, nx, ny)
                 imageCorners = []
                 for corner in corners:
                     corner += (1,)
@@ -308,9 +311,9 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 print imageCorners[6]-imageCorners[0]
                 tileData = image.transform((int(TILE_SIZE),)*2, Image.QUAD,
                                            imageCorners, Image.BICUBIC)
-                if not os.path.exists(basePath+'/%s/%s/' % (zoom,x)):
-                    os.makedirs(basePath+'/%s/%s' % (zoom,x))
-                tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,x,y))
+                if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
+                    os.makedirs(basePath+'/%s/%s' % (zoom,nx))
+                tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,nx,ny))
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)

@@ -27,12 +27,12 @@ var sfMapTypeOptions = {
             return null;
 	}
 	var bound = Math.pow(2,zoom);
-	return "/data/geocamTiePoint/tiles/"+ overlay['key'] +
+	return "/data/geocamTiePoint/registeredTiles/"+ overlay['key'] +
 	"/" + zoom + "/" + normalizedCoord.x + "/" +
 	normalizedCoord.y + ".jpg";
     },
     tileSize: new google.maps.Size(256, 256),
-    maxZoom: maxZoom,
+    maxZoom: 15,
     minZoom: offset,
     radius: 1738000,
     name: "SF1920"
@@ -76,7 +76,7 @@ function initialize() {
 				   myOptions2);
     map2.mapTypes.set('sf1920', sfMapType);
     map2.setMapTypeId('sf1920');
-    map2.setCenter(new google.maps.LatLng(83,-140));
+    map2.setCenter(myLatLng);
       
     //SEARCHBAR
     var input = document.getElementById('searchTextField');
