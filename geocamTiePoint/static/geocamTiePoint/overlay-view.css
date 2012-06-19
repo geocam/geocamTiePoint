@@ -1,0 +1,19 @@
+html {
+    height: 100%;
+    width: 100%
+}
+
+body {
+    height: 100%;
+    width: 100%;
+}
+
+table.map_area {
+    height:50%;
+    width: 100%;
+}
+
+div.map {
+    height: 100%;
+    width: 100%;
+}

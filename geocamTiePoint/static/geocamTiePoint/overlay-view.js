@@ -49,7 +49,7 @@ function initialize_map() {
 	mapTypeId: google.maps.MapTypeId.ROADMAP
     };
 
-    map = new google.maps.Map(document.getElementById("map_canvas")s, mapOptions);
+    map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
     if (navigator.geolocation) {
 	navigator.geolocation.getCurrentPosition(function (position) {
@@ -67,7 +67,7 @@ function initialize_map() {
 
 function initialize_image() {
     var mapOptions = {
-	center: new google.maps.LatLng(80, -170),
+	center: new google.maps.LatLng(83, -165),
 	zoom: 1,
 	streetViewControl: false,
 	backgroundColor: "rgb(0,0,0)",
