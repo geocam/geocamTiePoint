@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ overlay.name }}</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <script type="text/javascript">
+      var overlay = JSON.parse('{{ overlay.data|safe }}');
+      var data_url = "{{ DATA_URL }}";
+    </script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css" />
+  </head>
+  <body onLoad="initialize()">
+    <h2 class="title">{{ overlay.name }}</h2>
+    <div class="action_section"><input type="button" value="warp" onClick="window.location='warp/'" /><input type="button" value="preview" onClick="window.location='preview/'" /></div>
+    <div class="map" id="map_canvas"></div>
+    <div class="map" id="image_canvas"></div>
+    <div class="action_section"><input type="button" value="reset" onClick="alert('you pressed the reset button!')" /><input type="button" value="save" onClick="window.location='.json'"></div>
+  </body>
+</html>

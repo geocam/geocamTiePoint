@@ -122,7 +122,8 @@ def overlayId(request, key):
         except models.Overlay.DoesNotExist:
             raise Http404()
         else:
-            return render_to_response('map-simple.html', {'overlay':overlay},
+            return render_to_response('overlay-view.html', {'overlay':overlay,
+                                                            'DATA_URL':settings.DATA_URL},
                                       context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
