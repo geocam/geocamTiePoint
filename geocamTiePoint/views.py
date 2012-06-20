@@ -122,7 +122,8 @@ def overlayId(request, key):
             raise Http404()
         else:
             return render_to_response('overlay-view.html', {'overlay':overlay,
-                                                            'DATA_URL':settings.DATA_URL},
+                                                            'DATA_URL':settings.DATA_URL,
+                                                            'TIEPOINT_URL':settings.TIEPOINT_URL},
                                       context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -133,7 +134,12 @@ def overlayIdJson(request, key):
             overlay = models.Overlay.objects.get(key=key)
         except models.Overlay.DoesNotExist:
             raise Http404()
-        return HttpResponse(overlay.data)
+        data = {
+            "data": json.loads(overlay.data),
+            "name": overlay.name,
+            "imageType": overlay.imageType
+            }
+        return HttpResponse(json.dumps(data))
     elif request.method == 'POST':
         try:
             overlay = models.Overlay.objects.get(key=key)
@@ -143,7 +149,12 @@ def overlayIdJson(request, key):
         overlay.name = request.POST['name']
         overlay.imageType = request.POST['imageType']
         overlay.save()
-        return HttpResponse("")
+        data = {
+            "data": json.loads(overlay.data),
+            "name": overlay.name,
+            "imageType": overlay.imageType
+            }
+        return HttpResponse(json.dumps(data))
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 

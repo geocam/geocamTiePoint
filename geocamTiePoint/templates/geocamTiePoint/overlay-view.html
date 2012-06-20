@@ -13,14 +13,18 @@
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
   </head>
   <body onLoad="initialize()">
-    <h2 class="title">{{ overlay.name }}</h2>
+    <div class="top">
+    <h2 class="title">{{ overlay.name }} <a href="/{{ TIEPOINT_URL }}">back</a></h2>
     <div class="action_section"><input type="button" value="warp" onClick="window.location='warp/'" /><input type="button" value="preview" onClick="window.location='preview/'" /></div>
+    </div>
     <table class="map_area">
       <tr>
 	<td><div class="map" id="map_canvas"></div></td>
 	<td><div class="map" id="image_canvas"></div></td>
       </tr>
     </table>
+    <div class="bottom">
     <div class="action_section"><input type="button" value="reset" onClick="alert('you pressed the reset button!')" /><input type="button" value="save" onClick="window.location='.json'"></div>
+    </div>
   </body>
 </html>

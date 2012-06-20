@@ -26,6 +26,12 @@ var imageMapTypeOptions = {
 
 var imageMapType = new google.maps.ImageMapType(imageMapTypeOptions);
 
+var imageMarkers = new Array();
+var mapMarkers = new Array();
+
+var imageCoords = new Array();
+var mapCoords = new Array();
+
 function getImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
 
@@ -63,6 +69,8 @@ function initialize_map() {
 	// browser doesn't support geolocation
 	handleNoGeolocation(false);
     }
+
+    google.maps.event.addListener(map, "click", handleMapClick);
 }
 
 function initialize_image() {
@@ -80,6 +88,8 @@ function initialize_image() {
 
     image_map.mapTypes.set('image-map', imageMapType);
     image_map.setMapTypeId('image-map');
+
+    google.maps.event.addListener(image_map, "click", handleImageClick);
 }
 
 function handleNoGeolocation(errorFlag) {
@@ -102,4 +112,133 @@ function getNormalizedCoord(coord, zoom) {
 	x: x,
 	y: y
     };
+}
+
+function handleImageClick(event) {
+    var latLng = event.latLng;
+    var coord = latLonToPixel(latLng);
+    var index = imageMarkers.length;
+    var markerOpts ={
+	title: "" + (index + 1),
+	draggable: true,
+	position: latLng,
+	map: image_map
+    };
+    var marker = new google.maps.Marker(markerOpts);
+    google.maps.event.addListener(marker, "dragend", function(event) {
+	handleImageMarkerDragEnd(index, event);
+    });
+    google.maps.event.addListener(marker, "rightclick", function(event) {
+	handleImageMarkerRightClick(index, event);
+    });
+    imageMarkers[index] = marker;
+    imageCoords[index] = coord;
+}
+
+function handleMapClick(event) {
+    var latLng = event.latLng;
+    var coord = latLonToMeters(latLng);
+    var index = mapMarkers.length;
+    var markerOpts = {
+	title: "" + (index + 1),
+	draggable: true,
+	position: latLng,
+	map: map
+    };
+    var marker = new google.maps.Marker(markerOpts);
+    google.maps.event.addListener(marker, "dragend", function(event) {
+	handleMapMarkerDragEnd(index, event);
+    });
+    google.maps.event.addListener(marker, "rightclick", function(event) {
+	handleMapMarkerRightClick(index, event);
+    });
+    mapMarkers[index] = marker;
+    mapCoords[index] = coord;
+}
+
+function handleImageMarkerDragEnd(markerIndex, event) {
+    var coords = latLonToPixel(event.latLng);
+    imageCoords[markerIndex] = coords;
+}
+
+function handleMapMarkerDragEnd(markerIndex, event) {
+    var coords = latLonToMeters(event.latLng);
+    mapCoords[markerIndex] = coords;
+}
+
+function handleImageMarkerRightClick(markerIndex, event) {
+    imageCoords[markerIndex] = null;
+    imageMarkers[markerIndex].setMap(null);
+    imageMarkers[markerIndex] = null;
+}
+
+function handleMapMarkerRightClick(markerIndex, event) {
+    mapCoords[markerIndex] = null;
+    mapMarkers[markerIndex].setMap(null);
+    mapMarkers[markerIndex] = null;
+}
+
+function save(action) {
+    $.getJSON('.json', action);
+}
+
+function savePoints(jsonData) {
+    var points = new Array();
+    for (var i=0; i<imageCoords.length; i++) {
+	var coords = new Array();
+	coords[0] = mapCoords[i].x;
+	coords[1] = mapCoords[i].y;
+	coords[2] = imageCoords[i].x;
+	coords[3] = imageCoords[i].y;
+	points[points.length] = coords;
+    }
+    var data = jsonData['data'];
+    data['points'] = points;
+    jsonData['data'] = data;
+    var newJson = JSON.stringify(jsonData);
+    jsonData['data'] = newJson;
+    $.ajax
+}
+
+function latLonToMeters(latLon) {
+    var mx = latLon.lng() * originShift / 180;
+    var my = Math.log(Math.tan((90 + latLon.lat()) * Math.PI / 360)) /
+	(Math.PI / 180);
+    my = my * originShift / 180;
+    return {x:mx,
+	    y:my};
+}
+
+function metersToLatLon(meters) {
+    var lng = meters.x * 180 / originShift;
+    var lat = meters.y * 180 / originShift;
+    lat = ((Math.atan(Math.pow(2, (meters.y * (Math.PI / 180)))) * 360) / Math.PI) - 90;
+    var latLng = new google.maps.LatLng({lat:lat,lng:lng});
+    return latLng;
+}
+
+function metersToPixels(meters) {
+    var res = resolution(maxZoom);
+    var px = (meters.x + originShift) / res;
+    var py = (-meters.y + originShift) / res;
+    return {x:px, y:py};
+}
+
+function pixelsToMeters(pixels) {
+    var res = resolution(maxZoom);
+    var mx = (pixels.x * res) - originShift;
+    var my = -(pixels.y * res) + originShift;
+    return {x:mx, y:my};
+}
+
+function resolution(zoom) {
+    return initialResolution / (Math.pow(2,zoom));
+}
+
+function latLonToPixel(latLon) {
+    var meters = latLonToMeters(latLon);
+    console.log([meters.x, meters.y]);
+    var pixels = metersToPixels(meters);
+    console.log([pixels.x, pixels.y]);
+    return pixels;
 }
