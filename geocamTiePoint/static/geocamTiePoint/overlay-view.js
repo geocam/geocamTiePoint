@@ -32,6 +32,8 @@ var mapMarkers = new Array();
 var imageCoords = new Array();
 var mapCoords = new Array();
 
+var saveButtonTimeout = null;
+
 function getImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
 
@@ -178,10 +180,6 @@ function handleMapMarkerRightClick(markerIndex, event) {
     mapMarkers[markerIndex] = null;
 }
 
-function save(action) {
-    $.getJSON('.json', action);
-}
-
 function savePoints(jsonData) {
     var points = new Array();
     for (var i=0; i<imageCoords.length; i++) {
@@ -194,10 +192,23 @@ function savePoints(jsonData) {
     }
     var data = jsonData['data'];
     data['points'] = points;
-    jsonData['data'] = data;
-    var newJson = JSON.stringify(jsonData);
+    var newJson = JSON.stringify(data);
     jsonData['data'] = newJson;
-    $.ajax
+    $.post('.json', data=jsonData, success=function(data) {
+	$('#save_button')[0].value = "success!";
+	$('#save_button')[0].disabled = false;
+	saveButtonTimeout = setTimeout(function() {
+	    $('#save_button')[0].value = 'save';
+	},3000);
+    });
+}
+
+function saveButtonClicked() {
+    if (saveButtonTimeout != null)
+	clearTimeout(saveButtonTimeout);
+    $('#save_button')[0].value = "saving...";
+    $('#save_button')[0].disabled = true;
+    $.getJSON('.json', success=savePoints);
 }
 
 function latLonToMeters(latLon) {
