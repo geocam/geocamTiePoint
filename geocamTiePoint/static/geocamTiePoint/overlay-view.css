@@ -36,4 +36,5 @@ div.top, div.bottom {
 .labels {
     text-align: center;
     width: 40px;
+    font-size: 10px;
 }

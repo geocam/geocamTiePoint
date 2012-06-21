@@ -132,7 +132,7 @@ function handleImageClick(event) {
 	map: image_map,
 	icon: markerIcon,
 	labelContent: "" + (index + 1),
-	labelAnchor: new google.maps.Point(20,35),
+	labelAnchor: new google.maps.Point(20,30),
 	labelClass: "labels",
     };
     var marker = new MarkerWithLabel(markerOpts);
@@ -162,7 +162,7 @@ function handleMapClick(event) {
 	map: map,
 	icon: markerIcon,
 	labelContent: "" + (index + 1),
-	labelAnchor: new google.maps.Point(20,35),
+	labelAnchor: new google.maps.Point(20,30),
 	labelClass: "labels",
     };
     var marker = new MarkerWithLabel(markerOpts);
@@ -221,12 +221,14 @@ function savePoints(jsonData) {
     $.post('.json', data=jsonData)
 	.success(function(data, status, xhr) {
 	    $('#save_button')[0].value = "success!";
+	    $('#save_button')[0].disabled = false;
 	    saveButtonTimeout = setTimeout(function() {
 		$('#save_button')[0].value = "save";
 	    }, 3000);
 	})
 	.error(function(xhr, status, error) {
 	    $('#save_button')[0].value = "save";
+	    $('#save_button')[0].disabled = false;
 	    alert("Error occured while saving: " + error);
 	});
 }
@@ -234,8 +236,26 @@ function savePoints(jsonData) {
 function saveButtonClicked() {
     if (saveButtonTimeout != null)
 	clearTimeout(saveButtonTimeout);
+    if (mapCoords.length != imageCoords.length) {
+	var diff = mapCoords.length - imageCoords.length;
+	if (diff > 0) // need to add points to image
+	    $('#save_button')[0].value = "Add " + diff + " to image";
+	else
+	    $('#save_button')[0].value = "Add " + (-diff) + " to map";
+	saveButtonTimeout = setTimeout(function(){
+	    $('#save_button')[0].value = "save";
+	}, 3000);
+	return;
+    }
+    $('#save_button')[0].disabled = true;
     $('#save_button')[0].value = "saving...";
     $.getJSON('.json', success=savePoints);
+    setTimeout(function() {
+	if ($('#save_button')[0].disabled) {
+	    $('#save_button')[0].value = "still saving...";
+	    $('#save_button')[0].disabled = false;
+	}
+    }, 3000);
 }
 
 function resetButtonClicked() {
