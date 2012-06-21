@@ -34,6 +34,10 @@ var mapCoords = new Array();
 
 var saveButtonTimeout = null;
 
+var markerIcon = new google.maps.MarkerImage("http://maps.gstatic.com/mapfiles/markers2/marker_blank.png");
+
+var dragging = false;
+
 function getImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
 
@@ -117,6 +121,7 @@ function getNormalizedCoord(coord, zoom) {
 }
 
 function handleImageClick(event) {
+    if (dragging) return;
     var latLng = event.latLng;
     var coord = latLonToPixel(latLng);
     var index = imageMarkers.length;
@@ -124,11 +129,19 @@ function handleImageClick(event) {
 	title: "" + (index + 1),
 	draggable: true,
 	position: latLng,
-	map: image_map
+	map: image_map,
+	icon: markerIcon,
+	labelContent: "" + (index + 1),
+	labelAnchor: new google.maps.Point(20,35),
+	labelClass: "labels",
     };
-    var marker = new google.maps.Marker(markerOpts);
+    var marker = new MarkerWithLabel(markerOpts);
+    google.maps.event.addListener(marker, "dragstart", function(event) {
+	dragging = true;
+    });
     google.maps.event.addListener(marker, "dragend", function(event) {
 	handleImageMarkerDragEnd(index, event);
+	setTimeout(function(){dragging = false;}, 100);
     });
     google.maps.event.addListener(marker, "rightclick", function(event) {
 	handleImageMarkerRightClick(index, event);
@@ -138,6 +151,7 @@ function handleImageClick(event) {
 }
 
 function handleMapClick(event) {
+    if (dragging) return;
     var latLng = event.latLng;
     var coord = latLonToMeters(latLng);
     var index = mapMarkers.length;
@@ -145,11 +159,19 @@ function handleMapClick(event) {
 	title: "" + (index + 1),
 	draggable: true,
 	position: latLng,
-	map: map
+	map: map,
+	icon: markerIcon,
+	labelContent: "" + (index + 1),
+	labelAnchor: new google.maps.Point(20,35),
+	labelClass: "labels",
     };
-    var marker = new google.maps.Marker(markerOpts);
+    var marker = new MarkerWithLabel(markerOpts);
+    google.maps.event.addListener(marker, "dragstart", function(event) {
+	dragging = true;
+    });
     google.maps.event.addListener(marker, "dragend", function(event) {
 	handleMapMarkerDragEnd(index, event);
+	setTimeout(function(){dragging = false;}, 100);
     });
     google.maps.event.addListener(marker, "rightclick", function(event) {
 	handleMapMarkerRightClick(index, event);
@@ -169,12 +191,14 @@ function handleMapMarkerDragEnd(markerIndex, event) {
 }
 
 function handleImageMarkerRightClick(markerIndex, event) {
+    return; // this doesn't really work right now
     imageCoords[markerIndex] = null;
     imageMarkers[markerIndex].setMap(null);
     imageMarkers[markerIndex] = null;
 }
 
 function handleMapMarkerRightClick(markerIndex, event) {
+    return; // this doesn't really work right now
     mapCoords[markerIndex] = null;
     mapMarkers[markerIndex].setMap(null);
     mapMarkers[markerIndex] = null;
@@ -194,21 +218,39 @@ function savePoints(jsonData) {
     data['points'] = points;
     var newJson = JSON.stringify(data);
     jsonData['data'] = newJson;
-    $.post('.json', data=jsonData, success=function(data) {
-	$('#save_button')[0].value = "success!";
-	$('#save_button')[0].disabled = false;
-	saveButtonTimeout = setTimeout(function() {
-	    $('#save_button')[0].value = 'save';
-	},3000);
-    });
+    $.post('.json', data=jsonData)
+	.success(function(data, status, xhr) {
+	    $('#save_button')[0].value = "success!";
+	    saveButtonTimeout = setTimeout(function() {
+		$('#save_button')[0].value = "save";
+	    }, 3000);
+	})
+	.error(function(xhr, status, error) {
+	    $('#save_button')[0].value = "save";
+	    alert("Error occured while saving: " + error);
+	});
 }
 
 function saveButtonClicked() {
     if (saveButtonTimeout != null)
 	clearTimeout(saveButtonTimeout);
     $('#save_button')[0].value = "saving...";
-    $('#save_button')[0].disabled = true;
     $.getJSON('.json', success=savePoints);
+}
+
+function resetButtonClicked() {
+    for (var marker in imageMarkers) {
+	if (imageMarkers[marker] != null)
+	    imageMarkers[marker].setMap(null);
+    }
+    for (var marker in mapMarkers) {
+	if (mapMarkers[marker] != null)
+	    mapMarkers[marker].setMap(null);
+    }
+    imageMarkers = new Array();
+    mapMarkers = new Array();
+    imageCoords = new Array();
+    mapCoords = new Array();
 }
 
 function latLonToMeters(latLon) {

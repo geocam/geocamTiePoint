@@ -29,6 +29,11 @@ div.map {
     margin: 0px;
 }
 
-div.top, div.bottom{
+div.top, div.bottom {
     margin: 10px;
+}
+
+.labels {
+    text-align: center;
+    width: 40px;
 }
