@@ -204,7 +204,7 @@ function handleMapMarkerRightClick(markerIndex, event) {
     mapMarkers[markerIndex] = null;
 }
 
-function savePoints(jsonData) {
+function save(jsonData) {
     var points = new Array();
     for (var i=0; i<imageCoords.length; i++) {
 	var coords = new Array();
@@ -218,6 +218,8 @@ function savePoints(jsonData) {
     data['points'] = points;
     var newJson = JSON.stringify(data);
     jsonData['data'] = newJson;
+    jsonData['name'] = $('#title')[0].value;
+
     $.post('.json', data=jsonData)
 	.success(function(data, status, xhr) {
 	    $('#save_button')[0].value = "success!";
@@ -249,7 +251,7 @@ function saveButtonClicked() {
     }
     $('#save_button')[0].disabled = true;
     $('#save_button')[0].value = "saving...";
-    $.getJSON('.json', success=savePoints);
+    $.getJSON('.json', success=save);
     setTimeout(function() {
 	if ($('#save_button')[0].disabled) {
 	    $('#save_button')[0].value = "still saving...";

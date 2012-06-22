@@ -38,3 +38,9 @@ div.top, div.bottom {
     width: 40px;
     font-size: 10px;
 }
+
+.title {
+    margin-bottom: 10px;
+    border-style: none;
+    font-size: 25px;
+}
