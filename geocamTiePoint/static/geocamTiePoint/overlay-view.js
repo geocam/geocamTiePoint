@@ -33,6 +33,9 @@ var imageCoords = new Array();
 var mapCoords = new Array();
 
 var saveButtonTimeout = null;
+var otherSaveButtonTimeout = null;
+var warpButtonTimeout = null;
+var otherWarpButtonTimeout = null;
 
 var markerIcon = new google.maps.MarkerImage("http://maps.gstatic.com/mapfiles/markers2/marker_blank.png");
 
@@ -204,6 +207,34 @@ function handleMapMarkerRightClick(markerIndex, event) {
     mapMarkers[markerIndex] = null;
 }
 
+function warpButtonClicked() {
+    if (warpButtonTimeout != null)
+	clearTimeout(warpButtonTimeout);
+    if (otherWarpButtonTimeout != null)
+	clearTimeout(otherWarpButtonTimeout);
+    $('#warp_button')[0].disabled = true;
+    $('#warp_button')[0].value = 'warping...';
+    $.post('warp/')
+	.success(function(data, status, khr) {
+	    $('#warp_button')[0].disabled = false;
+	    $('#warp_button')[0].value = "success!";
+	    warpButtonTimeout = setTimeout(function() {
+		$('#warp_button')[0].value = "warp";
+	    }, 3000);
+	})
+	.error(function(xhr, status, error) {
+	    $('#warp_button')[0].disabled = false;
+	    $('#warp_button')[0].value = "warp";
+	    alert("Error occured during warping: " + error);
+	});
+    otherWarpButtonTimeout = setTimeout(function() {
+	if ($('#warp_button')[0].disabled) {
+	    $('#warp_button')[0].value = "still warping...";
+	    $('#warp_button')[0].disabled = false;
+	}
+    }, 10000);
+}
+
 function save(jsonData) {
     var points = new Array();
     for (var i=0; i<imageCoords.length; i++) {
@@ -238,6 +269,8 @@ function save(jsonData) {
 function saveButtonClicked() {
     if (saveButtonTimeout != null)
 	clearTimeout(saveButtonTimeout);
+    if (otherSaveButtonTimeout != null)
+	clearTimeout(otherSaveButtonTimeout);
     if (mapCoords.length != imageCoords.length) {
 	var diff = mapCoords.length - imageCoords.length;
 	if (diff > 0) // need to add points to image
@@ -251,8 +284,14 @@ function saveButtonClicked() {
     }
     $('#save_button')[0].disabled = true;
     $('#save_button')[0].value = "saving...";
-    $.getJSON('.json', success=save);
-    setTimeout(function() {
+    $.getJSON('.json')
+	.success(save)
+	.error(function(xhr, status, error) {
+	    $('#save_button')[0].value = "save";
+	    $('#save_button')[0].disabled = false;
+	    alert("Error occured while saving: " + error);
+	});
+    otherSaveButtonTimeout = setTimeout(function() {
 	if ($('#save_button')[0].disabled) {
 	    $('#save_button')[0].value = "still saving...";
 	    $('#save_button')[0].disabled = false;

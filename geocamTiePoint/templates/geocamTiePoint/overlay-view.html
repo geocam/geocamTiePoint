@@ -16,7 +16,7 @@
   <body onLoad="initialize()">
     <div class="top">
     <input type="text" id="title" class="title" value="{{ overlay.name }}" />
-    <div class="action_section"><input type="button" value="warp" onClick="window.location='warp/'" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /></div>
+    <div class="action_section"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /></div>
     </div>
     <table class="map_area">
       <tr>

@@ -162,7 +162,7 @@ def overlayIdWarp(request, key):
     if request.method == 'GET':
         return render_to_response('warp-form.html',{},
                                   context_instance=RequestContext(request))
-    elif request.method == 'POS':
+    elif request.method == 'POST':
         try:
             overlay = models.Overlay.objects.get(key=key)
         except models.Overlay.DoesNotExist:
