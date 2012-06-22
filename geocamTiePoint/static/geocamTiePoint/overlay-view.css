@@ -1,0 +1,46 @@
+html {
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    padding: 0px;
+    margin: 0px;
+}
+
+table.map_area {
+    height:50%;
+    width: 100%;
+}
+
+td, tr {
+    padding: 0px;
+}
+
+div.map {
+    height: 100%;
+    width: 100%;
+    padding: 0px;
+    margin: 0px;
+}
+
+div.top, div.bottom {
+    margin: 10px;
+}
+
+.labels {
+    text-align: center;
+    width: 40px;
+    font-size: 10px;
+}
+
+.title {
+    margin-bottom: 10px;
+    border-style: none;
+    font-size: 25px;
+}

@@ -116,14 +116,14 @@ def overlayNew(request):
 
 def overlayId(request, key):
     if request.method == 'GET':
-        # this line maybe should be try/catched to check for non-existing overlays
         try:
             overlay = models.Overlay.objects.get(key=key)
         except models.Overlay.DoesNotExist:
             raise Http404()
         else:
             return render_to_response('overlay-view.html', {'overlay':overlay,
-                                                            'DATA_URL':settings.DATA_URL},
+                                                            'DATA_URL':settings.DATA_URL,
+                                                            'TIEPOINT_URL':settings.TIEPOINT_URL},
                                       context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -134,7 +134,12 @@ def overlayIdJson(request, key):
             overlay = models.Overlay.objects.get(key=key)
         except models.Overlay.DoesNotExist:
             raise Http404()
-        return HttpResponse(overlay.data)
+        data = {
+            "data": json.loads(overlay.data),
+            "name": overlay.name,
+            "imageType": overlay.imageType
+            }
+        return HttpResponse(json.dumps(data))
     elif request.method == 'POST':
         try:
             overlay = models.Overlay.objects.get(key=key)
@@ -144,7 +149,12 @@ def overlayIdJson(request, key):
         overlay.name = request.POST['name']
         overlay.imageType = request.POST['imageType']
         overlay.save()
-        return HttpResponse("")
+        data = {
+            "data": json.loads(overlay.data),
+            "name": overlay.name,
+            "imageType": overlay.imageType
+            }
+        return HttpResponse(json.dumps(data))
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 
@@ -200,9 +210,9 @@ def makeQuadTree(image, coords, basePath):
         ny = int(math.ceil(image.size[1]/TILE_SIZE))
         for ix in xrange(nx):
             for iy in xrange(ny):
-                if testOutsideImage((TILE_SIZE*ix,TILE_SIZE*iy),coords) or\
-                        testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*iy),coords) or\
-                        testOutsideImage((TILE_SIZE*ix,TILE_SIZE*(iy+1)),coords) or\
+                if testOutsideImage((TILE_SIZE*ix,TILE_SIZE*iy),coords) and\
+                        testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*iy),coords) and\
+                        testOutsideImage((TILE_SIZE*ix,TILE_SIZE*(iy+1)),coords) and\
                         testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)),coords):
                     continue
                 if not os.path.exists(basePath+'/%s/%s/' % (i+ZOOM_OFFSET,ix)):
@@ -219,7 +229,6 @@ def makeQuadTree(image, coords, basePath):
 def testOutsideImage(point, coords):
     upperLeft, upperRight, lowerLeft, lowerRight = coords
     if point[0] < min(upperLeft[0], lowerLeft[0]):
-
         return True
     if point[1] < min(upperLeft[1], upperRight[1]):
         return True
