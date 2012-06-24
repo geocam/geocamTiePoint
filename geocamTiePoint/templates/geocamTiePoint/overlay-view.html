@@ -7,16 +7,25 @@
       var overlay = JSON.parse('{{ overlay.data|safe }}');
       var data_url = "{{ DATA_URL }}";
     </script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css" />
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
   </head>
   <body onLoad="initialize()">
-    <h2 class="title">{{ overlay.name }}</h2>
-    <div class="action_section"><input type="button" value="warp" onClick="window.location='warp/'" /><input type="button" value="preview" onClick="window.location='preview/'" /></div>
-    <div class="map" id="map_canvas"></div>
-    <div class="map" id="image_canvas"></div>
-    <div class="action_section"><input type="button" value="reset" onClick="alert('you pressed the reset button!')" /><input type="button" value="save" onClick="window.location='.json'"></div>
+    <div class="top">
+    <input type="text" id="title" class="title" value="{{ overlay.name }}" />
+    <div class="action_section"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /></div>
+    </div>
+    <table class="map_area">
+      <tr>
+	<td><div class="map" id="map_canvas"></div></td>
+	<td><div class="map" id="image_canvas"></div></td>
+      </tr>
+    </table>
+    <div class="bottom">
+    <div class="action_section"><input type="button" value="reset" onClick="resetButtonClicked()" /><input type="button" id="save_button" value="save" onClick="saveButtonClicked()"></div>
+    </div>
   </body>
 </html>
