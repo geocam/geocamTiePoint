@@ -1,6 +1,6 @@
-//TODO: f
+//TODO: 
 
-function powell(p,xi,ftol)
+function powell(p,xi,ftol,ncom,pcom,xicom,points)
 {
     var ITMAX=200;
     var TINY=1.0*Math.pow(2.7,-25);
@@ -15,8 +15,7 @@ function powell(p,xi,ftol)
     var pt = new Array(n);
     var ptt = new Array(n);
     var xit = new Array(n);
-    var fret=func(p);
-    console.log("in powell: p "+p);
+    var fret=func(p,ncom,pcom,xicom,points);
    
     for (var j=0;j<n;j++){
         pt[j]=p[j];
@@ -32,7 +31,7 @@ function powell(p,xi,ftol)
                 xit[j]=xi.values[j][i];
             }
             fptt=fret;
-            linmin_ret=linmin(p,xit);
+            linmin_ret=linmin(p,xit,ncom,pcom,xicom,points);
             p = linmin_ret.p;
             xit = linmin_ret.xi;
             fret = linmin_ret.fret;
@@ -57,11 +56,7 @@ function powell(p,xi,ftol)
         }
 
         
-        fptt=func(ptt);
-        //console.log("powell: ptt "+ptt);
-        //console.log("powell: fptt "+fptt);
-        //console.log("powell:fp "+fp); 
-        
+        fptt=func(ptt,ncom,pcom,xicom,points);
         
         if(fptt < fp) {
         
@@ -70,10 +65,7 @@ function powell(p,xi,ftol)
                 del*(Math.pow(fp-fptt,2));
             
             if(t < 0.0) {
-                console.log("p in t<0.0: "+p);
-                console.log("xit in t<0.0: "+xit);
-                linmin_ret=linmin(p,xit);  //TODO: this loops!! 
-                
+                linmin_ret=linmin(p,xit,ncom,pcom,xicom,points); 
                 p = linmin_ret.p;
                 xit = linmin_ret.xi;
                 fret = linmin_ret.fret;

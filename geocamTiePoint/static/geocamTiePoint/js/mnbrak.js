@@ -1,10 +1,10 @@
-function mnbrak(ax,bx) 
+function mnbrak(ax,bx,ncom,pcom,xicom,points) 
 {
     var GOLD=1.618034;
     var GLIMIT=100.0;
     var TINY=Math.pow(2.06115362*10,-9);
-    var fa = f1dim(ax);
-    var fb = f1dim(bx);
+    var fa = f1dim(ax,ncom,pcom,xicom,points);
+    var fb = f1dim(bx,ncom,pcom,xicom,points);
     var shft3_ret;
 
     if (fb>fa) {
@@ -18,7 +18,7 @@ function mnbrak(ax,bx)
     }
 
     var cx=bx+GOLD*(bx-ax);
-    var fc=f1dim(cx);
+    var fc=f1dim(cx,ncom,pcom,xicom,points);
 
     while (fb>fc) {
         
@@ -27,7 +27,7 @@ function mnbrak(ax,bx)
         var u=bx-((bx-cx)*q-(bx-ax)*r)/(2.0*SIGN(Math.max(Math.abs(q-r),TINY),q-r));
         var ulim=bx+GLIMIT*(cx-bx);
         if ((bx-u)*(u-cx) > 0.0) {
-            var fu=f1dim(u);
+            var fu=f1dim(u,ncom,pcom,xicom,points);
             if(fu<fc) {
                 ax=bx;
                 bx=u;
@@ -40,26 +40,26 @@ function mnbrak(ax,bx)
                 return {ax:ax,bx:bx,cx:cx};
             }
             u=cx+GOLD*(cx-bx);
-            fu=f1dim(u);
+            fu=f1dim(u,ncom,pcom,xicom,points);
         } else if ((cx-u)*(u-ulim) > 0.0) {
-            fu=f1dim(u);
+            fu=f1dim(u,ncom,pcom,xicom,points);
             if (fu<fc) {
                 shft3_ret = shft3(bx,cx,u,cx+GOLD*(cx-bx));
                 bx = shft3_ret.a;
                 cx = shft3_ret.b;
                 u  = shft3_ret.c;
 
-                shft3_ret = shft3(fb,fc,fu,f1dim(u));
+                shft3_ret = shft3(fb,fc,fu,f1dim(u,ncom,pcom,xicom,points));
                 fb = shft3_ret.a;
                 fc = shft3_ret.b;
                 fu = shft3_ret.c;
             }
         } else if ((u-ulim)*(ulim-cx) >= 0.0){
             u=ulim;
-            fu=f1dim(u);
+            fu=f1dim(u,ncom,pcom,xicom,points);
         } else {
             u=cx+GOLD*(cx-bx);
-            fu=f1dim(u);
+            fu=f1dim(u,ncom,pcom,xicom,points);
         }
         shft3_ret = shft3(ax,bx,cx,u);
         ax = shft3_ret.a;

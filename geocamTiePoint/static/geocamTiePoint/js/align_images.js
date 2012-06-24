@@ -1,5 +1,16 @@
-function align_images()
+function align_images(points)
 {
+    var x1 = new Array(); //to_pts (target pts)
+    var y1 = new Array(); //to_pts (target pts)
+    var x2 = new Array(); //from_pts 
+    var y2  = new Array(); //from_pts
+ 
+    for (var i =0; i<points.length; i++) {
+        x1[i] = points[i][0];
+        y1[i] = points[i][1];
+        x2[i] = points[i][2];
+        y2[i] = points[i][3];
+    }
     //find centroid of polygon made of pts.
     c1x=x1.sum()/points.length;
     c1y=y1.sum()/points.length;

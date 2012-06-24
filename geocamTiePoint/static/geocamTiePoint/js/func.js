@@ -1,5 +1,19 @@
-function func(p) //p is params to tMtx
+function func(p,ncom,pcom,xicom,points) //p is params to tMtx
 {
+
+    var numTiePts = points.length;
+    var x1 = new Array(); //to_pts (target pts)
+    var y1 = new Array(); //to_pts (target pts)
+    var x2 = new Array(); //from_pts 
+    var y2  = new Array(); //from_pts
+ 
+    for (var i =0; i<points.length; i++) {
+        x1[i] = points[i][0];
+        y1[i] = points[i][1];
+        x2[i] = points[i][2];
+        y2[i] = points[i][3];
+    }
+
     var xscale;
     var yscale;
     var tx;
@@ -90,7 +104,6 @@ function func(p) //p is params to tMtx
         sum += (Math.pow(hto_pts.values[0][i] - tfrom_pts.values[0][i],2))
                 +(Math.pow(hto_pts.values[1][i] - tfrom_pts.values[1][i],2))
                 +(Math.pow(hto_pts.values[2][i] - tfrom_pts.values[2][i],2));
-        //console.log("f["+i+"]:"+f[i]);
     }
     return sum;     
 }
