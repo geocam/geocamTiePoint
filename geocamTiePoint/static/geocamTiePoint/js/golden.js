@@ -1,6 +1,6 @@
 //This function works!
 
-function golden(ax,bx,cx,tol) 
+function golden(ax,bx,cx,tol,ncom,pcom,xicom,points) 
 {
     var R=0.61803399;
     var C=1.0-R;
@@ -19,8 +19,8 @@ function golden(ax,bx,cx,tol)
         x1 = bx-C * (bx-ax);
     }
 
-    var f1=f1dim(x1);
-    var f2=f1dim(x2);
+    var f1=f1dim(x1,ncom,pcom,xicom,points);
+    var f2=f1dim(x2,ncom,pcom,xicom,points);
 
     
     while(Math.abs(x3-x0) > tol*(Math.abs(x1)+Math.abs(x2))) {
@@ -30,7 +30,7 @@ function golden(ax,bx,cx,tol)
             x1 = shft3_ret.b;
             x2 = shft3_ret.c;
 
-            shft2_ret = shft2(f1,f2,f1dim(x2));
+            shft2_ret = shft2(f1,f2,f1dim(x2,ncom,pcom,xicom,points));
             f1=shft2_ret.a;
             f2=shft2_ret.b;  
         } else {
@@ -39,20 +39,12 @@ function golden(ax,bx,cx,tol)
             x2=shft3_ret.b;
             x1=shft3_ret.c;
 
-            shft2_ret = shft3(f2,f1,f1dim(x1));
+            shft2_ret = shft3(f2,f1,f1dim(x1,ncom,pcom,xicom,points));
             f2 = shft2_ret.a;
             f1 = shft2_ret.b;  
         }
     }
 
-    console.log("golden: f1 "+f1);
-    console.log("golden: f2 "+f2);
-    console.log("golden: x0 "+x0);
-    console.log("golden: x1 "+x1);
-    console.log("golden: x2 "+x2);
-    console.log("golden: x3 "+x3);
-
-    
     if(f1<f2) {
         xmin=x1;
         fret=f1;
