@@ -3,6 +3,7 @@
 *.egg-info
 *~
 /example/dev.db
+/example/settings.py
 /example/data
 /docs/_build/
 /pip-log.txt
