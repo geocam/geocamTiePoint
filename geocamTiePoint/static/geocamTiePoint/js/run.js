@@ -1,18 +1,9 @@
-/* global variables go here:*/
+/*var transformMatrix = run(points);
+console.log("transformMatrix: "+transformMatrix.values);
+*/
+var ncom; var pcom; var xicom;
 
-var xp1 = 104.8626; var yp1 = 73.3830; var x1 = 190.6316; var y1=105.1053;
-var xp2 = 328.9327; var yp2 = 192.6462; var x2 = 303.7895; var y2=249.8421;
-var xp3 = 372.3012; var yp3 = 33.6287; var x3 = 391.9474; var y3=189.3158;
-
-var points = new Array ();
-points[0] = new Array (xp1,yp1,x1,y1);
-points[1] = new Array (xp2,yp2,x2,y2);
-points[2] = new Array (xp3,yp3,x3,y3);
-
-
-var transformMatrix = run(points);
-
-function run(points)
+function run(points, numTiePts)
 {
     var x1 = new Array(); //to_pts (target pts)
     var y1 = new Array(); //to_pts (target pts)
@@ -35,6 +26,8 @@ function run(points)
     var yscale = align_images_ret.yscale;
     var tx = align_images_ret.tx;
     var ty = align_images_ret.ty;
+
+    
 
     var theta = 0;
     var ftol = 0.001;

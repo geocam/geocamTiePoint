@@ -7,11 +7,25 @@
       var overlay = JSON.parse('{{ overlay.data|safe }}');
       var data_url = "{{ DATA_URL }}";
     </script>
-    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
+    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
     <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
+
+    <!-- Grace's javascript matrix library -->
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/f1dim.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/func.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/golden.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/linmin.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/matrix.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/mnbrak.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/myLibrary.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/powell.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/run.js"></script>
   </head>
   <body onLoad="initialize()">
     <div class="top">

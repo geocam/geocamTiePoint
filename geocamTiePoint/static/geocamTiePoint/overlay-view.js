@@ -56,6 +56,44 @@ function getImageTileUrl(coord, zoom) {
 function initialize() {
     initialize_map();
     initialize_image();
+    initialize_search_bar();
+}
+
+function initialize_search_bar() {
+    var input = document.getElementById('searchTextField');
+    var autoComplete = new google.maps.places.Autocomplete(input);
+
+    autoComplete.bindTo('bounds', map);
+
+    var infoWindow = new google.maps.InfoWindow();
+    var marker = new google.maps.Marker({
+	map: map
+    });
+
+    google.maps.event.addListener(autoComplete, 'place_changed', function() {
+	infoWindow.close();
+	var place = autoComplete.getPlace();
+	if (place.geometry.viewport) {
+	    map.fitBounds(place.geometry.viewport)
+	} else {
+	    map.setCenter(place.geometry.location);
+	    map.setZoom(17);
+	}
+
+	var address = '';
+	if (place.address_components) {
+	    address = [(place.address_components[0] &&
+			place.address_components[0].short_name || ''),
+		       (place.address_components[1] &&
+			place.address_components[1].short_name || ''),
+		       (place.address_components[2] &&
+			place.address_components[2].short_name || '')
+		      ].join(' ');
+	}
+
+	infoWindow.setContent('<div><strong>' + place.name + '</strong><br>' + address + '</div>');
+	infoWindow.open(map, marker);
+    });
 }
 
 function initialize_map() {
