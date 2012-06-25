@@ -14,6 +14,7 @@ urlpatterns = patterns('',
     url(r'^(?P<key>\d+)/.json$', 'geocamTiePoint.views.overlayIdJson'),
     url(r'^(?P<key>\d+)/warp/$', 'geocamTiePoint.views.overlayIdWarp'),
     url(r'^(?P<key>\d+)/delete/$', 'geocamTiePoint.views.overlayDelete'),
+    url(r'^(?P<key>\d+)/preview/$', 'geocamTiePoint.views.overlayIdPreview'),
     url(r'^(?P<key>\d+)/(?P<fileName>\S+)$',
         'geocamTiePoint.views.overlayIdImageFileName'),
 )
