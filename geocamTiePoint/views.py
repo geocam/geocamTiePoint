@@ -128,6 +128,20 @@ def overlayId(request, key):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+def overlayIdPreview(request, key):
+    if request.method == 'GET':
+        try:
+            overlay = models.Overlay.objects.get(key=key)
+        except models.Overlay.DoesNotExist:
+            raise Http404()
+        else:
+            return render_to_response('overlay-preview.html', {'overlay':overlay,
+                                                               'DATA_URL':settings.DATA_URL,
+                                                               'TIEPOINT_URL':settings.TIEPOINT_URL},
+                                      context_instance=RequestContext(request))
+    else:
+        return HttpResponseNotAllowed(['GET'])
+
 def overlayIdJson(request, key):
     if request.method == 'GET':
         try:
