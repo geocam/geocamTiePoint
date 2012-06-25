@@ -36,4 +36,6 @@ class Overlay(models.Model):
         dataStorage.delete(self.image)
         if dataStorage.exists('geocamTiePoint/tiles/'+str(self.key)):
             shutil.rmtree(dataStorage.path('geocamTiePoint/tiles/'+str(self.key)))
+        if dataStorage.exists('geocamtiePoint/registeredTiles/'+str(self.key)):
+            shutil.rmtree(dataStorage.path('geocamTiePoint/registeredTiles/'+str(self.key)))
         models.Model.delete(self, *args,**kwargs)

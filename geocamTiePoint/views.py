@@ -173,6 +173,7 @@ def overlayIdWarp(request, key):
         basePath = models.dataStorage.path('geocamTiePoint/registeredTiles/'+str(overlay.key))
         generateWarpedQuadTree(Image.open(overlay.image.path), transformType,
                                transformMatrix, basePath)
+        return HttpResponse("{}")
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 
@@ -272,8 +273,8 @@ def tileIndexToPixels(x,y):
     return x*TILE_SIZE, y*TILE_SIZE
 
 def generateWarpedQuadTree(image, method, matrix, basePath):
-    print [matrix[:3],matrix[3:6],matrix[6:]]
-    matrix = numpy.matrix([matrix[:3],matrix[3:6],matrix[6:]])
+    print matrix
+    matrix = numpy.matrix(matrix)
     matrixInverse = numpy.linalg.inv(matrix)
     corners = [[0,0],[image.size[0],0],[0,image.size[1]],image.size]
     mercatorCorners = []
@@ -321,9 +322,24 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 print imageCorners[6]-imageCorners[0]
                 tileData = image.transform((int(TILE_SIZE),)*2, Image.QUAD,
                                            imageCorners, Image.BICUBIC)
-                if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
-                    os.makedirs(basePath+'/%s/%s' % (zoom,nx))
-                tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,nx,ny))
+                print "generating mask"
+                mask = Image.new('L', image.size, color=255).transform((int(TILE_SIZE),)*2, Image.QUAD,
+                                                                       imageCorners, Image.BICUBIC)
+                print "applying mask"
+                tileData.putalpha(mask)
+                try:
+                    if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
+                        os.makedirs(basePath+'/%s/%s' % (zoom,nx))
+                    if min(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], 0) < 0 or\
+                            max(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], image.size[0]) > image.size[0] or\
+                            min(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], 0) < 0 or\
+                            max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
+                        tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+                    else:
+                        tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,nx,ny))
+                    print "saved tile"
+                except Exception as e: print e; raise Exception(e)
+                else: print "no error"
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)

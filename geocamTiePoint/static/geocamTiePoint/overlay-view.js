@@ -285,6 +285,18 @@ function save(jsonData) {
     }
     var data = jsonData['data'];
     data['points'] = points;
+
+    var transformMatrix = generateMatrix(points, points.length);
+    var transformType = null;
+    if (points.length < 4)
+	transformType = "affine";
+    else if (points.length >= 4)
+	transformType = "projective";
+    data['transform'] = {
+	'type': transformType,
+	'matrix': transformMatrix
+    };
+
     var newJson = JSON.stringify(data);
     jsonData['data'] = newJson;
     jsonData['name'] = $('#title')[0].value;

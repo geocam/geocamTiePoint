@@ -3,7 +3,7 @@ console.log("transformMatrix: "+transformMatrix.values);
 */
 var ncom; var pcom; var xicom;
 
-function run(points, numTiePts)
+function generateMatrix(points, numTiePts)
 {
     var x1 = new Array(); //to_pts (target pts)
     var y1 = new Array(); //to_pts (target pts)
@@ -116,6 +116,6 @@ function putIntoMatrix(p,numTiePts)
         console.log("error in func: wrong number of parameters to tMtx!");
     }    
     tMtx = new Matrix(3,3,tvals);
-    return tMtx; 
+    return tMtx.values;
 }
 
