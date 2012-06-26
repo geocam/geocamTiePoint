@@ -6,12 +6,12 @@ var initialResolution = 2 * Math.PI * 6378137 / tileSize;
 var originShift = 2 * Math.PI * 6378137 / 2.0;
 
 // find max zoom
-var maxZoom = 0; var offset = 3;
-if (overlay['imageSize'][0] > overlay['imageSize'][1]) {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][0] / tileSize, 2)) + offset;
-} else {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / tileSize, 2)) + offset;
-}
+var offset = 3;
+var maxDimension = Math.max(overlay['imageSize'][0], overlay['imageSize'][1]);
+var maxZoom = Math.ceil(Math.log(maxDimension / tileSize)/Math.log(2)) + offset;
+console.log(Math.max(overlay['imageSize'][0], overlay['imageSize'][1]));
+console.log(overlay['imageSize']);
+console.log(maxZoom);
 
 var map; var image_map;
 

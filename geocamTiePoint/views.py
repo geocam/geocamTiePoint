@@ -11,7 +11,7 @@ from django.http import HttpResponseNotAllowed, HttpResponseBadRequest
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-import json, base64, os.path, os, math
+import json, base64, os.path, os, math, sys
 import numpy, numpy.linalg
 
 try:
@@ -219,10 +219,12 @@ def generateQuadTree(image, basePath):
     makeQuadTree(image, coords, basePath)
 
 def makeQuadTree(image, coords, basePath):
+    sys.stderr.write(str(image.size)+'\n')
     if image.size[0] > image.size[1]:
         maxZoom = int(math.ceil(math.log(image.size[0]/TILE_SIZE,2)))
     else:
         maxZoom = int(math.ceil(math.log(image.size[1]/TILE_SIZE,2)))
+    sys.stderr.write(str(maxZoom)+'\n')
     for i in xrange(maxZoom, -1, -1):
         nx = int(math.ceil(image.size[0]/TILE_SIZE))
         ny = int(math.ceil(image.size[1]/TILE_SIZE))
