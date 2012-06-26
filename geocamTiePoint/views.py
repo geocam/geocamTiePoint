@@ -353,7 +353,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                             max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
                         tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
                     else:
-                        tileData.save(basePath+'/%s/%s/%s.jpg' % (zoom,nx,ny))
+                        tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
                     print "saved tile"
                 except Exception as e: print e; raise Exception(e)
                 else: print "no error"
