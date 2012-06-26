@@ -308,6 +308,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
         bounds.extend(corner)
     print "bounds"
     print bounds.bounds
+    baseMask = Image.new('L', image.size, 255)
 
     maxZoom = calculateMaxZoom(bounds, image)
     for zoom in xrange(int(maxZoom), -1, -1):
@@ -342,12 +343,13 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 tileData = image.transform((int(TILE_SIZE*2),)*2, Image.QUAD,
                                            imageCorners, Image.BICUBIC)
                 print "generating mask"
-                mask = Image.new('L', image.size, color=255).transform((int(TILE_SIZE*2),)*2, Image.QUAD,
-                                                                       imageCorners, Image.BICUBIC)
-                print "applying mask"
-                tileData.putalpha(mask)
+                mask = baseMask.transform((int(TILE_SIZE),)*2, Image.QUAD,
+                                          imageCorners, Image.BICUBIC)
+               
                 print "downsizing"
                 tileData = tileData.resize((int(TILE_SIZE),)*2, Image.ANTIALIAS)
+                print "applying mask"
+                tileData.putalpha(mask)
                 try:
                     if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
                         os.makedirs(basePath+'/%s/%s' % (zoom,nx))
