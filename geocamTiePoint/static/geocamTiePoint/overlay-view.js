@@ -118,6 +118,41 @@ function initialize_map() {
     }
 
     google.maps.event.addListener(map, "click", handleMapClick);
+
+    if (overlay['points']) {
+	for (var point=0;point<overlay['points'].length;point++) {
+	    var meters = {
+		x:overlay['points'][point].slice(0,2)[0],
+		y:overlay['points'][point].slice(0,2)[1],
+	    };
+	    var latLng = metersToLatLon(meters);
+	    var coord = meters;
+	    var index = mapMarkers.length;
+	    var markerOpts = {
+		title: "" + (index + 1),
+		draggable: true,
+		position: latLng,
+		map: map,
+		icon: markerIcon,
+		labelContent: "" + (index + 1),
+		labelAnchor: new google.maps.Point(20,30),
+		labelClass: "labels",
+	    };
+	    var marker = new MarkerWithLabel(markerOpts);
+	    google.maps.event.addListener(marker, "dragstart", function(event) {
+		dragging = true;
+	    });
+	    google.maps.event.addListener(marker, "dragend", function(event) {
+		handleMapMarkerDragEnd(index, event);
+		setTimeout(function(){dragging = false;}, 100);
+	    });
+	    google.maps.event.addListener(marker, "rightclick", function(event) {
+		handleMapMarkerRightClick(index, event);
+	    });
+	    mapMarkers[index] = marker;
+	    mapCoords[index] = coord;
+	}
+    }
 }
 
 function initialize_image() {
@@ -137,6 +172,41 @@ function initialize_image() {
     image_map.setMapTypeId('image-map');
 
     google.maps.event.addListener(image_map, "click", handleImageClick);
+
+    if (overlay['points']) {
+	for (var point=0; point<overlay['points'].length; point++) {
+	    var pixels = {
+		x: overlay['points'][point].slice(2)[0],
+		y: overlay['points'][point].slice(2)[1],
+	    };
+	    var latLng = pixelsToLatLon(pixels);
+	    var coord = overlay['points'][point].slice(2);
+	    var index = imageMarkers.length;
+	    var markerOpts ={
+		title: "" + (index + 1),
+		draggable: true,
+		position: latLng,
+		map: image_map,
+		icon: markerIcon,
+		labelContent: "" + (index + 1),
+		labelAnchor: new google.maps.Point(20,30),
+		labelClass: "labels",
+	    };
+	    var marker = new MarkerWithLabel(markerOpts);
+	    google.maps.event.addListener(marker, "dragstart", function(event) {
+		dragging = true;
+	    });
+	    google.maps.event.addListener(marker, "dragend", function(event) {
+		handleImageMarkerDragEnd(index, event);
+		setTimeout(function(){dragging = false;}, 100);
+	    });
+	    google.maps.event.addListener(marker, "rightclick", function(event) {
+		handleImageMarkerRightClick(index, event);
+	    });
+	    imageMarkers[index] = marker;
+	    imageCoords[index] = coord;
+	}
+    }
 }
 
 function handleNoGeolocation(errorFlag) {
@@ -274,31 +344,43 @@ function warpButtonClicked() {
 }
 
 function save(jsonData) {
-    var points = new Array();
-    for (var i=0; i<imageCoords.length; i++) {
-	var coords = new Array();
-	coords[0] = mapCoords[i].x;
-	coords[1] = mapCoords[i].y;
-	coords[2] = imageCoords[i].x;
-	coords[3] = imageCoords[i].y;
-	points[points.length] = coords;
+    if (imageCoords.length) {
+	var points = new Array();
+	for (var i=0; i<imageCoords.length; i++) {
+	    var coords = new Array();
+	    coords[0] = mapCoords[i].x;
+	    coords[1] = mapCoords[i].y;
+	    coords[2] = imageCoords[i].x;
+	    coords[3] = imageCoords[i].y;
+	    points[points.length] = coords;
+	}
+	var data = jsonData['data'];
+	data['points'] = points;
+
+	var transformMatrix = generateMatrix(points, points.length);
+	var transformType = null;
+	if (points.length < 4)
+	    transformType = "affine";
+	else if (points.length >= 4)
+	    transformType = "projective";
+	data['transform'] = {
+	    'type': transformType,
+	    'matrix': transformMatrix
+	};
+
+	var newJson = JSON.stringify(data);
+	jsonData['data'] = newJson;
+    } else {
+	var data = jsonData['data'];
+	data['points'] = new Array();
+	data['transform'] = {
+	    'type': "",
+	    'matrix': new Array()
+	}
+	var newJson = JSON.stringify(data);
+	jsonData['data'] = newJson;
     }
-    var data = jsonData['data'];
-    data['points'] = points;
 
-    var transformMatrix = generateMatrix(points, points.length);
-    var transformType = null;
-    if (points.length < 4)
-	transformType = "affine";
-    else if (points.length >= 4)
-	transformType = "projective";
-    data['transform'] = {
-	'type': transformType,
-	'matrix': transformMatrix
-    };
-
-    var newJson = JSON.stringify(data);
-    jsonData['data'] = newJson;
     jsonData['name'] = $('#title')[0].value;
 
     $.post('.json', data=jsonData)
@@ -351,11 +433,11 @@ function saveButtonClicked() {
 
 function resetButtonClicked() {
     for (var marker in imageMarkers) {
-	if (imageMarkers[marker] != null)
+	if (imageMarkers[marker].setMap)
 	    imageMarkers[marker].setMap(null);
     }
     for (var marker in mapMarkers) {
-	if (mapMarkers[marker] != null)
+	if (mapMarkers[marker].setMap)
 	    mapMarkers[marker].setMap(null);
     }
     imageMarkers = new Array();
@@ -376,8 +458,8 @@ function latLonToMeters(latLon) {
 function metersToLatLon(meters) {
     var lng = meters.x * 180 / originShift;
     var lat = meters.y * 180 / originShift;
-    lat = ((Math.atan(Math.pow(2, (meters.y * (Math.PI / 180)))) * 360) / Math.PI) - 90;
-    var latLng = new google.maps.LatLng({lat:lat,lng:lng});
+    lat = ((Math.atan(Math.exp((lat * (Math.PI / 180)))) * 360) / Math.PI) - 90;
+    var latLng = new google.maps.LatLng(lat,lng);
     return latLng;
 }
 
@@ -401,8 +483,12 @@ function resolution(zoom) {
 
 function latLonToPixel(latLon) {
     var meters = latLonToMeters(latLon);
-    console.log([meters.x, meters.y]);
     var pixels = metersToPixels(meters);
-    console.log([pixels.x, pixels.y]);
     return pixels;
+}
+
+function pixelsToLatLon(pixels) {
+    var meters = pixelsToMeters(pixels);
+    var latLon = metersToLatLon(meters);
+    return latLon;
 }

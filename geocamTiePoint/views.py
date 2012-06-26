@@ -159,9 +159,12 @@ def overlayIdJson(request, key):
             overlay = models.Overlay.objects.get(key=key)
         except models.Overlay.DoesNotExist:
             raise Http404()
-        overlay.data = request.POST['data']
-        overlay.name = request.POST['name']
-        overlay.imageType = request.POST['imageType']
+        if 'data' in request.POST:
+            overlay.data = request.POST['data']
+        if 'name' in request.POST:
+            overlay.name = request.POST['name']
+        if 'imageType' in request.POST:
+            overlay.imageType = request.POST['imageType']
         overlay.save()
         data = {
             "data": json.loads(overlay.data),
