@@ -30,7 +30,7 @@
   <body onLoad="initialize()">
     <div class="top">
     <input type="text" id="title" class="title" value="{{ overlay.name }}" /><br>
-    <div class="action_section" style="float:left;"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /><input type="text" id="searchTextField" class="searchTextField" size="50"></div><!-- Begin right justify section --><div class="action_section" style="float:right;"><input type="button" value="reset" onClick="resetButtonClicked()" /><input type="button" id="save_button" value="save" onClick="saveButtonClicked()"></div>
+    <div class="action_section" style="float:left;"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /><input type="text" id="searchTextField" class="searchTextField"></div><!-- Begin right justify section --><div class="action_section" style="float:right;"><input type="button" value="reset" onClick="resetButtonClicked()" /><input type="button" id="save_button" value="save" onClick="saveButtonClicked()"></div>
     </div>
     <table class="map_area">
       <tr>

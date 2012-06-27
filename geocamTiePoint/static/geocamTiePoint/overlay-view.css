@@ -43,4 +43,5 @@ div.top, div.bottom {
     margin-bottom: 10px;
     border-style: none;
     font-size: 25px;
+    width: 100%;
 }
