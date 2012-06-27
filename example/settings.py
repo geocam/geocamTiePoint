@@ -4,7 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-# Django settings for example project.
+from django.conf import global_settings
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -76,17 +76,8 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '_+i%e4xgl++v4o78!2gq&e*p%%y6tv*)x+g0r*yhzb7cfq(+q+'
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
-    'django.template.loaders.app_directories.load_template_source',
-#     'django.template.loaders.eggs.load_template_source',
-)
-
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+MIDDLEWARE_CLASSES = global_settings.MIDDLEWARE_CLASSES + (
+    'geocamUtil.middleware.LogErrorsMiddleware.LogErrorsMiddleware',
 )
 
 ROOT_URLCONF = 'example.urls'

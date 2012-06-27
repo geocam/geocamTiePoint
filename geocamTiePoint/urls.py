@@ -6,15 +6,32 @@
 
 from django.conf.urls.defaults import url, patterns
 
-urlpatterns = patterns('',
-    url(r'^$', 'geocamTiePoint.views.overlayIndex'),
-    url(r'^new$', 'geocamTiePoint.views.overlayNew'),
-    url(r'^(?P<key>\d+)/$', 'geocamTiePoint.views.overlayId'),
-    url(r'^(?P<key>\d+).json$', 'geocamTiePoint.views.overlayIdJson'),
-    url(r'^(?P<key>\d+)/.json$', 'geocamTiePoint.views.overlayIdJson'),
-    url(r'^(?P<key>\d+)/warp/$', 'geocamTiePoint.views.overlayIdWarp'),
-    url(r'^(?P<key>\d+)/delete/$', 'geocamTiePoint.views.overlayDelete'),
-    url(r'^(?P<key>\d+)/preview/$', 'geocamTiePoint.views.overlayIdPreview'),
+urlpatterns = patterns(
+    'geocamTiePoint.views',
+
+    url(r'^$', 'overlayIndex',
+        {}, 'geocamTiePoint_overlayIndex'),
+
+    url(r'^new/$', 'overlayNew',
+        {}, 'geocamTiePoint_overlayNew'),
+
+    url(r'^(?P<key>\d+)/$', 'overlayId',
+        {}, 'geocamTiePoint_overlayId'),
+
+    url(r'^(?P<key>\d+).json$', 'overlayIdJson',
+        {}, 'geocamTiePoint_overlayIdJson'),
+
+    url(r'^(?P<key>\d+)/warp/$', 'overlayIdWarp',
+        {}, 'geocamTiePoint_overlayIdWarp'),
+
+    url(r'^(?P<key>\d+)/delete/$', 'overlayDelete',
+        {}, 'geocamTiePoint_overlayDelete'),
+
+    url(r'^(?P<key>\d+)/preview/$', 'overlayIdPreview',
+        {}, 'geocamTiePoint_overlayIdPreview'),
+
     url(r'^(?P<key>\d+)/(?P<fileName>\S+)$',
-        'geocamTiePoint.views.overlayIdImageFileName'),
+        'overlayIdImageFileName',
+        {}, 'geocamTiePoint_overlayIdImageFileName'),
+
 )
