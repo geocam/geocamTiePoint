@@ -171,6 +171,7 @@ def overlayIdWarp(request, key):
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
+        overlay.deleteRegisteredTiles()
         data = json.loads(overlay.data)
         transformType = data['transform']['type']
         transformMatrix = data['transform']['matrix']
