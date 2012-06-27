@@ -65,6 +65,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
     } else {
         console.log("error in func: wrong number of parameters to tMtx!");
     }    
+
     tMtx = new Matrix(3,3,tvals);        
     
     //create a dummy array for initial Mtx vals
@@ -75,7 +76,6 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
             dummyArray[i][j] = 0;
         }
     }
-  
 
     var hfrom_kernel = new Array(3);
     var hto_kernel = new Array(3);
@@ -94,9 +94,9 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
         hto_kernel[2][i]=1;
     }
 
-
-    var hfrom_pts = new Matrix(3,numTiePts,hfrom_kernel);
-    var hto_pts = new Matrix(3,numTiePts, hto_kernel); 
+    var hfrom_pts = new Matrix(numTiePts,3,hfrom_kernel);//(3,numTiePts,hfrom_kernel);
+    var hto_pts = new Matrix(numTiePts,3,hto_kernel);//(3,numTiePts, hto_kernel);
+    
     var tfrom_pts = tMtx.multiply(hfrom_pts); //TODO: or is it hfrom_pts?
     
     var sum =0;
