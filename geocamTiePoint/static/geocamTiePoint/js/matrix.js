@@ -8,7 +8,7 @@
 var Matrix = function (w, h, values) {
   this.w = w;
   this.h = h;
-  this.values = values || Matrix.allocate(h);
+  this.values = values || Matrix.allocate(w, h);
 };
 
 Matrix.allocate = function (w, h) {
@@ -166,7 +166,7 @@ Matrix.prototype.invert = function () {
 };
 
 Matrix.prototype.print = function () {
-  var out = "<table>";
+  var out = '<table class="matrix">';
   for (var y = 0; y < this.h; ++y) {
     out += '<tr>';
     for (var x = 0; x < this.w; ++x) {

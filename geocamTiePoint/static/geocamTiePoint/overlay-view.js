@@ -492,3 +492,52 @@ function pixelsToLatLon(pixels) {
     var latLon = metersToLatLon(meters);
     return latLon;
 }
+
+function debugFit() {
+    var n = overlay.points.length;
+    var mapPts = new Matrix(n, 3);
+    var imagePts = new Matrix(n, 3);
+    $.each(overlay.points, function (i, pt) {
+        mapPts.values[0][i] = pt[0];
+        mapPts.values[1][i] = pt[1];
+        mapPts.values[2][i] = 1.0;
+        imagePts.values[0][i] = pt[2];
+        imagePts.values[1][i] = pt[3];
+        imagePts.values[2][i] = 1.0;
+    });
+    var T = new Matrix(3, 3, overlay.transform.matrix);
+    var fitMapPts = T.multiply(imagePts);
+    var diff = mapPts.add(fitMapPts.multiply(-1));
+    var b = $('body');
+    b.append('mapPts:');
+    mapPts.print();
+    b.append('imagePts:');
+    imagePts.print();
+    b.append('T:');
+    T.print();
+    b.append('fitMapPts:');
+    fitMapPts.print();
+    b.append('diff:');
+    diff.print();
+    $('.matrix td').css('padding', '5px');
+
+    var greenIcon = new google.maps.MarkerImage("http://maps.google.com/mapfiles/ms/icons/green.png");
+    for (var i=0; i < n; i++) {
+        var meterCoords = {x: fitMapPts.values[0][i], y: fitMapPts.values[1][i]};
+        console.log(meterCoords);
+        var latlng = metersToLatLon(meterCoords);
+        console.log(latlng);
+        var markerOpts = {
+	    title: "" + (i + 1),
+	    draggable: true,
+	    position: latlng,
+	    map: map,
+	    icon: greenIcon,
+	    labelContent: "" + (i + 1),
+	    labelAnchor: new google.maps.Point(20,30),
+	    labelClass: "labels",
+        };
+        var marker = new MarkerWithLabel(markerOpts);
+    };
+
+}
