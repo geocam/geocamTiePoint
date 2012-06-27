@@ -5,6 +5,7 @@
   <body>
     <h4>Are you sure you want to delete the overlay?</h4><br>
     <form action="" method="POST">
+      {% csrf_token %}
       <input type="submit" value="OK"> <input type="button" value="Cancel" onclick="window.location='{{ index_url }}'">
     </form>
   </body>
