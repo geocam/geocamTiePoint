@@ -201,12 +201,10 @@ def generateQuadTree(image, basePath):
     makeQuadTree(image, coords, basePath)
 
 def makeQuadTree(image, coords, basePath):
-    sys.stderr.write(str(image.size)+'\n')
     if image.size[0] > image.size[1]:
         maxZoom = int(math.ceil(math.log(image.size[0]/TILE_SIZE,2)))
     else:
         maxZoom = int(math.ceil(math.log(image.size[1]/TILE_SIZE,2)))
-    sys.stderr.write(str(maxZoom)+'\n')
     for i in xrange(maxZoom, -1, -1):
         nx = int(math.ceil(image.size[0]/TILE_SIZE))
         ny = int(math.ceil(image.size[1]/TILE_SIZE))
