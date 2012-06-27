@@ -49,7 +49,6 @@ class Bounds(object):
         else: return object.__getattribute__(self, name)
 
     def extend(self, point):
-        print point
         if self.bounds[0] == None:
             self.bounds[0] = point[0]
         if self.bounds[1] == None:
@@ -62,8 +61,6 @@ class Bounds(object):
         self.bounds[1] = min(self.bounds[1],point[1])
         self.bounds[2] = max(self.bounds[2],point[0])
         self.bounds[3] = max(self.bounds[3],point[1])
-        print "bounds are now"
-        print self.bounds
 
 def overlayIndex(request):
     if request.method == 'GET':
@@ -260,11 +257,7 @@ def calculateMaxZoom(bounds, image):
 
 def tileIndex(zoom, mercatorCoords):
     coords = metersToPixels(mercatorCoords[0], mercatorCoords[1], zoom)
-    print "pixels"
-    print coords
     index = [int(math.floor(coord / (TILE_SIZE))) for coord in coords]
-    print "index"
-    print index
     return index
 
 def tileExtent(zoom, x, y):
@@ -277,7 +270,6 @@ def tileIndexToPixels(x,y):
     return x*TILE_SIZE, y*TILE_SIZE
 
 def generateWarpedQuadTree(image, method, matrix, basePath):
-    print matrix
     matrix = numpy.matrix(matrix)
     matrixInverse = numpy.linalg.inv(matrix)
     corners = [[0,0],[image.size[0],0],[0,image.size[1]],image.size]
@@ -291,8 +283,6 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
     bounds = Bounds()
     for corner in mercatorCorners:
         bounds.extend(corner)
-    print "bounds"
-    print bounds.bounds
     baseMask = Image.new('L', image.size, 255)
 
     maxZoom = calculateMaxZoom(bounds, image)
@@ -303,11 +293,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
             bounds.extend(tileCoords)
         xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
         xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
-        print "bounds"
-        print xmin, ymin
-        print xmax, ymax
         for nx in xrange(int(xmin), int(xmax) + 1):
-            print "x: %s" % nx
             for ny in xrange(int(ymin), int(ymax) + 1):
                 corners = tileExtent(zoom, nx, ny)
                 imageCorners = []
@@ -315,39 +301,25 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                     corner += (1,)
                     corner = numpy.matrix(corner).reshape(3,1)
                     output = (matrixInverse * corner).reshape(1,3)
-                    print "in pixels"
                     output = output.tolist()[0][:2]
                     output = [int(round(x)) for x in output]
-                    print output
                     imageCorners.extend(output)
-                print imageCorners
-                print "size of y side"
-                print imageCorners[3]-imageCorners[1]
-                print "size of x side"
-                print imageCorners[6]-imageCorners[0]
                 tileData = image.transform((int(TILE_SIZE*2),)*2, Image.QUAD,
                                            imageCorners, Image.BICUBIC)
-                print "generating mask"
                 mask = baseMask.transform((int(TILE_SIZE),)*2, Image.QUAD,
                                           imageCorners, Image.BICUBIC)
                
-                print "downsizing"
                 tileData = tileData.resize((int(TILE_SIZE),)*2, Image.ANTIALIAS)
-                print "applying mask"
                 tileData.putalpha(mask)
-                try:
-                    if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
-                        os.makedirs(basePath+'/%s/%s' % (zoom,nx))
-                    if min(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], 0) < 0 or\
-                            max(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], image.size[0]) > image.size[0] or\
-                            min(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], 0) < 0 or\
-                            max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
-                        tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-                    else:
-                        tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-                    print "saved tile"
-                except Exception as e: print e; raise Exception(e)
-                else: print "no error"
+                if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
+                    os.makedirs(basePath+'/%s/%s' % (zoom,nx))
+                if min(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], 0) < 0 or\
+                        max(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], image.size[0]) > image.size[0] or\
+                        min(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], 0) < 0 or\
+                        max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
+                    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+                else:
+                    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
