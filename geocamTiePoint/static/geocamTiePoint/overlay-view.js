@@ -333,7 +333,7 @@ function warpButtonClicked() {
 	.error(function(xhr, status, error) {
 	    $('#warp_button')[0].disabled = false;
 	    $('#warp_button')[0].value = "warp";
-	    alert("Error occured during warping: " + error);
+	    alert("Error occurred during warping: " + error);
 	});
     otherWarpButtonTimeout = setTimeout(function() {
 	if ($('#warp_button')[0].disabled) {
@@ -383,7 +383,7 @@ function save(jsonData) {
 
     jsonData['name'] = $('#title')[0].value;
 
-    $.post('.json', data=jsonData)
+    $.post(overlay.url, jsonData)
 	.success(function(data, status, xhr) {
 	    $('#save_button')[0].value = "success!";
 	    $('#save_button')[0].disabled = false;
@@ -394,7 +394,7 @@ function save(jsonData) {
 	.error(function(xhr, status, error) {
 	    $('#save_button')[0].value = "save";
 	    $('#save_button')[0].disabled = false;
-	    alert("Error occured while saving: " + error);
+	    alert("Error occurred while saving: " + error);
 	});
 }
 
@@ -416,12 +416,12 @@ function saveButtonClicked() {
     }
     $('#save_button')[0].disabled = true;
     $('#save_button')[0].value = "saving...";
-    $.getJSON('.json')
+    $.getJSON(overlay.url)
 	.success(save)
 	.error(function(xhr, status, error) {
 	    $('#save_button')[0].value = "save";
 	    $('#save_button')[0].disabled = false;
-	    alert("Error occured while saving: " + error);
+	    alert("Error occurred while saving: " + error);
 	});
     otherSaveButtonTimeout = setTimeout(function() {
 	if ($('#save_button')[0].disabled) {
