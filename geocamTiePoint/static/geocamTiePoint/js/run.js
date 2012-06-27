@@ -1,6 +1,3 @@
-/*var transformMatrix = run(points);
-console.log("transformMatrix: "+transformMatrix.values);
-*/
 var ncom; var pcom; var xicom;
 
 function generateMatrix(points, numTiePts)

@@ -16,7 +16,7 @@ function powell(p,xi,ftol,ncom,pcom,xicom,points)
     var ptt = new Array(n);
     var xit = new Array(n);
     var fret=func(p,ncom,pcom,xicom,points);
-   
+  
     for (var j=0;j<n;j++){
         pt[j]=p[j];
     }
@@ -75,5 +75,5 @@ function powell(p,xi,ftol,ncom,pcom,xicom,points)
                 }
             }
         }
-   }
+   } 
 }
