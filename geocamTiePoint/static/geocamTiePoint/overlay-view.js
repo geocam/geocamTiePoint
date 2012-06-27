@@ -204,7 +204,7 @@ function initialize_image() {
 		handleImageMarkerRightClick(index, event);
 	    });
 	    imageMarkers[index] = marker;
-	    imageCoords[index] = coord;
+	    imageCoords[index] = pixels;
 	}
     }
 }
