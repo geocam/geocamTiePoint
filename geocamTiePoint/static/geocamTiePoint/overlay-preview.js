@@ -12,7 +12,6 @@ if (overlay['imageSize'][0] > overlay['imageSize'][1]) {
     maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / tileSize, 2)) + offset;
 }
 
-
 function getTransformedImageTileUrl(coord,zoom) {
     var normalizedCoord = getNormalizedCoord(coord,zoom);
         
