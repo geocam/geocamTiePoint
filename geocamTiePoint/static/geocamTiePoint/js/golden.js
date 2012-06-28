@@ -2,6 +2,7 @@
 
 function golden(ax,bx,cx,tol,ncom,pcom,xicom,points) 
 {
+    var ITMAX = 100;
     var R=0.61803399;
     var C=1.0-R;
     var x0=ax;
@@ -23,6 +24,7 @@ function golden(ax,bx,cx,tol,ncom,pcom,xicom,points)
     var f2=f1dim(x2,ncom,pcom,xicom,points);
 
     
+    var step = 0;
     while(Math.abs(x3-x0) > tol*(Math.abs(x1)+Math.abs(x2))) {
         if (f2<f1) {
             shft3_ret = shft3(x0,x1,x2,R*x2+C*x3);
@@ -43,6 +45,10 @@ function golden(ax,bx,cx,tol,ncom,pcom,xicom,points)
             f2 = shft2_ret.a;
             f1 = shft2_ret.b;  
         }
+        if (step >= ITMAX) {
+            throw "golden: iterations maxed out";
+        }
+        step++;
     }
 
     if(f1<f2) {

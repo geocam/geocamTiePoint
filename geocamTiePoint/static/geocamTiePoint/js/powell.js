@@ -3,7 +3,7 @@
 function powell(p,xi,ftol,ncom,pcom,xicom,points)
 {
     var ITMAX=200;
-    var TINY=1.0*Math.pow(2.7,-25);
+    var TINY=1e-25;
     var n=p.length;
     var iter;
     var linmin_ret;
@@ -21,7 +21,7 @@ function powell(p,xi,ftol,ncom,pcom,xicom,points)
         pt[j]=p[j];
     }
  
-    for(iter=0;;++iter){ 
+    for(iter=0; iter < ITMAX; ++iter){ 
         fp=fret;
         ibig=0; 
         del=0.0; 
@@ -44,9 +44,6 @@ function powell(p,xi,ftol,ncom,pcom,xicom,points)
 
         if ((2.0*(fp-fret)) <= (ftol*(Math.abs(fp)+Math.abs(fret))+TINY)){
             return {finalpts:p,iter:iter,fret:fret,xi:xi};
-        }
-        if(iter==ITMAX) {
-            console.log("ERROR in powell.js: iteration maxed out");
         }
 
         for (var i=0; i<n; i++) {
@@ -76,4 +73,5 @@ function powell(p,xi,ftol,ncom,pcom,xicom,points)
             }
         }
    } 
+    throw "ERROR in powell.js: iteration maxed out";
 }

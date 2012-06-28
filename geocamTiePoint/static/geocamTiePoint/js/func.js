@@ -22,7 +22,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
     var tvals;
     var tMtx;
 
-    if (numTiePts ==2) {
+    if (p.length == 4) {
         xscale=p[0];
         yscale=p[1];
         tx=p[2];
@@ -30,7 +30,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
         tvals=[[xscale,0,tx],
               [0,yscale,ty],
               [0,0,1]];
-    } else if (numTiePts==3) {
+    } else if (p.length == 5) {
         xscale=p[0];
         yscale=p[1];
         theta=p[2];
@@ -39,7 +39,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
         tvals = [[Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx],
                  [Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty],
                  [0, 0, 1]];
-    } else if (numTiePts==4) {
+    } else if (p.length == 6) {
         var a11=p[0];
         var a12=p[1];
         var a21=p[2];
@@ -49,7 +49,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
         tvals = [[a11, a12, tx], 
                 [a21, a22, ty], 
                 [0,0,1]];
-    } else if (numTiePts>4) {
+    } else if (p.length == 8) {
         var p11=p[0];
         var p12=p[1];
         var p13=p[2];
@@ -113,7 +113,6 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
     var tfrom_pts = tMtx.multiply(hfrom_pts); //TODO: or is it hfrom_pts?
 
     // rescale, only needed for projective transform
-    /*
     for (var i=0; i < numTiePts; i++) {
         var z = tfrom_pts.values[2][i];
         if (z != 1.0) {
@@ -121,7 +120,6 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
             tfrom_pts.values[1][i] /= z;
         }
     }
-    */
 
     var sum =0;
     for(var i=0; i<numTiePts; i++) {

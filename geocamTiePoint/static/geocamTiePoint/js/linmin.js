@@ -1,7 +1,7 @@
 //This function works!
 function linmin(p,xi,ncom,pcom,xicom,points)
 {
-    var TOL = Math.pow(1.0*2.71828183,-8);
+    var TOL = Math.exp(-8);
     var n = p.length;
     ncom = n;
     pcom = p;

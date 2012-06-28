@@ -110,10 +110,9 @@ function putIntoMatrix(p,numTiePts)
         var p23=p[5];
         var p31=p[6];
         var p32=p[7];
-        var p33=p[8];
         tvals =[[p11,p12,p13],
                [p21,p22,p23],
-               [p31,p32,p33]];
+               [p31,p32,1]];
     } else {
         console.log("error in func: wrong number of parameters to tMtx!");
     }    

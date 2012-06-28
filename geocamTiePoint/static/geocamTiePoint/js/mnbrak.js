@@ -2,7 +2,8 @@ function mnbrak(ax,bx,ncom,pcom,xicom,points)
 {
     var GOLD=1.618034;
     var GLIMIT=100.0;
-    var TINY=Math.pow(2.06115362*10,-9);
+    var TINY=1e-20;
+    var ITMAX = 100;
     var fa = f1dim(ax,ncom,pcom,xicom,points);
     var fb = f1dim(bx,ncom,pcom,xicom,points);
     var shft3_ret;
@@ -19,6 +20,8 @@ function mnbrak(ax,bx,ncom,pcom,xicom,points)
 
     var cx=bx+GOLD*(bx-ax);
     var fc=f1dim(cx,ncom,pcom,xicom,points);
+
+    var step = 0;
 
     while (fb>fc) {
         
@@ -69,6 +72,11 @@ function mnbrak(ax,bx,ncom,pcom,xicom,points)
         fa = shft3_ret.fa;
         fb = shft3_ret.fb;
         fc = shft3_ret.fc;
+
+        if (step >= ITMAX) {
+            throw "mnbrak iterations maxed out";
+        }
+        step++;
     }
     return {ax:ax,bx:bx,cx:cx}
 }
