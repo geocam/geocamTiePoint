@@ -68,7 +68,7 @@ function generateMatrix(points, numTiePts)
     iter = powell_ret.iter;
     fret = powell_ret.fret;
     xi = powell_ret.xi;
-    return putIntoMatrix(finalpts,numTiePts);
+    return getTransform(powell_ret.finalpts);
 }
 
 function putIntoMatrix(p,numTiePts)

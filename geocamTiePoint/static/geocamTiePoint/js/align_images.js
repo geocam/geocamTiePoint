@@ -1,26 +1,42 @@
 
-function align_images(points)
-{
-    // convert to matrix format
+function getVMatrixFromPoints(points) {
     var V = new Matrix(points.length, 2);
-    var U = new Matrix(points.length, 2);
     for (var i=0; i < points.length; i++) {
         V.values[0][i] = points[i][0];
         V.values[1][i] = points[i][1];
+    }
+    return V;
+}
+
+function getSimpleUMatrixFromPoints(points) {
+    var U = new Matrix(points.length, 2);
+    for (var i=0; i < points.length; i++) {
         U.values[0][i] = points[i][2];
         U.values[1][i] = points[i][3];
     }
+    return U;
+}
 
-    // run linear regression
-    var result = linear_regression(V, U);
-    var m = result[0];
-    var b = result[1];
+function getProjectiveUMatrixFromPoints(points) {
+    var U = new Matrix(points.length, 3);
+    for (var i=0; i < points.length; i++) {
+        U.values[0][i] = points[i][2];
+        U.values[1][i] = points[i][3];
+        U.values[2][i] = 1;
+    }
+    return U;
+}
 
-    // extract the named parameters the optimizer wants
-    return {xscale: m.values[0][0],
-            yscale: m.values[1][0],
-            tx: b.values[0][0],
-            ty: b.values[1][0]};
+function getQuadraticUMatrixFromPoints(points) {
+    var U = new Matrix(points.length, 5);
+    for (var i=0; i < points.length; i++) {
+        U.values[0][i] = Math.pow(points[i][2], 2);
+        U.values[1][i] = Math.pow(points[i][3], 2);
+        U.values[2][i] = points[i][2];
+        U.values[3][i] = points[i][3];
+        U.values[4][i] = 1;
+    }
+    return U;
 }
 
 function linear_regression(V, U)
@@ -55,6 +71,23 @@ function linear_regression(V, U)
         console.log('b: ' + JSON.stringify(b));
     }
     return [m, b];
+}
+
+function align_images(points)
+{
+    var V = getVMatrixFromPoints(points);
+    var U = getSimpleUMatrixFromPoints(points);
+
+    // run linear regression
+    var result = linear_regression(V, U);
+    var m = result[0];
+    var b = result[1];
+
+    // extract the named parameters the optimizer wants
+    return {xscale: m.values[0][0],
+            yscale: m.values[1][0],
+            tx: b.values[0][0],
+            ty: b.values[1][0]};
 }
 
 function test_align_error(name, a, b) {

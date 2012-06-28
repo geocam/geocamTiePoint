@@ -196,6 +196,17 @@ Matrix.prototype.print = function () {
   return this;
 };
 
+// sum of squares of the matrix elements
+Matrix.prototype.squareSum = function () {
+    var sum = 0;
+    for (var x  = 0; x < this.w; ++x) {
+        for (var y = 0; y < this.h; ++y) {
+            sum += Math.pow(this.values[y][x], 2);
+        }
+    }
+    return sum;
+}
+
 // mean of the norms of the matrix columns
 Matrix.prototype.meanNorm = function () {
     var sum = 0;

@@ -356,17 +356,7 @@ function save(jsonData) {
 	}
 	var data = jsonData['data'];
 	data['points'] = points;
-
-	var transformMatrix = generateMatrix(points, points.length);
-	var transformType = null;
-	if (points.length < 4)
-	    transformType = "affine";
-	else if (points.length >= 4)
-	    transformType = "projective";
-	data['transform'] = {
-	    'type': transformType,
-	    'matrix': transformMatrix
-	};
+	data['transform'] = generateMatrix(points, points.length);
 
 	var newJson = JSON.stringify(data);
 	jsonData['data'] = newJson;
