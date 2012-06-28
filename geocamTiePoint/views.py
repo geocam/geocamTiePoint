@@ -33,6 +33,7 @@ from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay
 
 TILE_SIZE = 256.
+PATCH_SIZE = 32
 INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
@@ -328,18 +329,14 @@ class QuadraticTransform(object):
         # estimate an initial value when calculating the inverse.
         self.proj = ProjectiveTransform(self.matrix[:, 2:])
 
-    def _forward0(self, u):
-        v0 = matrix.dot(u)
-        # projective rescaling: divide by z and truncate
-        return (v0 / v0[2])[:2]
-
     def _residuals(self, v, u):
-        vapprox = self._forward0(u)
+        vapprox = self.forward(u)
         return (vapprox - v)
 
     def forward(self, ulist):
         u = numpy.array([ulist[0]**2, ulist[1]**2, ulist[0], ulist[1], 1])
-        v = self._forward0(u)
+        v0 = self.matrix.dot(u)
+        v = (v0 / v0[2])[:2]
         return v.tolist()
 
     def reverse(self, vlist):
@@ -351,10 +348,10 @@ class QuadraticTransform(object):
         u0 = self.proj.reverse(vlist)
 
         # run levenberg-marquardt to get an exact inverse.
-        umin = leastsq(lambda u: self._residuals(v, u),
-                       u0)
+        umin, error = leastsq(lambda u: self._residuals(v, u),
+                              u0)
 
-        return umin
+        return umin.tolist()
 
 def makeTransform(transformDict):
     transformType = transformDict['type']
@@ -367,6 +364,9 @@ def makeTransform(transformDict):
         raise ValueError('unknown transform type %s, expected one of: projective, quadratic'
                          % transformType)
 
+def flatten(listOfLists):
+    return [item for subList in listOfLists for item in subList]
+
 def generateWarpedQuadTree(image, transformDict, basePath):
     transform = makeTransform(transformDict)
     corners = [[0,0],[image.size[0],0],[0,image.size[1]],list(image.size)]
@@ -378,6 +378,7 @@ def generateWarpedQuadTree(image, transformDict, basePath):
         print >> sys.stderr, 'mercatorCorners:', mercatorCorners
         corners2 = [transform.reverse(corner)
                     for corner in mercatorCorners]
+        print >> sys.stderr, 'zip:', zip(corners, corners2)
         for i, pair in enumerate(zip(corners, corners2)):
             c1, c2 = pair
             print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
@@ -395,30 +396,75 @@ def generateWarpedQuadTree(image, transformDict, basePath):
             bounds.extend(tileCoords)
         xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
         xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
+        doubleSize = (int(TILE_SIZE * 2),) * 2
         for nx in xrange(int(xmin), int(xmax) + 1):
             for ny in xrange(int(ymin), int(ymax) + 1):
                 corners = tileExtent(zoom, nx, ny)
-                imageCorners = []
-                for corner in corners:
-                    output = transform.reverse(corner)
-                    output = [int(round(x)) for x in output]
-                    imageCorners.extend(output)
-                tileData = image.transform((int(TILE_SIZE*2),)*2, Image.QUAD,
-                                           imageCorners, Image.BICUBIC)
-                mask = baseMask.transform((int(TILE_SIZE),)*2, Image.QUAD,
-                                          imageCorners, Image.BICUBIC)
-               
-                tileData = tileData.resize((int(TILE_SIZE),)*2, Image.ANTIALIAS)
-                tileData.putalpha(mask)
+                if isinstance(transform, ProjectiveTransform):
+                    # projective -- do the whole tile in one go
+                    imageCorners = [[int(round(x))
+                                     for x in transform.reverse(corner)]
+                                    for corner in corners]
+                    transformArgs = (doubleSize,
+                                     Image.QUAD,
+                                     flatten(imageCorners),
+                                     Image.BICUBIC)
+
+                    print >> sys.stderr, 'corners:', corners
+                    print >> sys.stderr, 'transformArgs:', transformArgs
+
+                    tileData = image.transform(*transformArgs)
+                    tileMask = baseMask.transform(*transformArgs)
+                else:
+                    # quadratic -- do the tile in patches
+                    patchesPerTile = 8
+                    patchZoomOffset = math.log(patchesPerTile, 2)
+                    tileData = Image.new(image.mode, doubleSize)
+                    tileMask = Image.new(baseMask.mode, doubleSize)
+                    for ix in xrange(patchesPerTile):
+                        for iy in xrange(patchesPerTile):
+                            tileOrigin = corners[0]
+                            xoff = int(ix * PATCH_SIZE)
+                            yoff = int(iy * PATCH_SIZE)
+                            xx = tileOrigin[0] + xoff
+                            yy = tileOrigin[1] + yoff
+                            patchCorners = tileExtent(zoom + patchZoomOffset,
+                                                      nx * patchesPerTile + ix,
+                                                      ny * patchesPerTile + iy)
+                            imageCorners = [[int(round(x)) for x in transform.reverse(corner)]
+                                            for corner in patchCorners]
+                            transformArgs = ((int(PATCH_SIZE * 2),) * 2,
+                                             Image.QUAD,
+                                             flatten(imageCorners),
+                                             Image.BICUBIC)
+                            pasteBox = (2 * xoff,
+                                        2 * yoff,
+                                        2 * (xoff + PATCH_SIZE),
+                                        2 * (yoff + PATCH_SIZE))
+
+                            print >> sys.stderr, 'patchCorners:', patchCorners
+                            print >> sys.stderr, 'imageCorners:', imageCorners
+                            print >> sys.stderr, 'transformArgs:', transformArgs
+                            print >> sys.stderr, 'pasteBox:', pasteBox
+
+                            patchData = image.transform(*transformArgs)
+                            tileData.paste(patchData, pasteBox)
+
+                            patchMask = baseMask.transform(*transformArgs)
+                            tileMask.paste(patchMask, pasteBox)
+
+                tileData.putalpha(tileMask)
+                tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
                 if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
                     os.makedirs(basePath+'/%s/%s' % (zoom,nx))
-                if min(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], 0) < 0 or\
-                        max(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], image.size[0]) > image.size[0] or\
-                        min(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], 0) < 0 or\
-                        max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
-                    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-                else:
-                    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+                tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+                #if min(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], 0) < 0 or\
+                #        max(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], image.size[0]) > image.size[0] or\
+                #        min(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], 0) < 0 or\
+                #        max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
+                #    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+                #else:
+                #    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)

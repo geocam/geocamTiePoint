@@ -1,46 +1,51 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>{{ overlay.name }}</title>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-    <script type="text/javascript">
-      var overlay = JSON.parse('{{ overlay.data|safe }}');
-      var data_url = "{{ DATA_URL }}";
-    </script>
-    <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
-    <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>
-    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
+{% extends "base.html" %}
+{% block head %}
+<title>{{ overlay.name }}</title>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+{% endblock %}
+{% block style %}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+{% endblock %}
+{% block contents %}
+<div class="top">
+  <input type="text" id="title" class="title" value="{{ overlay.name }}" /><br>
+  <div class="action_section" style="float:left;"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /><input type="text" id="searchTextField" class="searchTextField"></div><!-- Begin right justify section --><div class="action_section" style="float:right;"><input type="button" value="reset" onClick="resetButtonClicked()" /><input type="button" id="save_button" value="save" onClick="saveButtonClicked()"></div>
+</div>
+<table class="map_area">
+  <tr>
+    <td><div class="map" id="map_canvas"></div></td>
+    <td><div class="map" id="image_canvas"></div></td>
+  </tr>
+</table>
+<div class="bottom">
+  
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
+<script type="text/javascript">
+  var overlay = JSON.parse('{{ overlay.data|safe }}');
+  var data_url = "{{ DATA_URL }}";
+</script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>
 
-    <!-- Grace's javascript matrix library -->
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/transform.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/f1dim.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/func.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/golden.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/linmin.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/matrix.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/mnbrak.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/myLibrary.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/powell.js"></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/run.js"></script>
-  </head>
-  <body onLoad="initialize()">
-    <div class="top">
-    <input type="text" id="title" class="title" value="{{ overlay.name }}" /><br>
-    <div class="action_section" style="float:left;"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /><input type="text" id="searchTextField" class="searchTextField"></div><!-- Begin right justify section --><div class="action_section" style="float:right;"><input type="button" value="reset" onClick="resetButtonClicked()" /><input type="button" id="save_button" value="save" onClick="saveButtonClicked()"></div>
-    </div>
-    <table class="map_area">
-      <tr>
-	<td><div class="map" id="map_canvas"></div></td>
-	<td><div class="map" id="image_canvas"></div></td>
-      </tr>
-    </table>
-    <div class="bottom">
-    
-    </div>
-  </body>
-</html>
+<!-- Grace's javascript matrix library -->
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/transform.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/f1dim.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/func.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/golden.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/linmin.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/matrix.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/mnbrak.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/myLibrary.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/powell.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/run.js"></script>
+{% endblock %}
+{% block jsInit %}
+initialize();
+{% endblock %}

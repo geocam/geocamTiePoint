@@ -5,12 +5,13 @@ html {
     margin: 0px;
 }
 
-body {
+body, div#contents {
     width: 100%;
     height: 100%;
-    position: absolute;
     padding: 0px;
     margin: 0px;
+    left: 0px;
+    overflow: hidden;
 }
 
 table.map_area {
