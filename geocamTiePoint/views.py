@@ -267,17 +267,51 @@ def tileExtent(zoom, x, y):
 def tileIndexToPixels(x,y):
     return x*TILE_SIZE, y*TILE_SIZE
 
+def getProjectiveInverse(matrix):
+    # http://www.cis.rit.edu/class/simg782/lectures/lecture_02/lec782_05_02.pdf (p. 33)
+    c0 = matrix[0, 0]
+    c1 = matrix[0, 1]
+    c2 = matrix[0, 2]
+    c3 = matrix[1, 0]
+    c4 = matrix[1, 1]
+    c5 = matrix[1, 2]
+    c6 = matrix[2, 0]
+    c7 = matrix[2, 1]
+    return numpy.array([[c4 - c5 * c7,
+                          c2 * c7 - c1,
+                          c1 * c5 - c2 * c4],
+                         [c5 * c6 - c3,
+                          c0 - c2 * c6,
+                          c3 * c2 - c0 * c5],
+                         [c3 * c7 - c4 * c6,
+                          c1 * c6 - c0 * c7,
+                          c0 * c4 - c1 * c3]])
+                          
+def applyProjectiveTransform(matrix, pt):
+    print >> sys.stderr, pt
+    u = numpy.array(pt + [1], 'd')
+    v0 = matrix.dot(u)
+    # projective rescaling: divide by z and truncate
+    v = (v0 / v0[2])[:2]
+    return v.tolist()
+
 def generateWarpedQuadTree(image, method, matrix, basePath):
-    matrix = numpy.matrix(matrix)
-    matrixInverse = numpy.linalg.inv(matrix)
-    corners = [[0,0],[image.size[0],0],[0,image.size[1]],image.size]
-    mercatorCorners = []
-    for corner in corners:
-        corner += (1,)
-        corner = numpy.matrix(corner).reshape(3,1)
-        output = (matrix * corner).reshape(1,3)
-        output = output.tolist()[0][:2]
-        mercatorCorners.append(output)
+    assert method == 'projective'
+    matrix = numpy.array(matrix)
+    matrixInverse = getProjectiveInverse(matrix)
+    corners = [[0,0],[image.size[0],0],[0,image.size[1]],list(image.size)]
+    mercatorCorners = [applyProjectiveTransform(matrix, corner)
+                       for corner in corners]
+
+    if 0:
+        # debug getProjectiveInverse
+        matrixInv = getProjectiveInverse(matrix)
+        corners2 = [applyProjectiveTransform(matrixInv, corner)
+                    for corner in mercatorCorners]
+        for i, pair in enumerate(zip(corners, corners2)):
+            c1, c2 = pair
+            print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
+
     bounds = Bounds()
     for corner in mercatorCorners:
         bounds.extend(corner)
@@ -296,10 +330,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 corners = tileExtent(zoom, nx, ny)
                 imageCorners = []
                 for corner in corners:
-                    corner += (1,)
-                    corner = numpy.matrix(corner).reshape(3,1)
-                    output = (matrixInverse * corner).reshape(1,3)
-                    output = output.tolist()[0][:2]
+                    output = applyProjectiveTransform(matrixInverse, corner)
                     output = [int(round(x)) for x in output]
                     imageCorners.extend(output)
                 tileData = image.transform((int(TILE_SIZE*2),)*2, Image.QUAD,
@@ -338,10 +369,10 @@ def pixelsToMeters(x, y, zoom):
     res = resolution(zoom)
     mx = (x * res) - ORIGIN_SHIFT
     my = -(y * res) + ORIGIN_SHIFT
-    return mx, my
+    return [mx, my]
 
 def metersToPixels(x, y, zoom):
     res = resolution(zoom)
     px = (x + ORIGIN_SHIFT) / res
     py = (-y + ORIGIN_SHIFT) / res
-    return px, py
+    return [px, py]
