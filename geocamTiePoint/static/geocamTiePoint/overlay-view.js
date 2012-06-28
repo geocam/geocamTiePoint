@@ -519,7 +519,8 @@ function debugFit() {
     fitMapPts.print();
     b.append('diff:');
     diff.print();
-    $('.matrix td').css('padding', '5px');
+    $('.matrix').css('padding', '5px');
+    $('.matrix td').css('padding-left', '10px');
 
     var greenIcon = new google.maps.MarkerImage("http://maps.google.com/mapfiles/ms/icons/green.png");
     for (var i=0; i < n; i++) {
