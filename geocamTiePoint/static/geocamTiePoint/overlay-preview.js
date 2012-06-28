@@ -1,6 +1,6 @@
 var tileSize=256;
 var offset=3;
-var opac = 0.4;
+var opac = 0.6;
 var OPACITY_MAX_PIXELS = 57; 
 var imageOverlay;
 
@@ -50,7 +50,7 @@ function initialize() {
     //insert the overlay map as first overlay map type at position 0
     map.overlayMapTypes.insertAt(0, transformedImageMapType);
 
-    var initialOpacity = 40;
+    var initialOpacity = 60;
    // imageOverlay = new CustomTileOverlay(map,initialOpacity);
    // imageOverlay.show();
 

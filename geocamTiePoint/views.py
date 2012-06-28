@@ -25,7 +25,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
-from scipy.optimize import leastsq
+#from scipy.optimize import leastsq
 
 from PIL import Image
 
