@@ -1,9 +1,8 @@
-<html>
-  <head>
-    <title>Success!</title>
-  </head>
-  <body>
-    <p>Successfully created new overlay! Click <a href="{% url geocamTiePoint_overlayId id %}">here</a> to continue.<br>
-    (Status: {{ status }})</p>
-  </body>
-</html>
+{% extends "base.html" %}
+{% block head %}
+<title>Success!</title>
+{% endblock %}
+{% block contents %}
+<p>Successfully created new overlay! Click <a href="{% url geocamTiePoint_overlayId id %}">here</a> to continue.<br>
+  (Status: {{ status }})</p>
+{% endblock %}

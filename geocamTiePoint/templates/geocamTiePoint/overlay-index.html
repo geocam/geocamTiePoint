@@ -1,17 +1,16 @@
-<html>
-  <head>
-    <title>Overlay Index</title>
-  </head>
-  <body>
-    <h3>Your Overlays</h3>
-    <div style="margin-bottom:8px;">[<a href="new">New Overlay</a>]</div>
-    <table>
-    {% for overlay in overlays %}
-    <tr>
+{% extends "base.html" %}
+{% block head %}
+<title>Overlay Index</title>
+{% endblock %}
+{% block contents %}
+<h3>Your Overlays</h3>
+<div style="margin-bottom:8px;">[<a href="new">New Overlay</a>]</div>
+<table>
+  {% for overlay in overlays %}
+  <tr>
     <td><a href="{{ overlay.key }}">{{ overlay.name }}</a></td>
     <td><a href="{{ overlay.key}}">edit</a></td>
     <td><a href="{{ overlay.key}}/delete/">delete</a></td>
     {% endfor %}
-    </table>
-  </body>
-</html>
+</table>
+{% endblock %}
