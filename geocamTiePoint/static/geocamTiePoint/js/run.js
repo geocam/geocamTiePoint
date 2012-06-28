@@ -19,6 +19,7 @@ function generateMatrix(points, numTiePts)
     var align_images_ret = align_images(points);    
     
     //to access return values, do, align_images_ret.xscale
+    console.log(align_images_ret);
     var xscale = align_images_ret.xscale;
     var yscale = align_images_ret.yscale;
     var tx = align_images_ret.tx;
