@@ -12,7 +12,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
     console.log('tform: ' + JSON.stringify(tform));
     console.log('Vapprox: ' + JSON.stringify(Vapprox));
     console.log('Verror: ' + JSON.stringify(Verror));
-    console.log('error: ' + JSON.stringify(error));
+    console.log('error: ' + error.toExponential(8));
     */
 
     return error;
