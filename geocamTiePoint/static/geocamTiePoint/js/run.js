@@ -38,7 +38,7 @@ function generateMatrix(points, numTiePts)
          Math.sin(theta),yscale*Math.cos(theta),tx,ty];
     } else if (numTiePts >=4) {
         p=[xscale*Math.cos(theta),-Math.sin(theta),tx,
-          Math.sin(theta),yscale*Math.cos(theta),ty,0,0,1];
+          Math.sin(theta),yscale*Math.cos(theta),ty,0,0];
     } else {
         console.log("ERROR: wrong number of tie points!");
     }    
