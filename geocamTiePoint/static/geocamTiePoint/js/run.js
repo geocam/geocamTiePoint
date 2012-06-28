@@ -17,9 +17,11 @@ function generateMatrix(points, numTiePts)
     var numTiePts = points.length;
     var ncom, pcom, xicom;
     var align_images_ret = align_images(points);    
+    console.log('points: ' + JSON.stringify(points));
+    test_align_error2('generateMatrix', points);
     
     //to access return values, do, align_images_ret.xscale
-    console.log(align_images_ret);
+    console.log('align_images_ret: ' + JSON.stringify(align_images_ret));
     var xscale = align_images_ret.xscale;
     var yscale = align_images_ret.yscale;
     var tx = align_images_ret.tx;
@@ -34,11 +36,13 @@ function generateMatrix(points, numTiePts)
     } else if (numTiePts ==3) {
         p=[xscale,yscale,theta,tx,ty];
     } else if (numTiePts ==4) {
-        p=[xscale*Math.cos(theta),-Math.sin(theta),
-         Math.sin(theta),yscale*Math.cos(theta),tx,ty];
+        p=[Math.cos(theta) * xscale, -Math.sin(theta) * yscale,
+           Math.sin(theta) * xscale, Math.cos(theta) * yscale,
+           tx, ty];
     } else if (numTiePts >=4) {
-        p=[xscale*Math.cos(theta),-Math.sin(theta),tx,
-          Math.sin(theta),yscale*Math.cos(theta),ty,0,0];
+        p = [Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx,
+             Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty,
+             0, 0];
     } else {
         console.log("ERROR: wrong number of tie points!");
     }    

@@ -36,9 +36,9 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
         theta=p[2];
         tx=p[3];
         ty=p[4];
-        tvals = [[xscale*Math.cos(theta), -Math.sin(theta), tx],
-                [Math.sin(theta), yscale*Math.cos(theta), ty],
-                [0, 0, 1]];
+        tvals = [[Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx],
+                 [Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty],
+                 [0, 0, 1]];
     } else if (numTiePts==4) {
         var a11=p[0];
         var a12=p[1];
@@ -76,6 +76,7 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
         }
     }
 
+    /*
     var hfrom_kernel = new Array(3);
     var hto_kernel = new Array(3);
  
@@ -95,15 +96,42 @@ function func(p,ncom,pcom,xicom,points) //p is params to tMtx
 
     var hfrom_pts = new Matrix(numTiePts,3,hfrom_kernel);//(3,numTiePts,hfrom_kernel);
     var hto_pts = new Matrix(numTiePts,3,hto_kernel);//(3,numTiePts, hto_kernel);
+    */
+
+    var hfrom_pts = new Matrix(numTiePts, 3);
+    var hto_pts = new Matrix(numTiePts, 3);
+    for (var i=0; i<numTiePts; i++) {
+        hfrom_pts.values[0][i] = x2[i];
+        hfrom_pts.values[1][i] = y2[i];
+        hfrom_pts.values[2][i] = 1;
+
+        hto_pts.values[0][i] = x1[i];
+        hto_pts.values[1][i] = y1[i];
+        hto_pts.values[2][i] = 1;
+    }
     
     var tfrom_pts = tMtx.multiply(hfrom_pts); //TODO: or is it hfrom_pts?
-    
+
+    // rescale, only needed for projective transform
+    /*
+    for (var i=0; i < numTiePts; i++) {
+        var z = tfrom_pts.values[2][i];
+        if (z != 1.0) {
+            tfrom_pts.values[0][i] /= z;
+            tfrom_pts.values[1][i] /= z;
+        }
+    }
+    */
+
     var sum =0;
     for(var i=0; i<numTiePts; i++) {
         sum += (Math.pow(hto_pts.values[0][i] - tfrom_pts.values[0][i],2))
-                +(Math.pow(hto_pts.values[1][i] - tfrom_pts.values[1][i],2))
-                +(Math.pow(hto_pts.values[2][i] - tfrom_pts.values[2][i],2));
+            +(Math.pow(hto_pts.values[1][i] - tfrom_pts.values[1][i],2));
     }
+    console.log('tMtx: ' + JSON.stringify(tvals) + ' sum: ' + sum.toExponential(8));
+    console.log('hfrom_pts: ' + JSON.stringify(hfrom_pts));
+    console.log('hto_pts: ' + JSON.stringify(hto_pts));
+    console.log('tfrom_pts: ' + JSON.stringify(tfrom_pts));
     return sum;     
 }
 

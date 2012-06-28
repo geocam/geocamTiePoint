@@ -44,6 +44,20 @@ Matrix.prototype.add = function (operand) {
   return new Matrix(this.w, this.h, values);
 };
 
+Matrix.prototype.subtract = function (operand) {
+  if (operand.w != this.w || operand.h != this.h) {
+    throw "Matrix add size mismatch";
+  }
+
+  var values = Matrix.allocate(this.w, this.h);
+  for (var y = 0; y < this.h; ++y) {
+    for (var x = 0; x < this.w; ++x) {
+      values[y][x] = this.values[y][x] - operand.values[y][x];
+    }
+  }
+  return new Matrix(this.w, this.h, values);
+};
+
 Matrix.prototype.transformProjectiveVector = function (operand) {
   var out = [];
   for (var y = 0; y < this.h; ++y) {
@@ -65,7 +79,7 @@ Matrix.prototype.multiply = function (operand) {
     if (operand.h != this.w) {
       throw "Matrix mult size mismatch";
     }
-    var values = Matrix.allocate(this.w, this.h);
+    var values = Matrix.allocate(operand.w, this.h);
     for (var y = 0; y < this.h; ++y) {
       for (var x = 0; x < operand.w; ++x) {
         var accum = 0;
@@ -182,3 +196,58 @@ Matrix.prototype.print = function () {
   return this;
 };
 
+// mean of the norms of the matrix columns
+Matrix.prototype.meanNorm = function () {
+    var sum = 0;
+    for (var x  = 0; x < this.w; ++x) {
+        var ysum = 0;
+        for (var y = 0; y < this.h; ++y) {
+            ysum += Math.pow(this.values[y][x], 2);
+        }
+        sum += Math.sqrt(ysum);
+    }
+    return sum / this.w;
+}
+
+// element-wise product, *not* matrix multiplication
+Matrix.prototype.elementMultiply = function (operand) {
+    if (this.w != operand.w || this.h != operand.h) {
+        throw "Matrix product size mismatch";
+    }
+
+    var result = new Matrix(this.w, this.h);
+    for (var y=0; y < this.h; ++y) {
+        for (var x=0; x < this.w; ++x) {
+            result.values[y][x] = this.values[y][x] * operand.values[y][x];
+        }
+    }
+    return result;
+}
+
+// element-wise division
+Matrix.prototype.elementDivide = function (operand) {
+    if (this.w != operand.w || this.h != operand.h) {
+        throw "Matrix product size mismatch";
+    }
+
+    var result = new Matrix(this.w, this.h);
+    for (var y=0; y < this.h; ++y) {
+        for (var x=0; x < this.w; ++x) {
+            result.values[y][x] = this.values[y][x] / operand.values[y][x];
+        }
+    }
+    return result;
+}
+
+// returns the mean of the columns of the matrix
+Matrix.prototype.meanColumn = function () {
+    var result = new Matrix(1, this.h);
+    for (var y=0; y < this.h; ++y) {
+        var sum = 0;
+        for (var x=0; x < this.w; ++x) {
+            sum += this.values[y][x];
+        }
+        result.values[y][0] = sum / this.w;
+    }
+    return result;
+}
