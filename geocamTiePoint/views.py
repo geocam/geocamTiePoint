@@ -25,6 +25,8 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
+from scipy.optimize import leastsq
+
 from PIL import Image
 
 from geocamTiePoint import models, forms, settings
@@ -173,8 +175,7 @@ def overlayIdWarp(request, key):
         transformType = data['transform']['type']
         transformMatrix = data['transform']['matrix']
         basePath = models.dataStorage.path('geocamTiePoint/registeredTiles/'+str(overlay.key))
-        generateWarpedQuadTree(Image.open(overlay.image.path), transformType,
-                               transformMatrix, basePath)
+        generateWarpedQuadTree(Image.open(overlay.image.path), data['transform'], basePath)
         return HttpResponse("{}")
     else:
         return HttpResponseNotAllowed(['GET','POST'])
@@ -277,15 +278,20 @@ def getProjectiveInverse(matrix):
     c5 = matrix[1, 2]
     c6 = matrix[2, 0]
     c7 = matrix[2, 1]
-    return numpy.array([[c4 - c5 * c7,
-                          c2 * c7 - c1,
-                          c1 * c5 - c2 * c4],
-                         [c5 * c6 - c3,
-                          c0 - c2 * c6,
-                          c3 * c2 - c0 * c5],
-                         [c3 * c7 - c4 * c6,
-                          c1 * c6 - c0 * c7,
-                          c0 * c4 - c1 * c3]])
+    result = numpy.array([[c4 - c5 * c7,
+                           c2 * c7 - c1,
+                           c1 * c5 - c2 * c4],
+                          [c5 * c6 - c3,
+                           c0 - c2 * c6,
+                           c3 * c2 - c0 * c5],
+                          [c3 * c7 - c4 * c6,
+                           c1 * c6 - c0 * c7,
+                           c0 * c4 - c1 * c3]])
+
+    # normalize just for the hell of it
+    result /= result[2, 2]
+
+    return result
                           
 def applyProjectiveTransform(matrix, pt):
     print >> sys.stderr, pt
@@ -295,18 +301,81 @@ def applyProjectiveTransform(matrix, pt):
     v = (v0 / v0[2])[:2]
     return v.tolist()
 
-def generateWarpedQuadTree(image, method, matrix, basePath):
-    assert method == 'projective'
-    matrix = numpy.array(matrix)
-    matrixInverse = getProjectiveInverse(matrix)
+class ProjectiveTransform(object):
+    def __init__(self, matrix):
+        self.matrix = numpy.array(matrix)
+        self.inverse = getProjectiveInverse(self.matrix)
+
+    def _apply(self, matrix, pt):
+        u = numpy.array(pt + [1], 'd')
+        v0 = matrix.dot(u)
+        # projective rescaling: divide by z and truncate
+        v = (v0 / v0[2])[:2]
+        return v.tolist()
+
+    def forward(self, pt):
+        self._apply(self.matrix, pt)
+        
+    def reverse(self, pt):
+        self._apply(self.inverse, pt)
+
+class QuadraticTransform(object):
+    def __init__(self, matrix):
+        self.matrix = numpy.array(matrix)
+
+        # there's a projective transform hiding in the quadratic
+        # transform if we drop the first two columns. we use it to
+        # estimate an initial value when calculating the inverse.
+        self.proj = ProjectiveTransform(self.matrix[:, 2:])
+
+    def _forward0(self, u):
+        v0 = matrix.dot(u)
+        # projective rescaling: divide by z and truncate
+        return (v0 / v0[2])[:2]
+
+    def _residuals(self, v, u):
+        vapprox = self._forward0(u)
+        return (vapprox - v)
+
+    def forward(self, ulist):
+        u = numpy.array([ulist[0]**2, ulist[1]**2, ulist[0], ulist[1], 1])
+        return self._forward0(u).tolist()
+
+    def reverse(self, vlist):
+        v = numpy.array(vlist)
+
+        # to get a rough initial value, apply the inverse of the simpler
+        # projective transform. this will give the exact answer if the
+        # quadratic terms happen to be 0.
+        u0 = self.proj.reverse(vlist)
+
+        # run levenberg-marquardt to get an exact inverse.
+        umin = leastsq(lambda u: self._residuals(v, u),
+                       u0)
+
+        return umin
+
+def makeTransform(transformDict):
+    transformType = transformDict['type']
+    transformMatrix = transformDict['matrix']
+    if transformType == 'projective':
+        return ProjectiveTransform(transformMatrix)
+    elif transformType == 'quadratic':
+        return QuadraticTransform(transformMatrix)
+    else:
+        raise ValueError('unknown transform type %s, expected one of: projective, quadratic'
+                         % transformType)
+
+def generateWarpedQuadTree(image, transformDict, basePath):
+    transform = makeTransform(transformDict)
     corners = [[0,0],[image.size[0],0],[0,image.size[1]],list(image.size)]
-    mercatorCorners = [applyProjectiveTransform(matrix, corner)
+    mercatorCorners = [transform.forward(corner)
                        for corner in corners]
 
     if 0:
         # debug getProjectiveInverse
         matrixInv = getProjectiveInverse(matrix)
-        corners2 = [applyProjectiveTransform(matrixInv, corner)
+        corners2 = [transform.reverse(corner)
                     for corner in mercatorCorners]
         for i, pair in enumerate(zip(corners, corners2)):
             c1, c2 = pair
@@ -330,7 +399,7 @@ def generateWarpedQuadTree(image, method, matrix, basePath):
                 corners = tileExtent(zoom, nx, ny)
                 imageCorners = []
                 for corner in corners:
-                    output = applyProjectiveTransform(matrixInverse, corner)
+                    output = transform.reverse(corner)
                     output = [int(round(x)) for x in output]
                     imageCorners.extend(output)
                 tileData = image.transform((int(TILE_SIZE*2),)*2, Image.QUAD,
