@@ -18,7 +18,7 @@ function generateMatrix(points, numTiePts)
     var ncom, pcom, xicom;
     var align_images_ret = align_images(points);    
     console.log('points: ' + JSON.stringify(points));
-    test_align_error2('generateMatrix', points);
+    //test_align_error2('generateMatrix', points);
     
     //to access return values, do, align_images_ret.xscale
     console.log('align_images_ret: ' + JSON.stringify(align_images_ret));
@@ -31,20 +31,36 @@ function generateMatrix(points, numTiePts)
 
     var theta = 0;
     var ftol = 0.001;
-    if (numTiePts ==2) {
-        p=[xscale,yscale,tx,ty];
-    } else if (numTiePts ==3) {
-        p=[xscale,yscale,theta,tx,ty];
-    } else if (numTiePts ==4) {
-        p=[Math.cos(theta) * xscale, -Math.sin(theta) * yscale,
-           Math.sin(theta) * xscale, Math.cos(theta) * yscale,
-           tx, ty];
-    } else if (numTiePts >=4) {
-        p = [Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx,
-             Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty,
-             0, 0];
+
+    // see func.js for implementation of these transforms
+    console.log('numTiePts: ' + numTiePts);
+    if (numTiePts >= 4) {
+        // set up affine part
+        var a = [Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx,
+                 Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty];
+
+        var USE_QUADRATIC = false;
+        if (USE_QUADRATIC && (numTiePts >= 7)) {
+            // 12-parameter quadratic
+            p = [0, 0, a[0], a[1], a[2],
+                 0, 0, a[3], a[4], a[5],
+                 0, 0];
+        } else if (numTiePts >= 5) {
+            // 8-parameter projective
+            p = a.concat([0, 0]);
+        } else {
+            // 6-parameter affine
+            p = a;
+        }              
+
+    } else if (numTiePts >= 3) {
+        // 5-parameter: scale, translation, rotation
+        p = [xscale,yscale,theta,tx,ty];
+    } else if (numTiePts >= 2) {
+        // 4-parameter: scale, translation
+        p = [xscale,yscale,tx,ty];
     } else {
-        console.log("ERROR: wrong number of tie points!");
+        throw "ERROR: generateMatrix: not enough tie points!";
     }    
    
     //matrix of unit vectors   

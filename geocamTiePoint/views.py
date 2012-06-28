@@ -314,10 +314,10 @@ class ProjectiveTransform(object):
         return v.tolist()
 
     def forward(self, pt):
-        self._apply(self.matrix, pt)
+        return self._apply(self.matrix, pt)
         
     def reverse(self, pt):
-        self._apply(self.inverse, pt)
+        return self._apply(self.inverse, pt)
 
 class QuadraticTransform(object):
     def __init__(self, matrix):
@@ -339,7 +339,8 @@ class QuadraticTransform(object):
 
     def forward(self, ulist):
         u = numpy.array([ulist[0]**2, ulist[1]**2, ulist[0], ulist[1], 1])
-        return self._forward0(u).tolist()
+        v = self._forward0(u)
+        return v.tolist()
 
     def reverse(self, vlist):
         v = numpy.array(vlist)
@@ -372,9 +373,9 @@ def generateWarpedQuadTree(image, transformDict, basePath):
     mercatorCorners = [transform.forward(corner)
                        for corner in corners]
 
-    if 0:
+    if 1:
         # debug getProjectiveInverse
-        matrixInv = getProjectiveInverse(matrix)
+        print >> sys.stderr, 'mercatorCorners:', mercatorCorners
         corners2 = [transform.reverse(corner)
                     for corner in mercatorCorners]
         for i, pair in enumerate(zip(corners, corners2)):
