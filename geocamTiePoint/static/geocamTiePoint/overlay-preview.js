@@ -25,7 +25,8 @@ var transformedImageMapTypeOptions = {
     maxZoom: maxZoom,
     minZoom: offset,
     radius: 1738000,
-    name: "transformed-image-map"
+    name: "transformed-image-map",
+    opacity: 0.5
 }
 
 var transformedImageMapType = new google.maps.ImageMapType(transformedImageMapTypeOptions);

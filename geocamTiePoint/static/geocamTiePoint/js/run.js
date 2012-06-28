@@ -39,7 +39,7 @@ function generateMatrix(points, numTiePts)
         var a = [Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx,
                  Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty];
 
-        var USE_QUADRATIC = false;
+        var USE_QUADRATIC = true;
         if (USE_QUADRATIC && (numTiePts >= 7)) {
             // 12-parameter quadratic
             p = [0, 0, a[0], a[1], a[2],
