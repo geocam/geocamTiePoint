@@ -68,7 +68,8 @@ class Bounds(object):
 def overlayIndex(request):
     if request.method == 'GET':
         overlays = models.Overlay.objects.all()
-        return render_to_response('overlay-index.html', {'overlays':overlays},
+        return render_to_response('geocamTiePoint/overlay-index.html',
+                                  {'overlays':overlays},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET','POST'])
@@ -76,8 +77,9 @@ def overlayIndex(request):
 def overlayDelete(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        return render_to_response('overlay-delete.html', {'overlay':overlay,
-                                                          'index_url':'/'+settings.TIEPOINT_URL+'/'},
+        return render_to_response('geocamTiePoint/overlay-delete.html',
+                                  {'overlay':overlay,
+                                   'index_url':'/'+settings.TIEPOINT_URL+'/'},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
@@ -105,23 +107,26 @@ def overlayNew(request):
             preData['key'] = overlay.key
             overlay.data = json.dumps(preData)
             overlay.save()
-            return render_to_response('new-overlay-result.html', {'status':'success',
-                                                                  'id':overlay.key},
+            return render_to_response('geocamTiePoint/new-overlay-result.html',
+                                      {'status':'success',
+                                       'id':overlay.key},
                                       context_instance=RequestContext(request))
     elif request.method == 'GET':
         form = forms.NewOverlayForm()
     else:
         return HttpResponseNotAllowed(('POST', 'GET'))
 
-    return render_to_response('new-overlay.html', {'form': form},
+    return render_to_response('geocamTiePoint/new-overlay.html',
+                              {'form': form},
                               context_instance=RequestContext(request))
 
 def overlayId(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        return render_to_response('overlay-view.html', {'overlay':overlay,
-                                                        'DATA_URL':settings.DATA_URL,
-                                                        'TIEPOINT_URL':settings.TIEPOINT_URL},
+        return render_to_response('geocamTiePoint/overlay-view.html',
+                                  {'overlay':overlay,
+                                   'DATA_URL':settings.DATA_URL,
+                                   'TIEPOINT_URL':settings.TIEPOINT_URL},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -129,9 +134,10 @@ def overlayId(request, key):
 def overlayIdPreview(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        return render_to_response('overlay-preview.html', {'overlay':overlay,
-                                                           'DATA_URL':settings.DATA_URL,
-                                                           'TIEPOINT_URL':settings.TIEPOINT_URL},
+        return render_to_response('geocamTiePoint/overlay-preview.html',
+                                  {'overlay':overlay,
+                                   'DATA_URL':settings.DATA_URL,
+                                   'TIEPOINT_URL':settings.TIEPOINT_URL},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -167,7 +173,7 @@ def overlayIdJson(request, key):
 @csrf_exempt
 def overlayIdWarp(request, key):
     if request.method == 'GET':
-        return render_to_response('warp-form.html',{},
+        return render_to_response('geocamTiePoint/warp-form.html',{},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
