@@ -43,6 +43,7 @@ PATCH_ZOOM_OFFSET = math.log(PATCHES_PER_TILE, 2)
 INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
+BENCHMARK_WARP_STEPS = False
 
 class Bounds(object):
     def __init__(self, *points):
@@ -440,23 +441,44 @@ def generateWarpedQuadTree(image, transformDict, basePath):
 
                 else:
                     # quadratic -- do the tile as a mesh of projective patches
+                    if BENCHMARK_WARP_STEPS:
+                        transformStart = time.time()
                     tileOrigin = corners[0]
                     doublePatchSize = PATCH_SIZE * 2
                     meshPatches = []
+
+                    patchTable = {}
+                    for ix in xrange(PATCHES_PER_TILE+1):
+                        for iy in xrange(PATCHES_PER_TILE+1):
+                            targetPatchOrigin = tileIndexToPixels(nx * PATCHES_PER_TILE + ix,
+                                                                  ny * PATCHES_PER_TILE + iy)
+                            mercatorPatchOrigin = pixelsToMeters(targetPatchOrigin[0],
+                                                                 targetPatchOrigin[1],
+                                                                 zoom + PATCH_ZOOM_OFFSET)
+                            sourcePatchOrigin = [int(round(x))
+                                                 for x in transform.reverse(mercatorPatchOrigin)]
+                            patchTable[(ix, iy)] = sourcePatchOrigin
+                    if BENCHMARK_WARP_STEPS:
+                        print
+                        print 'transformTime:', time.time() - transformStart
+
+                    if BENCHMARK_WARP_STEPS:
+                        meshStart = time.time()
                     for ix in xrange(PATCHES_PER_TILE):
                         for iy in xrange(PATCHES_PER_TILE):
-                            patchCorners = tileExtent(zoom + PATCH_ZOOM_OFFSET,
-                                                      nx * PATCHES_PER_TILE + ix,
-                                                      ny * PATCHES_PER_TILE + iy)
-                            sourceCorners = [[int(round(x)) for x in transform.reverse(corner)]
-                                             for corner in patchCorners]
+                            corners = ((ix, iy),
+                                       (ix, iy + 1),
+                                       (ix + 1, iy + 1),
+                                       (ix + 1, iy))
+                            sourcePatchCorners = [patchTable[corner]
+                                                  for corner in corners]
                             xoff = ix * doublePatchSize
                             yoff = iy * doublePatchSize
                             targetBox = (xoff,
                                          yoff,
                                          xoff + doublePatchSize,
                                          yoff + doublePatchSize)
-                            meshPatches.append([targetBox, flatten(sourceCorners)])
+                            meshPatches.append([targetBox, flatten(sourcePatchCorners)])
 
                             if 0:
                                 print >> sys.stderr, 'patchCorners:', patchCorners
@@ -471,14 +493,36 @@ def generateWarpedQuadTree(image, transformDict, basePath):
                     if 0:
                         print >> sys.stderr, 'meshPatches:'
                         print >> sys.stderr, json.dumps(meshPatches, indent=4)
+                    if BENCHMARK_WARP_STEPS:
+                        print 'meshTime:', time.time() - meshStart
 
+                if BENCHMARK_WARP_STEPS:
+                    warpDataStart = time.time()
                 tileData = image.transform(*transformArgs)
+                if BENCHMARK_WARP_STEPS:
+                    print 'warpDataTime:', time.time() - warpDataStart
+
+                if BENCHMARK_WARP_STEPS:
+                    warpMaskStart = time.time()
                 tileMask = baseMask.transform(*transformArgs)
+                if BENCHMARK_WARP_STEPS:
+                    print 'warpMaskTime:', time.time() - warpMaskStart
+
+                if BENCHMARK_WARP_STEPS:
+                    resizeStart = time.time()
                 tileData.putalpha(tileMask)
                 tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
                 if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
                     os.makedirs(basePath+'/%s/%s' % (zoom,nx))
+                if BENCHMARK_WARP_STEPS:
+                    print 'resizeTime:', time.time() - resizeStart
+
+                if BENCHMARK_WARP_STEPS:
+                    saveStart = time.time()
                 tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+                if BENCHMARK_WARP_STEPS:
+                    print 'saveTime:', time.time() - saveStart
+
                 #if min(sourceCorners[0], sourceCorners[2], sourceCorners[4], sourceCorners[6], 0) < 0 or\
                 #        max(sourceCorners[0], sourceCorners[2], sourceCorners[4], sourceCorners[6], image.size[0]) > image.size[0] or\
                 #        min(sourceCorners[1], sourceCorners[3], sourceCorners[5], sourceCorners[7], 0) < 0 or\
