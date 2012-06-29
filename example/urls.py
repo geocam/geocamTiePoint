@@ -11,13 +11,12 @@ from django.conf import settings
 from django.contrib import admin
 admin.autodiscover()
 
-import geocamTiePoint
+import geocamTiePoint, geocamTiePoint.urls
 
 urlpatterns = patterns('',
     # Example:
     # (r'^example/', include('example.foo.urls')),
-    (r'^'+geocamTiePoint.settings.TIEPOINT_URL+r'/',
-     include('geocamTiePoint.urls')),
+    (r'^', include(geocamTiePoint.urls)),
 
     # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
     # to INSTALLED_APPS to enable admin documentation:
