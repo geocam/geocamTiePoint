@@ -4,7 +4,7 @@
 {% endblock %}
 {% block contents %}
 <h3>Your Overlays</h3>
-<div style="margin-bottom:8px;">[<a href="new">New Overlay</a>]</div>
+<div style="margin-bottom:8px;">[<a href="{% url geocamTiePoint_overlayNew %}">New Overlay</a>]</div>
 <table>
   {% for overlay in overlays %}
   <tr>
