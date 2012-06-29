@@ -25,8 +25,6 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
-#from scipy.optimize import leastsq
-
 from PIL import Image
 
 from geocamTiePoint import models, forms, settings
@@ -354,6 +352,7 @@ class QuadraticTransform(object):
         u0 = self.proj.reverse(vlist)
 
         # run levenberg-marquardt to get an exact inverse.
+        from scipy.optimize import leastsq
         umin, error = leastsq(lambda u: self._residuals(v, u),
                               u0)
 

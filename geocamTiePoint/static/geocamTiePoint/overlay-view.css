@@ -15,7 +15,16 @@ body, div#contents {
 }
 
 table.map_area {
-    height:50%;
+    height:70%;
+    width: 100%;
+}
+
+table.map_area td {
+    width: 50%;
+}
+
+#map_canvas {
+    height: 100%;
     width: 100%;
 }
 

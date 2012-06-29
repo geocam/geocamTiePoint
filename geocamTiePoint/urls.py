@@ -9,28 +9,28 @@ from django.conf.urls.defaults import url, patterns
 urlpatterns = patterns(
     'geocamTiePoint.views',
 
-    url(r'^$', 'overlayIndex',
+    url(r'^overlay/$', 'overlayIndex',
         {}, 'geocamTiePoint_overlayIndex'),
 
-    url(r'^new/$', 'overlayNew',
+    url(r'^overlay/new/$', 'overlayNew',
         {}, 'geocamTiePoint_overlayNew'),
 
-    url(r'^(?P<key>\d+)/$', 'overlayId',
+    url(r'^overlay/(?P<key>\d+)/$', 'overlayId',
         {}, 'geocamTiePoint_overlayId'),
 
-    url(r'^(?P<key>\d+).json$', 'overlayIdJson',
+    url(r'^overlay/(?P<key>\d+).json$', 'overlayIdJson',
         {}, 'geocamTiePoint_overlayIdJson'),
 
-    url(r'^(?P<key>\d+)/warp/$', 'overlayIdWarp',
+    url(r'^overlay/(?P<key>\d+)/warp/$', 'overlayIdWarp',
         {}, 'geocamTiePoint_overlayIdWarp'),
 
-    url(r'^(?P<key>\d+)/delete/$', 'overlayDelete',
+    url(r'^overlay/(?P<key>\d+)/delete/$', 'overlayDelete',
         {}, 'geocamTiePoint_overlayDelete'),
 
-    url(r'^(?P<key>\d+)/preview/$', 'overlayIdPreview',
+    url(r'^overlay/(?P<key>\d+)/preview/$', 'overlayIdPreview',
         {}, 'geocamTiePoint_overlayIdPreview'),
 
-    url(r'^(?P<key>\d+)/(?P<fileName>\S+)$',
+    url(r'^overlay/(?P<key>\d+)/(?P<fileName>\S+)$',
         'overlayIdImageFileName',
         {}, 'geocamTiePoint_overlayIdImageFileName'),
 

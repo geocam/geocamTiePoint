@@ -1,16 +1,27 @@
 {% extends "base.html" %}
+
 {% block head %}
 <title>{{ overlay.name }}</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
-{% endblock %}
+{% endblock head %}
+
 {% block style %}
+{{ block.super }}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
-{% endblock %}
+{% endblock style %}
+
 {% block contents %}
 <div class="top">
   <input type="text" id="title" class="title" value="{{ overlay.name }}" /><br>
-  <div class="action_section" style="float:left;"><input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" /><input type="button" value="preview" onClick="window.location='preview/'" /><input type="button" value="back" onClick="window.location='/{{ TIEPOINT_URL }}'" /><input type="text" id="searchTextField" class="searchTextField"></div><!-- Begin right justify section --><div class="action_section" style="float:right;"><input type="button" value="reset" onClick="resetButtonClicked()" /><input type="button" id="save_button" value="save" onClick="saveButtonClicked()"></div>
+  <div class="action_section" style="float:left;">
+    <input type="text" id="searchTextField" class="searchTextField">
+    <span style="padding-right: 100px;"></span>
+    <input type="button" id="save_button" value="save" onClick="saveButtonClicked()">
+    <input type="button" id="warp_button" value="warp" onClick="warpButtonClicked()" />
+    <input type="button" value="preview" onClick="window.location='preview/'" />
+    <input type="button" value="reset" onClick="resetButtonClicked()" />
+  </div>
 </div>
 <table class="map_area">
   <tr>
@@ -21,8 +32,10 @@
 <div class="bottom">
   
 </div>
-{% endblock %}
+{% endblock contents %}
+
 {% block scripts %}
+{{ block.super }}
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
@@ -45,7 +58,8 @@
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/myLibrary.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/powell.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/run.js"></script>
-{% endblock %}
+{% endblock scripts %}
+
 {% block jsInit %}
 initialize();
 {% endblock %}

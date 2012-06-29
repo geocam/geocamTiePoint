@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+
 {% block head %}
 <title>Overlay Index</title>
-{% endblock %}
+{% endblock head %}
+
 {% block contents %}
 <h3>Your Overlays</h3>
 <div style="margin-bottom:8px;">[<a href="{% url geocamTiePoint_overlayNew %}">New Overlay</a>]</div>
@@ -11,6 +13,7 @@
     <td><a href="{{ overlay.key }}">{{ overlay.name }}</a></td>
     <td><a href="{{ overlay.key}}">edit</a></td>
     <td><a href="{{ overlay.key}}/delete/">delete</a></td>
-    {% endfor %}
+  </tr>
+  {% endfor %}
 </table>
-{% endblock %}
+{% endblock contents %}
