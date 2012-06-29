@@ -34,7 +34,6 @@ var transformedImageMapTypeOptions = {
 
 var transformedImageMapType = new google.maps.ImageMapType(transformedImageMapTypeOptions);
 
-
 var map;
 var currCity = new google.maps.LatLng(0,0);//figure this out form tie points
 
