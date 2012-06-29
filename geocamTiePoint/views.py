@@ -9,6 +9,7 @@ import base64
 import os
 import math
 import sys
+import time
 import numpy
 import numpy.linalg
 try:
@@ -25,6 +26,11 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 
+try:
+    from scipy.optimize import leastsq
+except ImportError:
+    pass  # only needed for quadratic model with many tie points
+
 from PIL import Image
 
 from geocamTiePoint import models, forms, settings
@@ -32,6 +38,8 @@ from geocamTiePoint.models import Overlay
 
 TILE_SIZE = 256.
 PATCH_SIZE = 32
+PATCHES_PER_TILE = int(TILE_SIZE / PATCH_SIZE)
+PATCH_ZOOM_OFFSET = math.log(PATCHES_PER_TILE, 2)
 INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
@@ -352,7 +360,10 @@ class QuadraticTransform(object):
         u0 = self.proj.reverse(vlist)
 
         # run levenberg-marquardt to get an exact inverse.
-        from scipy.optimize import leastsq
+        try:
+            leastsq
+        except NameError:
+            raise ImportError('scipy.optimize.leastsq')
         umin, error = leastsq(lambda u: self._residuals(v, u),
                               u0)
 
@@ -394,6 +405,9 @@ def generateWarpedQuadTree(image, transformDict, basePath):
     baseMask = Image.new('L', image.size, 255)
 
     maxZoom = calculateMaxZoom(bounds, image)
+    print >> sys.stderr, 'warping...'
+    totalTiles = 0
+    startTime = time.time()
     for zoom in xrange(int(maxZoom), -1, -1):
         bounds = Bounds()
         for corner in mercatorCorners:
@@ -401,75 +415,81 @@ def generateWarpedQuadTree(image, transformDict, basePath):
             bounds.extend(tileCoords)
         xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
         xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
+        maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
+        totalTiles += maxNumTiles
+        sys.stderr.write('zoom %d: generating %d tiles' % (zoom, maxNumTiles))
         doubleSize = (int(TILE_SIZE * 2),) * 2
         for nx in xrange(int(xmin), int(xmax) + 1):
             for ny in xrange(int(ymin), int(ymax) + 1):
+                sys.stderr.write('.')
                 corners = tileExtent(zoom, nx, ny)
+
                 if isinstance(transform, ProjectiveTransform):
                     # projective -- do the whole tile in one go
-                    imageCorners = [[int(round(x))
+                    sourceCorners = [[int(round(x))
                                      for x in transform.reverse(corner)]
                                     for corner in corners]
                     transformArgs = (doubleSize,
                                      Image.QUAD,
-                                     flatten(imageCorners),
+                                     flatten(sourceCorners),
                                      Image.BICUBIC)
 
-                    print >> sys.stderr, 'corners:', corners
-                    print >> sys.stderr, 'transformArgs:', transformArgs
+                    if 0:
+                        print >> sys.stderr, 'corners:', corners
+                        print >> sys.stderr, 'transformArgs:', transformArgs
 
-                    tileData = image.transform(*transformArgs)
-                    tileMask = baseMask.transform(*transformArgs)
                 else:
-                    # quadratic -- do the tile in patches
-                    patchesPerTile = 8
-                    patchZoomOffset = math.log(patchesPerTile, 2)
-                    tileData = Image.new(image.mode, doubleSize)
-                    tileMask = Image.new(baseMask.mode, doubleSize)
-                    for ix in xrange(patchesPerTile):
-                        for iy in xrange(patchesPerTile):
-                            tileOrigin = corners[0]
-                            xoff = int(ix * PATCH_SIZE)
-                            yoff = int(iy * PATCH_SIZE)
-                            xx = tileOrigin[0] + xoff
-                            yy = tileOrigin[1] + yoff
-                            patchCorners = tileExtent(zoom + patchZoomOffset,
-                                                      nx * patchesPerTile + ix,
-                                                      ny * patchesPerTile + iy)
-                            imageCorners = [[int(round(x)) for x in transform.reverse(corner)]
-                                            for corner in patchCorners]
-                            transformArgs = ((int(PATCH_SIZE * 2),) * 2,
-                                             Image.QUAD,
-                                             flatten(imageCorners),
-                                             Image.BICUBIC)
-                            pasteBox = (2 * xoff,
-                                        2 * yoff,
-                                        2 * (xoff + PATCH_SIZE),
-                                        2 * (yoff + PATCH_SIZE))
+                    # quadratic -- do the tile as a mesh of projective patches
+                    tileOrigin = corners[0]
+                    doublePatchSize = PATCH_SIZE * 2
+                    meshPatches = []
+                    for ix in xrange(PATCHES_PER_TILE):
+                        for iy in xrange(PATCHES_PER_TILE):
+                            patchCorners = tileExtent(zoom + PATCH_ZOOM_OFFSET,
+                                                      nx * PATCHES_PER_TILE + ix,
+                                                      ny * PATCHES_PER_TILE + iy)
+                            sourceCorners = [[int(round(x)) for x in transform.reverse(corner)]
+                                             for corner in patchCorners]
+                            xoff = ix * doublePatchSize
+                            yoff = iy * doublePatchSize
+                            targetBox = (xoff,
+                                         yoff,
+                                         xoff + doublePatchSize,
+                                         yoff + doublePatchSize)
+                            meshPatches.append([targetBox, flatten(sourceCorners)])
 
-                            print >> sys.stderr, 'patchCorners:', patchCorners
-                            print >> sys.stderr, 'imageCorners:', imageCorners
-                            print >> sys.stderr, 'transformArgs:', transformArgs
-                            print >> sys.stderr, 'pasteBox:', pasteBox
+                            if 0:
+                                print >> sys.stderr, 'patchCorners:', patchCorners
+                                print >> sys.stderr, 'sourceCorners:', sourceCorners
+                                print >> sys.stderr, 'targetBox:', targetBox
 
-                            patchData = image.transform(*transformArgs)
-                            tileData.paste(patchData, pasteBox)
+                    transformArgs = (doubleSize,
+                                     Image.MESH,
+                                     meshPatches,
+                                     Image.BICUBIC)
 
-                            patchMask = baseMask.transform(*transformArgs)
-                            tileMask.paste(patchMask, pasteBox)
+                    if 0:
+                        print >> sys.stderr, 'meshPatches:'
+                        print >> sys.stderr, json.dumps(meshPatches, indent=4)
 
+                tileData = image.transform(*transformArgs)
+                tileMask = baseMask.transform(*transformArgs)
                 tileData.putalpha(tileMask)
                 tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
                 if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
                     os.makedirs(basePath+'/%s/%s' % (zoom,nx))
                 tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-                #if min(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], 0) < 0 or\
-                #        max(imageCorners[0], imageCorners[2], imageCorners[4], imageCorners[6], image.size[0]) > image.size[0] or\
-                #        min(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], 0) < 0 or\
-                #        max(imageCorners[1], imageCorners[3], imageCorners[5], imageCorners[7], image.size[1]) > image.size[1]:
+                #if min(sourceCorners[0], sourceCorners[2], sourceCorners[4], sourceCorners[6], 0) < 0 or\
+                #        max(sourceCorners[0], sourceCorners[2], sourceCorners[4], sourceCorners[6], image.size[0]) > image.size[0] or\
+                #        min(sourceCorners[1], sourceCorners[3], sourceCorners[5], sourceCorners[7], 0) < 0 or\
+                #        max(sourceCorners[1], sourceCorners[3], sourceCorners[5], sourceCorners[7], image.size[1]) > image.size[1]:
                 #    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
                 #else:
                 #    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
+        sys.stderr.write('\n')
+    elapsedTime = time.time() - startTime
+    print >> sys.stderr, ('warping complete: %d tiles, elapsed time %.1f seconds = %d ms/tile'
+                          % (totalTiles, elapsedTime, int(1000 * elapsedTime / totalTiles)))
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
