@@ -42,6 +42,7 @@ var markerIcon = new google.maps.MarkerImage("http://maps.gstatic.com/mapfiles/m
 var dragging = false;
 
 var undoStack = new Array();
+var redoStack = new Array();
 
 function getImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
@@ -235,7 +236,7 @@ function getNormalizedCoord(coord, zoom) {
 
 function handleImageClick(event) {
     if (dragging) return;
-    pushState();
+    actionPerformed();
     var latLng = event.latLng;
     var coord = latLonToPixel(latLng);
     var index = imageMarkers.length;
@@ -266,7 +267,7 @@ function handleImageClick(event) {
 
 function handleMapClick(event) {
     if (dragging) return;
-    pushState();
+    actionPerformed();
     var latLng = event.latLng;
     var coord = latLonToMeters(latLng);
     var index = mapMarkers.length;
@@ -425,7 +426,7 @@ function saveButtonClicked() {
 }
 
 function resetButtonClicked() {
-    pushState();
+    actionPerformed();
     reset();
 }
 
@@ -444,7 +445,7 @@ function reset() {
     mapCoords = new Array();
 }
 
-function pushState() {
+function pushState(stack) {
     var data = overlay;
     if (imageCoords.length || mapCoords.length) {
 	var points = new Array();
@@ -470,12 +471,13 @@ function pushState() {
 	data['points'] = new Array();
     }
     var newJson = JSON.stringify(data);
-    undoStack.push(newJson);
+    stack.push(newJson);
 }
 
-function popState() {
+function popState(stack) {
+    if (stack.length < 1) return;
     reset(); // clear state
-    var data = JSON.parse(undoStack.pop());
+    var data = JSON.parse(stack.pop());
 
     if (data['points']) {
 	for (var point=0; point<data['points'].length; point++) {
@@ -545,6 +547,28 @@ function popState() {
 	    }
 	}
     }
+
+    return JSON.stringify(data);
+}
+
+function undo() {
+    if (undoStack.length < 1) return;
+    pushState(redoStack);
+    popState(undoStack);
+}
+
+function redo() {
+    if (redoStack.length < 1) return;
+    pushState(undoStack);
+    popState(redoStack);
+}
+
+function actionPerformed() {
+    if (redoStack.length > 0) {
+	for (var i=0;i<redoStack.length;i++)
+	    undoStack.push(redoStack.pop());
+    }
+    pushState(undoStack);
 }
 
 function latLonToMeters(latLon) {

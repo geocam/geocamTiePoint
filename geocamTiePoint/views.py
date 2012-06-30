@@ -10,6 +10,7 @@ import os
 import math
 import sys
 import time
+import tarfile
 import numpy
 import numpy.linalg
 try:
@@ -190,6 +191,16 @@ def overlayIdWarp(request, key):
         transformMatrix = data['transform']['matrix']
         basePath = models.dataStorage.path('geocamTiePoint/registeredTiles/'+str(overlay.key))
         generateWarpedQuadTree(Image.open(overlay.image.path), data['transform'], basePath)
+        tarFilePath = models.dataStorage.path('geocamTiePoint/tileArchives/')
+        if not os.path.exists(tarFilePath):
+            os.makedirs(tarFilePath)
+        oldPath = os.getcwd()
+        os.chdir(basePath)
+        tarFile = tarfile.open(tarFilePath+'/'+str(overlay.key)+'.tar.gz', 'w:gz')
+        for name in os.listdir(os.getcwd()):
+            tarFile.add(name)
+        os.chdir(oldPath)
+        tarFile.close()
         return HttpResponse("{}")
     else:
         return HttpResponseNotAllowed(['GET','POST'])
