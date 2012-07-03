@@ -1,0 +1,30 @@
+{% extends "base.html"%}
+
+{% block head %}
+<title> Rotate Image Until North is Up</title>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type = "text/javascript">
+    var image = "{{ image }}";
+</script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/rotate-overlay.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+{% endblock scripts %}
+
+{% block contents %}
+<h4> Rotate the image by 90 deg clockwise or counter clockwise. </h4><br>
+<div>
+<img src=image id="rotate_image" alt="some_text" width="300" height="300"/> <br> 
+<input type="button" id="rotate_left_button" value="rotate left" onClick="rotateLeftButtonClicked()">
+<input type="button" id="rotate_right_button" value="rotate right" onClick="rotateRightButtonClicked()"> </br>
+</div>
+
+<form action="." method="POST">
+<input type="submit" id="save_image" value="save image"/>
+<input type="hidden" id="angle_value" name="angle" value="0" />
+</form>
+{% endblock contents %}
+
