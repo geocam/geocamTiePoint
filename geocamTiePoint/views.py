@@ -11,6 +11,7 @@ import math
 import sys
 import time
 import tarfile
+
 import numpy
 import numpy.linalg
 try:
@@ -26,6 +27,7 @@ from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.core.urlresolvers import reverse
 
 try:
     from scipy.optimize import leastsq
@@ -86,13 +88,12 @@ def overlayDelete(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-delete.html',
-                                  {'overlay':overlay,
-                                   'index_url':'/'+settings.TIEPOINT_URL+'/'},
+                                  {'overlay':overlay},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
         overlay.delete()
-        return HttpResponseRedirect("/"+settings.TIEPOINT_URL+'/')
+        return HttpResponseRedirect(reverse('geocamTiePoint_overlayIndex'))
 
 def overlayNew(request):
     if request.method == 'POST':
@@ -109,7 +110,7 @@ def overlayNew(request):
             basePath = models.dataStorage.path('geocamTiePoint/tiles/'+str(overlay.key))
             generateQuadTree(image,basePath)
             preData['points'] = []
-            preData['url'] = '/'+settings.TIEPOINT_URL+'/'+str(overlay.key)+'.json'
+            preData['url'] = reverse('geocamTiePoint_overlayIdJson', args=[overlay.key])
             preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
             preData['imageSize'] = (overlay.image.width, overlay.image.height)
             preData['key'] = overlay.key
@@ -133,8 +134,7 @@ def overlayId(request, key):
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-view.html',
                                   {'overlay':overlay,
-                                   'DATA_URL':settings.DATA_URL,
-                                   'TIEPOINT_URL':settings.TIEPOINT_URL},
+                                   'DATA_URL':settings.DATA_URL},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -144,8 +144,7 @@ def overlayIdPreview(request, key):
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-preview.html',
                                   {'overlay':overlay,
-                                   'DATA_URL':settings.DATA_URL,
-                                   'TIEPOINT_URL':settings.TIEPOINT_URL},
+                                   'DATA_URL':settings.DATA_URL},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])

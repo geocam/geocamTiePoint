@@ -43,7 +43,7 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
 <script type="text/javascript">
-  var overlay = JSON.parse('{{ overlay.data|safe }}');
+  var overlay = {{ overlay.data|safe }};
   var data_url = "{{ DATA_URL }}";
 </script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>

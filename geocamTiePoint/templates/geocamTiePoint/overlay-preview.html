@@ -13,9 +13,8 @@
 {% block scripts %}
 {{ block.super }}
 <script type="text/javascript">
-  var overlay = JSON.parse('{{ overlay.data|safe }}'); 
+  var overlay = {{ overlay.data|safe }};
   var data_url = "{{DATA_URL}}"; 
-  var tiepoint_url = "{{TIEPOINT_URL}}";
 </script>    
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
