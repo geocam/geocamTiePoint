@@ -14,4 +14,3 @@
 Django
 PIL
 numpy
-django-piston
