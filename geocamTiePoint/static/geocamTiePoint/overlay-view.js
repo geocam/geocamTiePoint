@@ -50,10 +50,12 @@ function getImageTileUrl(coord, zoom) {
     if (!normalizedCoord)
 	return null;
 
-    var bounds = Math.pow(2,zoom);
-    return data_url+"geocamTiePoint/tiles/" + overlay['key'] +
-	'/' + zoom + '/' + normalizedCoord.x + '/' +
-	normalizedCoord.y + '.jpg';
+    var bounds = Math.pow(2, zoom);
+    return overlay.tilesUrl
+        + zoom
+        + '/' + normalizedCoord.x
+        + '/' + normalizedCoord.y
+        + '.jpg';
 }
 
 function initialize() {

@@ -13,15 +13,16 @@ import math
 import sys
 import time
 import tarfile
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+
+from django.http import HttpResponse
 
 from PIL import Image
-
 import numpy
 import numpy.linalg
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
 
 try:
     from scipy.optimize import leastsq
@@ -37,6 +38,11 @@ ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
 BENCHMARK_WARP_STEPS = False
 
+class ZoomTooBig(Exception):
+    pass
+
+class OutOfBounds(Exception):
+    pass
 
 class Bounds(object):
     def __init__(self, *points):
@@ -74,23 +80,35 @@ def splitArray(array, by):
         newArray.append(array[i:i+by])
     return newArray
 
-def testOutsideImage(point, coords):
-    upperLeft, upperRight, lowerLeft, lowerRight = coords
-    if point[0] < min(upperLeft[0], lowerLeft[0]):
-        return True
-    if point[1] < min(upperLeft[1], upperRight[1]):
-        return True
-    if point[0] > max(upperRight[0], lowerRight[0]):
-        return True
-    if point[1] > max(lowerLeft[1], lowerRight[1]):
-        return True
-    if point[0] > max(upperLeft[0], lowerLeft[0]) and\
-            point[0] < min(upperRight[0], lowerRight[0]) and\
-            point[1] > max(lowerLeft[1], lowerRight[1]) and\
-            point[1] < min(upperRight[1], upperRight[1]):
-        return False
-    # just assuming it's in the image, even though it might not be
-    return False
+def testOutsideCorners(point, corners):
+    x, y = point
+    upperLeft, upperRight, lowerLeft, lowerRight = corners
+
+    left = min(upperLeft[0], lowerLeft[0])
+    right = max(upperRight[0], lowerRight[0])
+    top = min(upperLeft[1], upperRight[1])
+    bottom = max(lowerLeft[1], lowerRight[1])
+
+    inside = ((left <= x <= right)
+              and (top <= y <= bottom))
+    return not inside
+
+def allPointsOutsideCorners(points, corners):
+    return all([testOutsideCorners(p, corners) for p in points])
+
+def cornerPoints(bounds):
+    left, top, right, bottom = bounds
+    return ((left, top),
+            (right, top),
+            (left, bottom),
+            (right, bottom))
+
+def getImageCorners(image):
+    w, h = image.size
+    return ((0, 0),
+            (w, 0),
+            (0, h),
+            (w, h))
 
 def calculateMaxZoom(bounds, image):
     metersPerPixelX = (bounds.xmax - bounds.xmin) / image.size[0]
@@ -107,13 +125,16 @@ def tileIndex(zoom, mercatorCoords):
     return index
 
 def tileExtent(zoom, x, y):
-    corners = ((x,y),(x,y+1),(x+1,y+1),(x+1,y))
+    corners = ((x, y),
+               (x, y + 1),
+               (x + 1, y + 1),
+               (x + 1, y))
     pixelCorners = [tileIndexToPixels(*corner) for corner in corners]
     mercatorCorners = [pixelsToMeters(*(pixels + (zoom,))) for pixels in pixelCorners]
     return mercatorCorners
 
 def tileIndexToPixels(x,y):
-    return x*TILE_SIZE, y*TILE_SIZE
+    return x * TILE_SIZE, y * TILE_SIZE
 
 def getProjectiveInverse(matrix):
     # http://www.cis.rit.edu/class/simg782/lectures/lecture_02/lec782_05_02.pdf (p. 33)
@@ -203,6 +224,7 @@ class QuadraticTransform(object):
 
         return umin.tolist()
 
+
 def makeTransform(transformDict):
     transformType = transformDict['type']
     transformMatrix = transformDict['matrix']
@@ -217,188 +239,22 @@ def makeTransform(transformDict):
 def flatten(listOfLists):
     return [item for subList in listOfLists for item in subList]
 
-def makeQuadTree(image, coords, basePath, storage):
-    if image.size[0] > image.size[1]:
-        maxZoom = int(math.ceil(math.log(image.size[0]/TILE_SIZE,2)))
-    else:
-        maxZoom = int(math.ceil(math.log(image.size[1]/TILE_SIZE,2)))
-    for i in xrange(maxZoom, -1, -1):
-        nx = int(math.ceil(image.size[0]/TILE_SIZE))
-        ny = int(math.ceil(image.size[1]/TILE_SIZE))
-        tile_keys = []
-        for ix in xrange(nx):
-            for iy in xrange(ny):
-                if testOutsideImage((TILE_SIZE*ix,TILE_SIZE*iy),coords) and\
-                        testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*iy),coords) and\
-                        testOutsideImage((TILE_SIZE*ix,TILE_SIZE*(iy+1)),coords) and\
-                        testOutsideImage((TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)),coords):
-                    continue
-                tile_key = basePath+'/%s/%s/%s.jpg' % (i+ZOOM_OFFSET,ix,iy)
-                if not os.path.exists(basePath+'/%s/%s/' % (i+ZOOM_OFFSET,ix)):
-                    os.makedirs(basePath+'/%s/%s' % (i+ZOOM_OFFSET,ix))
-                corners = [TILE_SIZE*ix,TILE_SIZE*iy,TILE_SIZE*(ix+1),TILE_SIZE*(iy+1)]
-                corners = [int(round(x)) for x in corners]
-                newImage = image.crop(corners)
-                newImage.save(tile_key)
-                tile_keys.append(tile_key)
-        image = image.resize((int(math.ceil(image.size[0]/2.)),
-                              int(math.ceil(image.size[1]/2.))),
-                             Image.ANTIALIAS)
+
+def getImageResponsePng(image):
+    out = StringIO()
+    image.save(out, format='png')
+    return HttpResponse(out.getvalue(), mimetype='image/png')
 
 
-def generateWarpedQuadTree(image, transformDict, basePath):
-    transform = makeTransform(transformDict)
-    corners = [[0,0],[image.size[0],0],[0,image.size[1]],list(image.size)]
-    mercatorCorners = [transform.forward(corner)
-                       for corner in corners]
+def getImageResponseJpg(image):
+    out = StringIO()
+    image.save(out, format='jpeg')
+    return HttpResponse(out.getvalue(), mimetype='image/jpeg')
 
-    if 1:
-        # debug getProjectiveInverse
-        print >> sys.stderr, 'mercatorCorners:', mercatorCorners
-        corners2 = [transform.reverse(corner)
-                    for corner in mercatorCorners]
-        print >> sys.stderr, 'zip:', zip(corners, corners2)
-        for i, pair in enumerate(zip(corners, corners2)):
-            c1, c2 = pair
-            print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
-
-    bounds = Bounds()
-    for corner in mercatorCorners:
-        bounds.extend(corner)
-    baseMask = Image.new('L', image.size, 255)
-
-    maxZoom = calculateMaxZoom(bounds, image)
-    print >> sys.stderr, 'warping...'
-    totalTiles = 0
-    startTime = time.time()
-    for zoom in xrange(int(maxZoom), -1, -1):
-        bounds = Bounds()
-        for corner in mercatorCorners:
-            tileCoords = tileIndex(zoom, corner)
-            bounds.extend(tileCoords)
-        xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
-        xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
-        maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
-        totalTiles += maxNumTiles
-        sys.stderr.write('zoom %d: generating %d tiles' % (zoom, maxNumTiles))
-        doubleSize = (int(TILE_SIZE * 2),) * 2
-        for nx in xrange(int(xmin), int(xmax) + 1):
-            for ny in xrange(int(ymin), int(ymax) + 1):
-                sys.stderr.write('.')
-                corners = tileExtent(zoom, nx, ny)
-
-                if isinstance(transform, ProjectiveTransform):
-                    # projective -- do the whole tile in one go
-                    sourceCorners = [[int(round(x))
-                                     for x in transform.reverse(corner)]
-                                    for corner in corners]
-                    transformArgs = (doubleSize,
-                                     Image.QUAD,
-                                     flatten(sourceCorners),
-                                     Image.BICUBIC)
-
-                    if 0:
-                        print >> sys.stderr, 'corners:', corners
-                        print >> sys.stderr, 'transformArgs:', transformArgs
-
-                else:
-                    # quadratic -- do the tile as a mesh of projective patches
-                    if BENCHMARK_WARP_STEPS:
-                        transformStart = time.time()
-                    tileOrigin = corners[0]
-                    doublePatchSize = PATCH_SIZE * 2
-                    meshPatches = []
-
-                    patchTable = {}
-                    for ix in xrange(PATCHES_PER_TILE+1):
-                        for iy in xrange(PATCHES_PER_TILE+1):
-                            targetPatchOrigin = tileIndexToPixels(nx * PATCHES_PER_TILE + ix,
-                                                                  ny * PATCHES_PER_TILE + iy)
-                            mercatorPatchOrigin = pixelsToMeters(targetPatchOrigin[0],
-                                                                 targetPatchOrigin[1],
-                                                                 zoom + PATCH_ZOOM_OFFSET)
-                            sourcePatchOrigin = [int(round(x))
-                                                 for x in transform.reverse(mercatorPatchOrigin)]
-                            patchTable[(ix, iy)] = sourcePatchOrigin
-                    if BENCHMARK_WARP_STEPS:
-                        print
-                        print 'transformTime:', time.time() - transformStart
-
-                    if BENCHMARK_WARP_STEPS:
-                        meshStart = time.time()
-                    for ix in xrange(PATCHES_PER_TILE):
-                        for iy in xrange(PATCHES_PER_TILE):
-                            corners = ((ix, iy),
-                                       (ix, iy + 1),
-                                       (ix + 1, iy + 1),
-                                       (ix + 1, iy))
-                            sourcePatchCorners = [patchTable[corner]
-                                                  for corner in corners]
-                            xoff = ix * doublePatchSize
-                            yoff = iy * doublePatchSize
-                            targetBox = (xoff,
-                                         yoff,
-                                         xoff + doublePatchSize,
-                                         yoff + doublePatchSize)
-                            meshPatches.append([targetBox, flatten(sourcePatchCorners)])
-
-                            if 0:
-                                print >> sys.stderr, 'patchCorners:', patchCorners
-                                print >> sys.stderr, 'sourceCorners:', sourceCorners
-                                print >> sys.stderr, 'targetBox:', targetBox
-
-                    transformArgs = (doubleSize,
-                                     Image.MESH,
-                                     meshPatches,
-                                     Image.BICUBIC)
-
-                    if 0:
-                        print >> sys.stderr, 'meshPatches:'
-                        print >> sys.stderr, json.dumps(meshPatches, indent=4)
-                    if BENCHMARK_WARP_STEPS:
-                        print 'meshTime:', time.time() - meshStart
-
-                if BENCHMARK_WARP_STEPS:
-                    warpDataStart = time.time()
-                tileData = image.transform(*transformArgs)
-                if BENCHMARK_WARP_STEPS:
-                    print 'warpDataTime:', time.time() - warpDataStart
-
-                if BENCHMARK_WARP_STEPS:
-                    warpMaskStart = time.time()
-                tileMask = baseMask.transform(*transformArgs)
-                if BENCHMARK_WARP_STEPS:
-                    print 'warpMaskTime:', time.time() - warpMaskStart
-
-                if BENCHMARK_WARP_STEPS:
-                    resizeStart = time.time()
-                tileData.putalpha(tileMask)
-                tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
-                if not os.path.exists(basePath+'/%s/%s/' % (zoom,nx)):
-                    os.makedirs(basePath+'/%s/%s' % (zoom,nx))
-                if BENCHMARK_WARP_STEPS:
-                    print 'resizeTime:', time.time() - resizeStart
-
-                if BENCHMARK_WARP_STEPS:
-                    saveStart = time.time()
-                tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-                if BENCHMARK_WARP_STEPS:
-                    print 'saveTime:', time.time() - saveStart
-
-                #if min(sourceCorners[0], sourceCorners[2], sourceCorners[4], sourceCorners[6], 0) < 0 or\
-                #        max(sourceCorners[0], sourceCorners[2], sourceCorners[4], sourceCorners[6], image.size[0]) > image.size[0] or\
-                #        min(sourceCorners[1], sourceCorners[3], sourceCorners[5], sourceCorners[7], 0) < 0 or\
-                #        max(sourceCorners[1], sourceCorners[3], sourceCorners[5], sourceCorners[7], image.size[1]) > image.size[1]:
-                #    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-                #else:
-                #    tileData.save(basePath+'/%s/%s/%s.png' % (zoom,nx,ny))
-        sys.stderr.write('\n')
-    elapsedTime = time.time() - startTime
-    print >> sys.stderr, ('warping complete: %d tiles, elapsed time %.1f seconds = %d ms/tile'
-                          % (totalTiles, elapsedTime, int(1000 * elapsedTime / totalTiles)))
 
 def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
+
 
 def latLonTometers(lat, lng):
     mx = lng * ORIGIN_SHIFT / 180
@@ -406,11 +262,13 @@ def latLonTometers(lat, lng):
     my = my * ORIGIN_SHIFT / 180
     return mx, my
 
+
 def metersToLatLon(x, y):
     lng = x * 180 / originShift
     lat = y * 180 / originShift
     lat = ((math.atan(2 ** (y * (math.pi / 180))) * 360) / math.pi) - 90
     return lat, lng
+
 
 def pixelsToMeters(x, y, zoom):
     res = resolution(zoom)
@@ -418,8 +276,254 @@ def pixelsToMeters(x, y, zoom):
     my = -(y * res) + ORIGIN_SHIFT
     return [mx, my]
 
+
 def metersToPixels(x, y, zoom):
     res = resolution(zoom)
     px = (x + ORIGIN_SHIFT) / res
     py = (-y + ORIGIN_SHIFT) / res
     return [px, py]
+
+
+class SimpleQuadTreeGenerator(object):
+    def __init__(self, imagePath):
+        image = Image.open(imagePath)
+        self.imageSize = image.size
+        w, h = self.imageSize
+        self.coords = ((0, 0),
+                       (w, 0),
+                       (0, h),
+                       (w, h))
+
+        if self.imageSize[0] > self.imageSize[1]:
+            self.maxZoom = int(math.ceil(math.log(self.imageSize[0] / TILE_SIZE, 2)))
+        else:
+            self.maxZoom = int(math.ceil(math.log(self.imageSize[1] / TILE_SIZE, 2)))
+
+        self.zoomedImage = {}
+        self.zoomedImage[self.maxZoom] = image
+
+    def getZoomedImage(self, zoom):
+        result = self.zoomedImage.get(zoom, None)
+        if result is None:
+            image = self.getZoomedImage(zoom + 1)
+            result = image.resize((int(math.ceil(image.size[0] / 2.)),
+                                   int(math.ceil(image.size[1] / 2.))),
+                                  Image.ANTIALIAS)
+            self.zoomedImage[zoom] = result
+        return result
+
+    def writeQuadTree(self, basePath):
+        for zoom in xrange(self.maxZoom, -1, -1):
+            nx = int(math.ceil(self.imageSize[0] / TILE_SIZE))
+            ny = int(math.ceil(self.imageSize[1] / TILE_SIZE))
+            for x in xrange(nx):
+                for y in xrange(ny):
+                    zoom0 = zoom + ZOOM_OFFSET
+                    try:
+                        self.writeTile(basePath, zoom0, x, y)
+                    except OutOfBounds:
+                        # no surprise if some tiles are empty around the edges
+                        pass
+
+    def writeTile(self, basePath, zoom0, x, y):
+        tileData = self.generateTile(zoom0, x, y)
+
+        tilePath = basePath + '/%s/%s/%s.jpg' % (zoom0, x, y)
+        tileDir = os.path.dirname(tilePath)
+        if not os.path.exists(tileDir):
+            os.makedirs(tileDir)
+        tileData.save(tilePath)
+
+    def getTileResponse(self, zoom0, x, y):
+        return getImageResponseJpg(self.generateTile(zoom0, x, y))
+
+    def generateTile(self, zoom0, x, y):
+        zoom = zoom0 - ZOOM_OFFSET
+
+        if zoom > self.maxZoom:
+            raise ZoomTooBig("can't generate tiles with zoom %d > maximum of %d"
+                             % (zoom0, self.maxZoom + ZOOM_OFFSET))
+
+        tileBounds = [TILE_SIZE * x,
+                      TILE_SIZE * y,
+                      TILE_SIZE * (x + 1),
+                      TILE_SIZE * (y + 1)]
+        tileBounds = [int(round(c)) for c in tileBounds]
+        image = self.getZoomedImage(zoom)
+        if allPointsOutsideCorners(cornerPoints(tileBounds), getImageCorners(image)):
+            raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
+                              % (zoom0, x, y))
+
+        return image.crop(tileBounds)
+
+
+class WarpedQuadTreeGenerator(object):
+    def __init__(self, imagePath, transformDict):
+        self.image = Image.open(imagePath)
+        self.transform = makeTransform(transformDict)
+        corners = [[0, 0],
+                   [image.size[0], 0],
+                   [0, image.size[1]],
+                   [image.size[0], image.size[1]]]
+        self.mercatorCorners = [self.transform.forward(corner)
+                                for corner in corners]
+
+        if 1:
+            # debug getProjectiveInverse
+            print >> sys.stderr, 'mercatorCorners:', mercatorCorners
+            corners2 = [transform.reverse(corner)
+                        for corner in mercatorCorners]
+            print >> sys.stderr, 'zip:', zip(corners, corners2)
+            for i, pair in enumerate(zip(corners, corners2)):
+                c1, c2 = pair
+                print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
+
+        bounds = Bounds()
+        for corner in mercatorCorners:
+            bounds.extend(corner)
+        self.baseMask = Image.new('L', image.size, 255)
+
+    def writeQuadTree(self, basePath):
+        maxZoom = calculateMaxZoom(bounds, self.image)
+        print >> sys.stderr, 'warping...'
+        totalTiles = 0
+        startTime = time.time()
+        for zoom in xrange(int(maxZoom), -1, -1):
+            bounds = Bounds()
+            for corner in mercatorCorners:
+                tileCoords = tileIndex(zoom, corner)
+                bounds.extend(tileCoords)
+            xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
+            xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
+            maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
+            totalTiles += maxNumTiles
+            sys.stderr.write('zoom %d: generating %d tiles' % (zoom, maxNumTiles))
+            for x in xrange(int(xmin), int(xmax) + 1):
+                for y in xrange(int(ymin), int(ymax) + 1):
+                    try:
+                        self.writeTile(basePath, zoom, x, y)
+                    except OutOfBounds:
+                        # no surprise if some tiles are empty around the edges
+                        pass
+
+        elapsedTime = time.time() - startTime
+        print >> sys.stderr, ('warping complete: %d tiles, elapsed time %.1f seconds = %d ms/tile'
+                              % (totalTiles, elapsedTime, int(1000 * elapsedTime / totalTiles)))
+
+    def writeTile(self, basePath, zoom, x, y):
+        tileData = self.generateTile(zoom, x, y)
+
+        if BENCHMARK_WARP_STEPS:
+            saveStart = time.time()
+        tilePath = basePath + '/%s/%s/%s.png' % (zoom, x, y)
+        tileDir = os.path.dirname(tilePath)
+        if not os.path.exists(tileDir):
+            os.makedirs(tileDir)
+        tileData.save(tilePath)
+        if BENCHMARK_WARP_STEPS:
+            print 'saveTime:', time.time() - saveStart
+            sys.stderr.write('\n')
+
+    def getTileResponse(self, zoom, x, y):
+        return getImageResponsePng(self.generateTile(zoom, x, y))
+
+    def generateTile(self, zoom, x, y):
+        sys.stderr.write('.')
+        corners = tileExtent(zoom, x, y)
+
+        if isinstance(self.transform, ProjectiveTransform):
+            transformArgs = self.getPilTransformArgsProjective(zoom, x, y)
+        else:
+            transformArgs = self.getPilTransformArgsQuadratic(zoom, x, y)
+
+        if BENCHMARK_WARP_STEPS:
+            warpDataStart = time.time()
+        tileData = self.image.transform(*transformArgs)
+        if BENCHMARK_WARP_STEPS:
+            print 'warpDataTime:', time.time() - warpDataStart
+
+        if BENCHMARK_WARP_STEPS:
+            warpMaskStart = time.time()
+        tileMask = self.baseMask.transform(*transformArgs)
+        if BENCHMARK_WARP_STEPS:
+            print 'warpMaskTime:', time.time() - warpMaskStart
+
+        if BENCHMARK_WARP_STEPS:
+            resizeStart = time.time()
+        tileData.putalpha(tileMask)
+        tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
+        if BENCHMARK_WARP_STEPS:
+            print 'resizeTime:', time.time() - resizeStart
+
+        return tileData
+
+    def getPilTransformArgsProjective(self, zoom, x, y):
+        corners = tileExtent(zoom, x, y)
+        sourceCorners = [[int(round(c))
+                          for c in self.transform.reverse(corner)]
+                         for corner in corners]
+
+        return ((int(TILE_SIZE * 2),) * 2,
+                Image.QUAD,
+                flatten(sourceCorners),
+                Image.BICUBIC)
+
+    def getPilTransformArgsQuadratic(self, zoom, x, y):
+        corners = tileExtent(zoom, x, y)
+
+        if BENCHMARK_WARP_STEPS:
+            transformStart = time.time()
+        tileOrigin = corners[0]
+        doublePatchSize = PATCH_SIZE * 2
+        meshPatches = []
+
+        patchTable = {}
+        for px in xrange(PATCHES_PER_TILE+1):
+            for py in xrange(PATCHES_PER_TILE+1):
+                targetPatchOrigin = tileIndexToPixels(x * PATCHES_PER_TILE + px,
+                                                      y * PATCHES_PER_TILE + py)
+                mercatorPatchOrigin = pixelsToMeters(targetPatchOrigin[0],
+                                                     targetPatchOrigin[1],
+                                                     zoom + PATCH_ZOOM_OFFSET)
+                sourcePatchOrigin = [int(round(c))
+                                     for c in transform.reverse(mercatorPatchOrigin)]
+                patchTable[(px, py)] = sourcePatchOrigin
+        if BENCHMARK_WARP_STEPS:
+            print
+            print 'transformTime:', time.time() - transformStart
+
+        if BENCHMARK_WARP_STEPS:
+            meshStart = time.time()
+        for px in xrange(PATCHES_PER_TILE):
+            for py in xrange(PATCHES_PER_TILE):
+                corners = ((px, py),
+                           (px, py + 1),
+                           (px + 1, py + 1),
+                           (px + 1, py))
+                sourcePatchCorners = [patchTable[corner]
+                                      for corner in corners]
+                xoff = px * doublePatchSize
+                yoff = py * doublePatchSize
+                targetBox = (xoff,
+                             yoff,
+                             xoff + doublePatchSize,
+                             yoff + doublePatchSize)
+                meshPatches.append([targetBox, flatten(sourcePatchCorners)])
+
+                if 0:
+                    print >> sys.stderr, 'patchCorners:', patchCorners
+                    print >> sys.stderr, 'sourceCorners:', sourceCorners
+                    print >> sys.stderr, 'targetBox:', targetBox
+
+        transformArgs = ((int(TILE_SIZE * 2),) * 2,
+                         Image.MESH,
+                         meshPatches,
+                         Image.BICUBIC)
+
+        if 0:
+            print >> sys.stderr, 'meshPatches:'
+            print >> sys.stderr, json.dumps(meshPatches, indent=4)
+        if BENCHMARK_WARP_STEPS:
+            print 'meshTime:', time.time() - meshStart
+
+        return transformArgs

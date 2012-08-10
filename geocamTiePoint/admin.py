@@ -6,9 +6,7 @@
 
 from django.contrib import admin
 
-from geocamTiePoint.models import Overlay
+from geocamTiePoint import models
 
-class OverlayAdmin(admin.ModelAdmin):
-    pass
-
-admin.site.register(Overlay, OverlayAdmin)
+admin.site.register(models.Overlay)
+admin.site.register(models.QuadTree)

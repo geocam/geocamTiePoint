@@ -34,4 +34,12 @@ urlpatterns = patterns(
         'overlayIdImageFileName',
         {}, 'geocamTiePoint_overlayIdImageFileName'),
 
+    url(r'^tile/(?P<quadTreeId>\d+)/$',
+        'helloQuadTree',
+        {}, 'geocamTiePoint_tileRoot'),
+
+    url(r'^tile/(?P<quadTreeId>\d+)/(?P<zoom>\d+)/(?P<x>\d+)/(?P<y>\d+)\.(\w+)$',
+        'getTile',
+        {}, 'geocamTiePoint_tile'),
+
 )

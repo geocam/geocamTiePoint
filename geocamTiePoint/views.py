@@ -20,7 +20,7 @@ except ImportError:
     import StringIO
 
 from django.shortcuts import render_to_response
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
 from django.http import HttpResponseForbidden, Http404
 from django.http import HttpResponseNotAllowed, HttpResponseBadRequest
 from django.template import RequestContext
@@ -37,8 +37,8 @@ except ImportError:
 from PIL import Image
 
 from geocamTiePoint import models, forms, settings
-from geocamTiePoint.models import Overlay
-
+from geocamTiePoint.models import Overlay, QuadTree
+from geocamTiePoint import quadtree
 
 
 def overlayIndex(request):
@@ -72,16 +72,16 @@ def overlayNew(request):
                                      name=os.path.basename(image.name),
                                      data=json.dumps(preData))
             overlay.save()
+            qt = overlay.generateQuadTree()
             image = Image.open(models.dataStorage.path(overlay.image))
             basePath = models.dataStorage.path('geocamTiePoint/tiles/'+str(overlay.key))
             preData['points'] = []
             preData['url'] = reverse('geocamTiePoint_overlayIdJson', args=[overlay.key])
-            preData['tilesUrl'] = settings.DATA_URL+'geocamTiePoint/tiles/'+str(overlay.key)
+            preData['tilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
             preData['imageSize'] = (overlay.image.width, overlay.image.height)
             preData['key'] = overlay.key
             overlay.data = json.dumps(preData)
             overlay.save()
-            overlay.generateQuadTree() # this should be done out-of-band, ideally.
             return render_to_response('geocamTiePoint/new-overlay-result.html',
                                       {'status':'success',
                                        'id':overlay.key},
@@ -179,3 +179,23 @@ def overlayIdImageFileName(request, key, fileName):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+def getTile(request, quadTreeId, zoom, x, y):
+    quadTreeId = int(quadTreeId)
+    zoom = int(zoom)
+    x = int(x)
+    y = int(y)
+
+    qt = get_object_or_404(QuadTree, id=quadTreeId)
+    if qt.transform:
+        gen = quadtree.WarpedQuadTreeGenerator(qt.overlay.image.path, qt.transform)
+    else:
+        gen = quadtree.SimpleQuadTreeGenerator(qt.overlay.image.path)
+    try:
+        return gen.getTileResponse(zoom, x, y)
+    except quadtree.ZoomTooBig:
+        return HttpResponseNotFound('zoom too big')
+    except quadtree.OutOfBounds:
+        return HttpResponseNotFound('out of bounds')
+
+def helloQuadTree(request, quadTreeId):
+    return HttpResponse('hello')
