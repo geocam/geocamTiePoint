@@ -28,6 +28,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
+from django.views.decorators.cache import cache_page
 
 try:
     from scipy.optimize import leastsq
@@ -40,6 +41,12 @@ from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
 from geocamTiePoint import quadtree
 
+TRANSPARENT_PNG_BINARY = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x01sRGB\x00\xae\xce\x1c\xe9\x00\x00\x00\rIDAT\x08\xd7c````\x00\x00\x00\x05\x00\x01^\xf3*:\x00\x00\x00\x00IEND\xaeB`\x82'
+
+
+def transparentPngResponse():
+    return HttpResponse(TRANSPARENT_PNG_BINARY, mimetype='image/png')
+
 
 def overlayIndex(request):
     if request.method == 'GET':
@@ -49,6 +56,7 @@ def overlayIndex(request):
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET','POST'])
+
 
 def overlayDelete(request, key):
     if request.method == 'GET':
@@ -60,6 +68,7 @@ def overlayDelete(request, key):
         overlay = get_object_or_404(Overlay, key=key)
         overlay.delete()
         return HttpResponseRedirect(reverse('geocamTiePoint_overlayIndex'))
+
 
 def overlayNew(request):
     if request.method == 'POST':
@@ -95,6 +104,7 @@ def overlayNew(request):
                               {'form': form},
                               context_instance=RequestContext(request))
 
+
 def overlayId(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
@@ -105,6 +115,7 @@ def overlayId(request, key):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+
 def overlayIdPreview(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
@@ -114,6 +125,7 @@ def overlayIdPreview(request, key):
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
+
 
 @csrf_exempt
 def overlayIdJson(request, key):
@@ -143,6 +155,7 @@ def overlayIdJson(request, key):
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 
+
 @csrf_exempt
 def overlayIdWarp(request, key):
     if request.method == 'GET':
@@ -150,25 +163,14 @@ def overlayIdWarp(request, key):
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
-        overlay.deleteRegisteredTiles()
         data = json.loads(overlay.data)
         transformType = data['transform']['type']
         transformMatrix = data['transform']['matrix']
-        basePath = models.dataStorage.path('geocamTiePoint/registeredTiles/'+str(overlay.key))
-        generateWarpedQuadTree(Image.open(overlay.image.path), data['transform'], basePath)
-        tarFilePath = models.dataStorage.path('geocamTiePoint/tileArchives/')
-        if not os.path.exists(tarFilePath):
-            os.makedirs(tarFilePath)
-        oldPath = os.getcwd()
-        os.chdir(basePath)
-        tarFile = tarfile.open(tarFilePath+'/'+str(overlay.key)+'.tar.gz', 'w:gz')
-        for name in os.listdir(os.getcwd()):
-            tarFile.add(name)
-        os.chdir(oldPath)
-        tarFile.close()
+        overlay.generateAlignedQuadTree()
         return HttpResponse("{}")
     else:
         return HttpResponseNotAllowed(['GET','POST'])
+
 
 def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
@@ -179,6 +181,8 @@ def overlayIdImageFileName(request, key, fileName):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+
+@cache_page(3600 * 24 * 365)
 def getTile(request, quadTreeId, zoom, x, y):
     quadTreeId = int(quadTreeId)
     zoom = int(zoom)
@@ -186,16 +190,14 @@ def getTile(request, quadTreeId, zoom, x, y):
     y = int(y)
 
     qt = get_object_or_404(QuadTree, id=quadTreeId)
-    if qt.transform:
-        gen = quadtree.WarpedQuadTreeGenerator(qt.overlay.image.path, qt.transform)
-    else:
-        gen = quadtree.SimpleQuadTreeGenerator(qt.overlay.image.path)
+    gen = qt.getGenerator()
     try:
         return gen.getTileResponse(zoom, x, y)
     except quadtree.ZoomTooBig:
-        return HttpResponseNotFound('zoom too big')
+        return transparentPngResponse()
     except quadtree.OutOfBounds:
-        return HttpResponseNotFound('out of bounds')
+        return transparentPngResponse()
+
 
 def helloQuadTree(request, quadTreeId):
     return HttpResponse('hello')

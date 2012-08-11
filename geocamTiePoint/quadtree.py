@@ -163,7 +163,7 @@ def getProjectiveInverse(matrix):
                           
 def applyProjectiveTransform(matrix, pt):
     print >> sys.stderr, pt
-    u = numpy.array(pt + [1], 'd')
+    u = numpy.array(list(pt) + [1], 'd')
     v0 = matrix.dot(u)
     # projective rescaling: divide by z and truncate
     v = (v0 / v0[2])[:2]
@@ -175,7 +175,7 @@ class ProjectiveTransform(object):
         self.inverse = getProjectiveInverse(self.matrix)
 
     def _apply(self, matrix, pt):
-        u = numpy.array(pt + [1], 'd')
+        u = numpy.array(list(pt) + [1], 'd')
         v0 = matrix.dot(u)
         # projective rescaling: divide by z and truncate
         v = (v0 / v0[2])[:2]
@@ -361,17 +361,17 @@ class WarpedQuadTreeGenerator(object):
     def __init__(self, imagePath, transformDict):
         self.image = Image.open(imagePath)
         self.transform = makeTransform(transformDict)
-        corners = [[0, 0],
-                   [image.size[0], 0],
-                   [0, image.size[1]],
-                   [image.size[0], image.size[1]]]
-        self.mercatorCorners = [self.transform.forward(corner)
-                                for corner in corners]
+        self.baseMask = Image.new('L', self.image.size, 255)
+
+    def writeQuadTree(self, basePath):
+        corners = getImageCorners(self.image)
+        mercatorCorners = [self.transform.forward(corner)
+                           for corner in corners]
 
         if 1:
             # debug getProjectiveInverse
             print >> sys.stderr, 'mercatorCorners:', mercatorCorners
-            corners2 = [transform.reverse(corner)
+            corners2 = [self.transform.reverse(corner)
                         for corner in mercatorCorners]
             print >> sys.stderr, 'zip:', zip(corners, corners2)
             for i, pair in enumerate(zip(corners, corners2)):
@@ -381,14 +381,12 @@ class WarpedQuadTreeGenerator(object):
         bounds = Bounds()
         for corner in mercatorCorners:
             bounds.extend(corner)
-        self.baseMask = Image.new('L', image.size, 255)
 
-    def writeQuadTree(self, basePath):
-        maxZoom = calculateMaxZoom(bounds, self.image)
+        self.maxZoom = calculateMaxZoom(bounds, self.image)
         print >> sys.stderr, 'warping...'
         totalTiles = 0
         startTime = time.time()
-        for zoom in xrange(int(maxZoom), -1, -1):
+        for zoom in xrange(int(self.maxZoom), -1, -1):
             bounds = Bounds()
             for corner in mercatorCorners:
                 tileCoords = tileIndex(zoom, corner)
@@ -405,6 +403,7 @@ class WarpedQuadTreeGenerator(object):
                     except OutOfBounds:
                         # no surprise if some tiles are empty around the edges
                         pass
+            sys.stderr.write('\n')
 
         elapsedTime = time.time() - startTime
         print >> sys.stderr, ('warping complete: %d tiles, elapsed time %.1f seconds = %d ms/tile'
@@ -422,12 +421,15 @@ class WarpedQuadTreeGenerator(object):
         tileData.save(tilePath)
         if BENCHMARK_WARP_STEPS:
             print 'saveTime:', time.time() - saveStart
-            sys.stderr.write('\n')
 
     def getTileResponse(self, zoom, x, y):
         return getImageResponsePng(self.generateTile(zoom, x, y))
 
     def generateTile(self, zoom, x, y):
+        if zoom > self.maxZoom:
+            raise ZoomTooBig("can't generate tiles with zoom %d > maximum of %d"
+                             % (zoom, self.maxZoom))
+
         sys.stderr.write('.')
         corners = tileExtent(zoom, x, y)
 

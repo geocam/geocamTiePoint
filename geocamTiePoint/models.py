@@ -11,6 +11,7 @@ from django.db import models
 from django.core.files.storage import FileSystemStorage
 
 from geocamUtil.models import UuidField
+from geocamUtil import anyjson as json
 
 from geocamTiePoint import quadtree, settings
 
@@ -27,6 +28,15 @@ class QuadTree(models.Model):
     # transform is either an empty string (simple quadtree) or a JSON-formatted
     # definition of the warping transform (warped quadtree)
     transform = models.TextField(blank=True)
+
+    def getBasePath(self):
+        return settings.DATA_ROOT + 'geocamTiePoint/tiles/%d' % self.id
+
+    def getGenerator(self):
+        if self.transform:
+            return quadtree.WarpedQuadTreeGenerator(self.overlay.image.path, self.transform)
+        else:
+            return quadtree.SimpleQuadTreeGenerator(self.overlay.image.path)
 
 
 class Overlay(models.Model):
@@ -55,13 +65,42 @@ class Overlay(models.Model):
         # self.last_quadtree.delete()  # FIX: delete quadtrees associated with overlay
         super(Overlay, self).delete(*args, **kwargs)
 
-    def generateQuadTree(self):
+    def generateUnalignedQuadTree(self):
         qt = QuadTree(overlay=self)
         qt.save()
+
+        if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
+            gen = qt.getGenerator()
+            gen.writeQuadTree(qt.getBasePath())
+
         self.unalignedQuadtree = qt
         self.save()
-        if 1:
-            gen = quadtree.SimpleQuadTreeGenerator(self.image.path)
-            basePath = settings.DATA_ROOT + 'geocamTiePoint/tiles/%d' % qt.id
-            gen.writeQuadTree(basePath)
+
+        return qt
+
+    def generateAlignedQuadTree(self):
+        data = json.loads(self.data)
+        qt = QuadTree(overlay=self, transform=data['transform'])
+        qt.save()
+
+        if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
+            gen = qt.getGenerator()
+            gen.writeQuadTree(qt.getBasePath())
+
+        self.alignedQuadtree = qt
+        self.save()
+
+        if 0:
+            # figure tar file stuff out again later
+            tarFilePath = models.dataStorage.path('geocamTiePoint/tileArchives/')
+            if not os.path.exists(tarFilePath):
+                os.makedirs(tarFilePath)
+            oldPath = os.getcwd()
+            os.chdir(basePath)
+            tarFile = tarfile.open(tarFilePath+'/'+str(overlay.key)+'.tar.gz', 'w:gz')
+            for name in os.listdir(os.getcwd()):
+                tarFile.add(name)
+            os.chdir(oldPath)
+            tarFile.close()
+
         return qt
