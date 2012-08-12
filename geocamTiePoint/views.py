@@ -11,13 +11,14 @@ import math
 import sys
 import time
 import tarfile
-
-import numpy
-import numpy.linalg
 try:
     import cStringIO as StringIO
 except ImportError:
     import StringIO
+
+import numpy
+import numpy.linalg
+import PIL.Image
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
@@ -86,12 +87,11 @@ def overlayNew(request):
                                      data=dumps(preData))
             overlay.save()
             qt = overlay.generateUnalignedQuadTree()
-            image = Image.open(models.dataStorage.path(overlay.image))
-            basePath = models.dataStorage.path('geocamTiePoint/tiles/'+str(overlay.key))
+            image = PIL.Image.open(overlay.image.file)
             preData['points'] = []
             preData['url'] = reverse('geocamTiePoint_overlayIdJson', args=[overlay.key])
             preData['tilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
-            preData['imageSize'] = (overlay.image.width, overlay.image.height)
+            preData['imageSize'] = image.size
             preData['key'] = overlay.key
             overlay.data = dumps(preData)
             overlay.save()

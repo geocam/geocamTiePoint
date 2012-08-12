@@ -6,6 +6,9 @@
 
 import os
 import shutil
+import logging
+
+import PIL.Image
 
 from django.db import models
 from django.core.files.storage import FileSystemStorage
@@ -16,14 +19,13 @@ from geocamUtil import anyjson as json
 
 from geocamTiePoint import quadTree, settings
 
-dataStorage = FileSystemStorage(location=settings.DATA_ROOT)
-
 def getNewImageFileName(instance, filename):
     return 'geocamTiePoint/overlay_images/'+filename
 
 
 def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
+
 
 class QuadTree(models.Model):
     overlay = models.ForeignKey('Overlay', null=True, db_index=True,
@@ -37,25 +39,23 @@ class QuadTree(models.Model):
         return settings.DATA_ROOT + 'geocamTiePoint/tiles/%d' % self.id
 
     def getGenerator(self):
+        image = PIL.Image.open(self.overlay.image.file)
         if self.transform:
-            return quadTree.WarpedQuadTreeGenerator(self.overlay.image.path,
-                                                    json.loads(self.transform))
+            return quadTree.WarpedQuadTreeGenerator(image, json.loads(self.transform))
         else:
-            return quadTree.SimpleQuadTreeGenerator(self.overlay.image.path)
+            return quadTree.SimpleQuadTreeGenerator(image)
 
 
 # FIX: may want to pull out Overlay.image field into a separate model to
 # support versioning:
 
 # class OverlayImage(models.Model):
-#    image = models.ImageField(upload_to=getNewImageFileName,
-#                              storage=dataStorage)
+#    image = models.ImageField(upload_to=getNewImageFileName)
 
 
 class Overlay(models.Model):
     data = models.TextField()
-    image = models.ImageField(upload_to=getNewImageFileName,
-                              storage=dataStorage)
+    image = models.ImageField(upload_to=getNewImageFileName)
     imageType = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     key = models.AutoField(primary_key=True, unique=True)
@@ -74,7 +74,7 @@ class Overlay(models.Model):
         return unicode(self.name)
 
     def delete(self, *args, **kwargs):
-        dataStorage.delete(self.image)
+        self.image.delete()
         # self.last_quadTree.delete()  # FIX: delete quadTrees associated with overlay
         super(Overlay, self).delete(*args, **kwargs)
 
@@ -108,7 +108,7 @@ class Overlay(models.Model):
 
         if 0:
             # figure tar file stuff out again later
-            tarFilePath = models.dataStorage.path('geocamTiePoint/tileArchives/')
+            tarFilePath = settings.DATA_ROOT + 'geocamTiePoint/tileArchives/'
             if not os.path.exists(tarFilePath):
                 os.makedirs(tarFilePath)
             oldPath = os.getcwd()

@@ -285,8 +285,7 @@ def metersToPixels(x, y, zoom):
 
 
 class SimpleQuadTreeGenerator(object):
-    def __init__(self, imagePath):
-        image = Image.open(imagePath)
+    def __init__(self, image):
         self.imageSize = image.size
         w, h = self.imageSize
         self.coords = ((0, 0),
@@ -358,8 +357,8 @@ class SimpleQuadTreeGenerator(object):
 
 
 class WarpedQuadTreeGenerator(object):
-    def __init__(self, imagePath, transformDict):
-        self.image = Image.open(imagePath)
+    def __init__(self, image, transformDict):
+        self.image = image
         self.transform = makeTransform(transformDict)
         self.baseMask = Image.new('L', self.image.size, 255)
 
