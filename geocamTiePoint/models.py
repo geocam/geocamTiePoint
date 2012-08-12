@@ -14,7 +14,7 @@ from django.core.urlresolvers import reverse
 from geocamUtil.models import UuidField
 from geocamUtil import anyjson as json
 
-from geocamTiePoint import quadtree, settings
+from geocamTiePoint import quadTree, settings
 
 dataStorage = FileSystemStorage(location=settings.DATA_ROOT)
 
@@ -29,8 +29,8 @@ class QuadTree(models.Model):
     overlay = models.ForeignKey('Overlay', null=True, db_index=True,
                                 on_delete=models.SET_NULL  # avoid circular FK constraints making deletes impossible
                                 )
-    # transform is either an empty string (simple quadtree) or a JSON-formatted
-    # definition of the warping transform (warped quadtree)
+    # transform is either an empty string (simple quadTree) or a JSON-formatted
+    # definition of the warping transform (warped quadTree)
     transform = models.TextField(blank=True)
 
     def getBasePath(self):
@@ -38,10 +38,10 @@ class QuadTree(models.Model):
 
     def getGenerator(self):
         if self.transform:
-            return quadtree.WarpedQuadTreeGenerator(self.overlay.image.path,
+            return quadTree.WarpedQuadTreeGenerator(self.overlay.image.path,
                                                     json.loads(self.transform))
         else:
-            return quadtree.SimpleQuadTreeGenerator(self.overlay.image.path)
+            return quadTree.SimpleQuadTreeGenerator(self.overlay.image.path)
 
 
 # FIX: may want to pull out Overlay.image field into a separate model to
@@ -59,9 +59,9 @@ class Overlay(models.Model):
     imageType = models.CharField(max_length=50)
     name = models.CharField(max_length=50)
     key = models.AutoField(primary_key=True, unique=True)
-    unalignedQuadtree = models.ForeignKey(QuadTree, null=True, blank=True,
+    unalignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
                                           related_name='unaligned_overlays')
-    alignedQuadtree = models.ForeignKey(QuadTree, null=True, blank=True,
+    alignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
                                         related_name='aligned_overlays')
 
     class Meta:
@@ -75,7 +75,7 @@ class Overlay(models.Model):
 
     def delete(self, *args, **kwargs):
         dataStorage.delete(self.image)
-        # self.last_quadtree.delete()  # FIX: delete quadtrees associated with overlay
+        # self.last_quadTree.delete()  # FIX: delete quadTrees associated with overlay
         super(Overlay, self).delete(*args, **kwargs)
 
     def generateUnalignedQuadTree(self):
@@ -86,7 +86,7 @@ class Overlay(models.Model):
             gen = qt.getGenerator()
             gen.writeQuadTree(qt.getBasePath())
 
-        self.unalignedQuadtree = qt
+        self.unalignedQuadTree = qt
         self.save()
 
         return qt
@@ -101,7 +101,7 @@ class Overlay(models.Model):
             gen = qt.getGenerator()
             gen.writeQuadTree(qt.getBasePath())
 
-        self.alignedQuadtree = qt
+        self.alignedQuadTree = qt
         data['alignedTilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
         self.data = dumps(data)
         self.save()

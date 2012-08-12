@@ -39,7 +39,7 @@ from PIL import Image
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
-from geocamTiePoint import quadtree
+from geocamTiePoint import quadTree
 
 TRANSPARENT_PNG_BINARY = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x01sRGB\x00\xae\xce\x1c\xe9\x00\x00\x00\rIDAT\x08\xd7c````\x00\x00\x00\x05\x00\x01^\xf3*:\x00\x00\x00\x00IEND\xaeB`\x82'
 
@@ -197,9 +197,9 @@ def getTile(request, quadTreeId, zoom, x, y):
     gen = qt.getGenerator()
     try:
         return gen.getTileResponse(zoom, x, y)
-    except quadtree.ZoomTooBig:
+    except quadTree.ZoomTooBig:
         return transparentPngResponse()
-    except quadtree.OutOfBounds:
+    except quadTree.OutOfBounds:
         return transparentPngResponse()
 
 
