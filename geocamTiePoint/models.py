@@ -9,6 +9,7 @@ import shutil
 
 from django.db import models
 from django.core.files.storage import FileSystemStorage
+from django.core.urlresolvers import reverse
 
 from geocamUtil.models import UuidField
 from geocamUtil import anyjson as json
@@ -20,6 +21,9 @@ dataStorage = FileSystemStorage(location=settings.DATA_ROOT)
 def getNewImageFileName(instance, filename):
     return 'geocamTiePoint/overlay_images/'+filename
 
+
+def dumps(obj):
+    return json.dumps(obj, sort_keys=True, indent=4)
 
 class QuadTree(models.Model):
     overlay = models.ForeignKey('Overlay', null=True, db_index=True,
@@ -34,9 +38,18 @@ class QuadTree(models.Model):
 
     def getGenerator(self):
         if self.transform:
-            return quadtree.WarpedQuadTreeGenerator(self.overlay.image.path, self.transform)
+            return quadtree.WarpedQuadTreeGenerator(self.overlay.image.path,
+                                                    json.loads(self.transform))
         else:
             return quadtree.SimpleQuadTreeGenerator(self.overlay.image.path)
+
+
+# FIX: may want to pull out Overlay.image field into a separate model to
+# support versioning:
+
+# class OverlayImage(models.Model):
+#    image = models.ImageField(upload_to=getNewImageFileName,
+#                              storage=dataStorage)
 
 
 class Overlay(models.Model):
@@ -80,7 +93,8 @@ class Overlay(models.Model):
 
     def generateAlignedQuadTree(self):
         data = json.loads(self.data)
-        qt = QuadTree(overlay=self, transform=data['transform'])
+
+        qt = QuadTree(overlay=self, transform=dumps(data['transform']))
         qt.save()
 
         if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
@@ -88,6 +102,8 @@ class Overlay(models.Model):
             gen.writeQuadTree(qt.getBasePath())
 
         self.alignedQuadtree = qt
+        data['alignedTilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
+        self.data = dumps(data)
         self.save()
 
         if 0:

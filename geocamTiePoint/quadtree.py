@@ -363,36 +363,37 @@ class WarpedQuadTreeGenerator(object):
         self.transform = makeTransform(transformDict)
         self.baseMask = Image.new('L', self.image.size, 255)
 
-    def writeQuadTree(self, basePath):
         corners = getImageCorners(self.image)
-        mercatorCorners = [self.transform.forward(corner)
+        self.mercatorCorners = [self.transform.forward(corner)
                            for corner in corners]
 
         if 1:
             # debug getProjectiveInverse
-            print >> sys.stderr, 'mercatorCorners:', mercatorCorners
+            print >> sys.stderr, 'mercatorCorners:', self.mercatorCorners
             corners2 = [self.transform.reverse(corner)
-                        for corner in mercatorCorners]
+                        for corner in self.mercatorCorners]
             print >> sys.stderr, 'zip:', zip(corners, corners2)
             for i, pair in enumerate(zip(corners, corners2)):
                 c1, c2 = pair
                 print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
 
         bounds = Bounds()
-        for corner in mercatorCorners:
+        for corner in self.mercatorCorners:
             bounds.extend(corner)
 
         self.maxZoom = calculateMaxZoom(bounds, self.image)
+
+    def writeQuadTree(self, basePath):
         print >> sys.stderr, 'warping...'
         totalTiles = 0
         startTime = time.time()
         for zoom in xrange(int(self.maxZoom), -1, -1):
-            bounds = Bounds()
-            for corner in mercatorCorners:
+            tileBounds = Bounds()
+            for corner in self.mercatorCorners:
                 tileCoords = tileIndex(zoom, corner)
-                bounds.extend(tileCoords)
-            xmin, ymin = (bounds.bounds[0], bounds.bounds[1])
-            xmax, ymax = (bounds.bounds[2], bounds.bounds[3])
+                tileBounds.extend(tileCoords)
+            xmin, ymin = (tileBounds.bounds[0], tileBounds.bounds[1])
+            xmax, ymax = (tileBounds.bounds[2], tileBounds.bounds[3])
             maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
             totalTiles += maxNumTiles
             sys.stderr.write('zoom %d: generating %d tiles' % (zoom, maxNumTiles))

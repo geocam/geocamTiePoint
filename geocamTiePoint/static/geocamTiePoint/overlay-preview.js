@@ -18,8 +18,11 @@ function getTransformedImageTileUrl(coord,zoom) {
     if(!normalizedCoord)
         return null;
     var bounds = Math.pow(2,zoom);
-    return data_url+"geocamTiePoint/registeredTiles/"+overlay['key']+
-        '/'+zoom+'/'+normalizedCoord.x+'/'+normalizedCoord.y+'.png';
+    return overlay.alignedTilesUrl
+        + zoom
+        + '/' + normalizedCoord.x
+        + '/' + normalizedCoord.y
+        + '.png';
 }
 
 var transformedImageMapTypeOptions = {

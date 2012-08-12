@@ -45,7 +45,11 @@ TRANSPARENT_PNG_BINARY = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x0
 
 
 def transparentPngResponse():
-    return HttpResponse(TRANSPARENT_PNG_BINARY, mimetype='image/png')
+    return HttpResponse(TRANSPARENT_PNG_BINARY, content_type='image/png')
+
+
+def dumps(obj):
+    return json.dumps(obj, sort_keys=True, indent=4)
 
 
 def overlayIndex(request):
@@ -79,7 +83,7 @@ def overlayNew(request):
             overlay = models.Overlay(image=image,
                                      imageType=image.content_type,
                                      name=os.path.basename(image.name),
-                                     data=json.dumps(preData))
+                                     data=dumps(preData))
             overlay.save()
             qt = overlay.generateQuadTree()
             image = Image.open(models.dataStorage.path(overlay.image))
@@ -89,7 +93,7 @@ def overlayNew(request):
             preData['tilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
             preData['imageSize'] = (overlay.image.width, overlay.image.height)
             preData['key'] = overlay.key
-            overlay.data = json.dumps(preData)
+            overlay.data = dumps(preData)
             overlay.save()
             return render_to_response('geocamTiePoint/new-overlay-result.html',
                                       {'status':'success',
@@ -136,7 +140,7 @@ def overlayIdJson(request, key):
             "name": overlay.name,
             "imageType": overlay.imageType
             }
-        return HttpResponse(json.dumps(data))
+        return HttpResponse(dumps(data), content_type='application/json')
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
         if 'data' in request.POST:
@@ -151,7 +155,7 @@ def overlayIdJson(request, key):
             "name": overlay.name,
             "imageType": overlay.imageType
             }
-        return HttpResponse(json.dumps(data))
+        return HttpResponse(dumps(data), content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 
@@ -167,7 +171,7 @@ def overlayIdWarp(request, key):
         transformType = data['transform']['type']
         transformMatrix = data['transform']['matrix']
         overlay.generateAlignedQuadTree()
-        return HttpResponse("{}")
+        return HttpResponse("{}", content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET','POST'])
 
@@ -199,5 +203,5 @@ def getTile(request, quadTreeId, zoom, x, y):
         return transparentPngResponse()
 
 
-def helloQuadTree(request, quadTreeId):
-    return HttpResponse('hello')
+def dummyView(*args, **kwargs):
+    return HttpResponseNotFound()
