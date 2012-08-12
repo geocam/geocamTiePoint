@@ -85,7 +85,7 @@ def overlayNew(request):
                                      name=os.path.basename(image.name),
                                      data=dumps(preData))
             overlay.save()
-            qt = overlay.generateQuadTree()
+            qt = overlay.generateUnalignedQuadTree()
             image = Image.open(models.dataStorage.path(overlay.image))
             basePath = models.dataStorage.path('geocamTiePoint/tiles/'+str(overlay.key))
             preData['points'] = []

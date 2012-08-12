@@ -489,7 +489,7 @@ class WarpedQuadTreeGenerator(object):
                                                      targetPatchOrigin[1],
                                                      zoom + PATCH_ZOOM_OFFSET)
                 sourcePatchOrigin = [int(round(c))
-                                     for c in transform.reverse(mercatorPatchOrigin)]
+                                     for c in self.transform.reverse(mercatorPatchOrigin)]
                 patchTable[(px, py)] = sourcePatchOrigin
         if BENCHMARK_WARP_STEPS:
             print
