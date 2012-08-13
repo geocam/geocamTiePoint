@@ -5,38 +5,18 @@
 # __END_LICENSE__
 
 import json
-import base64
 import os
-import math
-import sys
-import time
-import tarfile
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
 
-import numpy
-import numpy.linalg
 import PIL.Image
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
-from django.http import HttpResponseForbidden, Http404
-from django.http import HttpResponseNotAllowed, HttpResponseBadRequest
+from django.http import HttpResponseNotAllowed
 from django.template import RequestContext
-from django.utils.translation import ugettext, ugettext_lazy as _
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 from django.views.decorators.cache import cache_page
-
-try:
-    from scipy.optimize import leastsq
-except ImportError:
-    pass  # only needed for quadratic model with many tie points
-
-from PIL import Image
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
@@ -57,17 +37,17 @@ def overlayIndex(request):
     if request.method == 'GET':
         overlays = models.Overlay.objects.all()
         return render_to_response('geocamTiePoint/overlay-index.html',
-                                  {'overlays':overlays},
+                                  {'overlays': overlays},
                                   context_instance=RequestContext(request))
     else:
-        return HttpResponseNotAllowed(['GET','POST'])
+        return HttpResponseNotAllowed(['GET', 'POST'])
 
 
 def overlayDelete(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-delete.html',
-                                  {'overlay':overlay},
+                                  {'overlay': overlay},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
@@ -96,8 +76,8 @@ def overlayNew(request):
             overlay.data = dumps(preData)
             overlay.save()
             return render_to_response('geocamTiePoint/new-overlay-result.html',
-                                      {'status':'success',
-                                       'id':overlay.key},
+                                      {'status': 'success',
+                                       'id': overlay.key},
                                       context_instance=RequestContext(request))
     elif request.method == 'GET':
         form = forms.NewOverlayForm()
@@ -113,8 +93,8 @@ def overlayId(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-view.html',
-                                  {'overlay':overlay,
-                                   'DATA_URL':settings.DATA_URL},
+                                  {'overlay': overlay,
+                                   'DATA_URL': settings.DATA_URL},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -124,8 +104,8 @@ def overlayIdPreview(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-preview.html',
-                                  {'overlay':overlay,
-                                   'DATA_URL':settings.DATA_URL},
+                                  {'overlay': overlay,
+                                   'DATA_URL': settings.DATA_URL},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -157,29 +137,27 @@ def overlayIdJson(request, key):
             }
         return HttpResponse(dumps(data), content_type='application/json')
     else:
-        return HttpResponseNotAllowed(['GET','POST'])
+        return HttpResponseNotAllowed(['GET', 'POST'])
 
 
 @csrf_exempt
 def overlayIdWarp(request, key):
     if request.method == 'GET':
-        return render_to_response('geocamTiePoint/warp-form.html',{},
+        return render_to_response('geocamTiePoint/warp-form.html', {},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
-        data = json.loads(overlay.data)
-        transformType = data['transform']['type']
-        transformMatrix = data['transform']['matrix']
         overlay.generateAlignedQuadTree()
         return HttpResponse("{}", content_type='application/json')
     else:
-        return HttpResponseNotAllowed(['GET','POST'])
+        return HttpResponseNotAllowed(['GET', 'POST'])
 
 
 def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        fobject = overlay.image; fobject.open()
+        fobject = overlay.image
+        fobject.open()
         response = HttpResponse(fobject.read(), content_type=overlay.imageType)
         return response
     else:

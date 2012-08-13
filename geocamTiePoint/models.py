@@ -5,22 +5,19 @@
 # __END_LICENSE__
 
 import os
-import shutil
-import logging
 
 import PIL.Image
 
 from django.db import models
-from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse
 
-from geocamUtil.models import UuidField
 from geocamUtil import anyjson as json
 
 from geocamTiePoint import quadTree, settings
 
+
 def getNewImageFileName(instance, filename):
-    return 'geocamTiePoint/overlay_images/'+filename
+    return 'geocamTiePoint/overlay_images/' + filename
 
 
 def dumps(obj):
@@ -107,13 +104,14 @@ class Overlay(models.Model):
         self.save()
 
         if 0:
+            import tarfile
             # figure tar file stuff out again later
             tarFilePath = settings.DATA_ROOT + 'geocamTiePoint/tileArchives/'
             if not os.path.exists(tarFilePath):
                 os.makedirs(tarFilePath)
             oldPath = os.getcwd()
-            os.chdir(basePath)
-            tarFile = tarfile.open(tarFilePath+'/'+str(overlay.key)+'.tar.gz', 'w:gz')
+            os.chdir(qt.getBasePath())
+            tarFile = tarfile.open(tarFilePath + '/' + str(self.key) + '.tar.gz', 'w:gz')
             for name in os.listdir(os.getcwd()):
                 tarFile.add(name)
             os.chdir(oldPath)

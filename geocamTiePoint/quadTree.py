@@ -4,15 +4,13 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-# Imports are copied from the old views.py, 
+# Imports are copied from the old views.py,
 # so I'm basically taking a wild guess at what's required.
 import json
-import base64
 import os
 import math
 import sys
 import time
-import tarfile
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -38,24 +36,32 @@ ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
 BENCHMARK_WARP_STEPS = False
 
+
 class ZoomTooBig(Exception):
     pass
 
+
 class OutOfBounds(Exception):
     pass
+
 
 class Bounds(object):
     def __init__(self, *points):
         self.bounds = [None, None, None, None]
         for point in points:
             self.extend(point)
-    
+
     def __getattribute__(self, name):
-        if name == 'xmin': return self.bounds[0]
-        elif name == 'xmax': return self.bounds[2]
-        elif name == 'ymin': return self.bounds[1]
-        elif name == 'ymax': return self.bounds[3]
-        else: return object.__getattribute__(self, name)
+        if name == 'xmin':
+            return self.bounds[0]
+        elif name == 'xmax':
+            return self.bounds[2]
+        elif name == 'ymin':
+            return self.bounds[1]
+        elif name == 'ymax':
+            return self.bounds[3]
+        else:
+            return object.__getattribute__(self, name)
 
     def extend(self, point):
         if self.bounds[0] == None:
@@ -66,19 +72,20 @@ class Bounds(object):
             self.bounds[2] = point[0]
         if self.bounds[3] == None:
             self.bounds[3] = point[1]
-        self.bounds[0] = min(self.bounds[0],point[0])
-        self.bounds[1] = min(self.bounds[1],point[1])
-        self.bounds[2] = max(self.bounds[2],point[0])
-        self.bounds[3] = max(self.bounds[3],point[1])
+        self.bounds[0] = min(self.bounds[0], point[0])
+        self.bounds[1] = min(self.bounds[1], point[1])
+        self.bounds[2] = max(self.bounds[2], point[0])
+        self.bounds[3] = max(self.bounds[3], point[1])
 
 
 def splitArray(array, by):
     by = int(by)
     assert(by > 1)
     newArray = []
-    for i in range(0, int(float(len(array))/by)+1, by):
-        newArray.append(array[i:i+by])
+    for i in range(0, int(float(len(array)) / by) + 1, by):
+        newArray.append(array[i:(i + by)])
     return newArray
+
 
 def testOutsideCorners(point, corners):
     x, y = point
@@ -93,8 +100,10 @@ def testOutsideCorners(point, corners):
               and (top <= y <= bottom))
     return not inside
 
+
 def allPointsOutsideCorners(points, corners):
     return all([testOutsideCorners(p, corners) for p in points])
+
 
 def cornerPoints(bounds):
     left, top, right, bottom = bounds
@@ -103,12 +112,14 @@ def cornerPoints(bounds):
             (left, bottom),
             (right, bottom))
 
+
 def getImageCorners(image):
     w, h = image.size
     return ((0, 0),
             (w, 0),
             (0, h),
             (w, h))
+
 
 def calculateMaxZoom(bounds, image):
     metersPerPixelX = (bounds.xmax - bounds.xmin) / image.size[0]
@@ -119,10 +130,12 @@ def calculateMaxZoom(bounds, image):
     zoom = int(math.ceil(decimalZoom))
     return zoom
 
+
 def tileIndex(zoom, mercatorCoords):
     coords = metersToPixels(mercatorCoords[0], mercatorCoords[1], zoom)
     index = [int(math.floor(coord / (TILE_SIZE))) for coord in coords]
     return index
+
 
 def tileExtent(zoom, x, y):
     corners = ((x, y),
@@ -133,8 +146,10 @@ def tileExtent(zoom, x, y):
     mercatorCorners = [pixelsToMeters(*(pixels + (zoom,))) for pixels in pixelCorners]
     return mercatorCorners
 
-def tileIndexToPixels(x,y):
+
+def tileIndexToPixels(x, y):
     return x * TILE_SIZE, y * TILE_SIZE
+
 
 def getProjectiveInverse(matrix):
     # http://www.cis.rit.edu/class/simg782/lectures/lecture_02/lec782_05_02.pdf (p. 33)
@@ -160,7 +175,8 @@ def getProjectiveInverse(matrix):
     result /= result[2, 2]
 
     return result
-                          
+
+
 def applyProjectiveTransform(matrix, pt):
     print >> sys.stderr, pt
     u = numpy.array(list(pt) + [1], 'd')
@@ -168,6 +184,7 @@ def applyProjectiveTransform(matrix, pt):
     # projective rescaling: divide by z and truncate
     v = (v0 / v0[2])[:2]
     return v.tolist()
+
 
 class ProjectiveTransform(object):
     def __init__(self, matrix):
@@ -183,9 +200,10 @@ class ProjectiveTransform(object):
 
     def forward(self, pt):
         return self._apply(self.matrix, pt)
-        
+
     def reverse(self, pt):
         return self._apply(self.inverse, pt)
+
 
 class QuadraticTransform(object):
     def __init__(self, matrix):
@@ -201,7 +219,7 @@ class QuadraticTransform(object):
         return (vapprox - v)
 
     def forward(self, ulist):
-        u = numpy.array([ulist[0]**2, ulist[1]**2, ulist[0], ulist[1], 1])
+        u = numpy.array([ulist[0] ** 2, ulist[1] ** 2, ulist[0], ulist[1], 1])
         v0 = self.matrix.dot(u)
         v = (v0 / v0[2])[:2]
         return v.tolist()
@@ -219,8 +237,8 @@ class QuadraticTransform(object):
             leastsq
         except NameError:
             raise ImportError('scipy.optimize.leastsq')
-        umin, error = leastsq(lambda u: self._residuals(v, u),
-                              u0)
+        umin, _error = leastsq(lambda u: self._residuals(v, u),
+                               u0)
 
         return umin.tolist()
 
@@ -235,6 +253,7 @@ def makeTransform(transformDict):
     else:
         raise ValueError('unknown transform type %s, expected one of: projective, quadratic'
                          % transformType)
+
 
 def flatten(listOfLists):
     return [item for subList in listOfLists for item in subList]
@@ -264,8 +283,8 @@ def latLonTometers(lat, lng):
 
 
 def metersToLatLon(x, y):
-    lng = x * 180 / originShift
-    lat = y * 180 / originShift
+    lng = x * 180 / ORIGIN_SHIFT
+    lat = y * 180 / ORIGIN_SHIFT
     lat = ((math.atan(2 ** (y * (math.pi / 180))) * 360) / math.pi) - 90
     return lat, lng
 
@@ -431,7 +450,6 @@ class WarpedQuadTreeGenerator(object):
                              % (zoom, self.maxZoom))
 
         sys.stderr.write('.')
-        corners = tileExtent(zoom, x, y)
 
         if isinstance(self.transform, ProjectiveTransform):
             transformArgs = self.getPilTransformArgsProjective(zoom, x, y)
@@ -475,13 +493,12 @@ class WarpedQuadTreeGenerator(object):
 
         if BENCHMARK_WARP_STEPS:
             transformStart = time.time()
-        tileOrigin = corners[0]
         doublePatchSize = PATCH_SIZE * 2
         meshPatches = []
 
         patchTable = {}
-        for px in xrange(PATCHES_PER_TILE+1):
-            for py in xrange(PATCHES_PER_TILE+1):
+        for px in xrange(PATCHES_PER_TILE + 1):
+            for py in xrange(PATCHES_PER_TILE + 1):
                 targetPatchOrigin = tileIndexToPixels(x * PATCHES_PER_TILE + px,
                                                       y * PATCHES_PER_TILE + py)
                 mercatorPatchOrigin = pixelsToMeters(targetPatchOrigin[0],
@@ -513,8 +530,8 @@ class WarpedQuadTreeGenerator(object):
                 meshPatches.append([targetBox, flatten(sourcePatchCorners)])
 
                 if 0:
-                    print >> sys.stderr, 'patchCorners:', patchCorners
-                    print >> sys.stderr, 'sourceCorners:', sourceCorners
+                    print >> sys.stderr, 'patchCorners:', corners
+                    print >> sys.stderr, 'sourceCorners:', sourcePatchCorners
                     print >> sys.stderr, 'targetBox:', targetBox
 
         transformArgs = ((int(TILE_SIZE * 2),) * 2,
