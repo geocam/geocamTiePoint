@@ -8,7 +8,7 @@ from django import forms
 from geocamTiePoint import models
 
 
-class NewOverlayForm(forms.ModelForm):
+class NewImageDataForm(forms.ModelForm):
     class Meta:
-        model = models.Overlay
+        model = models.ImageData
         fields = ('image',)

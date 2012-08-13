@@ -8,5 +8,6 @@ from django.contrib import admin
 
 from geocamTiePoint import models
 
+admin.site.register(models.ImageData)
 admin.site.register(models.Overlay)
 admin.site.register(models.QuadTree)

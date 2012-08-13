@@ -57,30 +57,40 @@ def overlayDelete(request, key):
 
 def overlayNew(request):
     if request.method == 'POST':
-        form = forms.NewOverlayForm(request.POST, request.FILES)
+        form = forms.NewImageDataForm(request.POST, request.FILES)
         if form.is_valid():
-            image = form.cleaned_data['image']
-            preData = {}
-            overlay = models.Overlay(image=image,
-                                     imageType=image.content_type,
-                                     name=os.path.basename(image.name),
-                                     data=dumps(preData))
+            # create and save new empty overlay so we can refer to it
+            overlay = models.Overlay(author=request.user)
             overlay.save()
-            qt = overlay.generateUnalignedQuadTree()
-            image = PIL.Image.open(overlay.image.file)
+
+            # save imageData
+            imageRef = form.cleaned_data['image']
+            imageData = models.ImageData(image=imageRef,
+                                         contentType=imageRef.content_type,
+                                         overlay=overlay)
+            imageData.save()
+
+            # fill in overlay info
+            overlay.name = imageRef.name
+            overlay.imageData = imageData
+            image = PIL.Image.open(imageData.image.file)
+            preData = {}
             preData['points'] = []
             preData['url'] = reverse('geocamTiePoint_overlayIdJson', args=[overlay.key])
-            preData['tilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
             preData['imageSize'] = image.size
             preData['key'] = overlay.key
             overlay.data = dumps(preData)
             overlay.save()
+
+            # generate initial quad tree
+            qt = overlay.generateUnalignedQuadTree()
+
             return render_to_response('geocamTiePoint/new-overlay-result.html',
                                       {'status': 'success',
                                        'id': overlay.key},
                                       context_instance=RequestContext(request))
     elif request.method == 'GET':
-        form = forms.NewOverlayForm()
+        form = forms.NewImageDataForm()
     else:
         return HttpResponseNotAllowed(('POST', 'GET'))
 
@@ -118,7 +128,7 @@ def overlayIdJson(request, key):
         data = {
             "data": json.loads(overlay.data),
             "name": overlay.name,
-            "imageType": overlay.imageType
+            "contentType": overlay.imageData.contentType
             }
         return HttpResponse(dumps(data), content_type='application/json')
     elif request.method == 'POST':
@@ -127,13 +137,13 @@ def overlayIdJson(request, key):
             overlay.data = request.POST['data']
         if 'name' in request.POST:
             overlay.name = request.POST['name']
-        if 'imageType' in request.POST:
-            overlay.imageType = request.POST['imageType']
+        if 'contentType' in request.POST:
+            overlay.imageData.contentType = request.POST['contentType']
         overlay.save()
         data = {
             "data": json.loads(overlay.data),
             "name": overlay.name,
-            "imageType": overlay.imageType
+            "contentType": overlay.imageData.contentType
             }
         return HttpResponse(dumps(data), content_type='application/json')
     else:
@@ -156,9 +166,9 @@ def overlayIdWarp(request, key):
 def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        fobject = overlay.image
+        fobject = overlay.imageData.image
         fobject.open()
-        response = HttpResponse(fobject.read(), content_type=overlay.imageType)
+        response = HttpResponse(fobject.read(), content_type=overlay.contentType)
         return response
     else:
         return HttpResponseNotAllowed(['GET'])

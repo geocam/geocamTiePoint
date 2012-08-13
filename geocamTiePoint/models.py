@@ -5,11 +5,13 @@
 # __END_LICENSE__
 
 import os
+import datetime
 
 import PIL.Image
 
 from django.db import models
 from django.core.urlresolvers import reverse
+from django.contrib.auth.models import User
 
 from geocamUtil import anyjson as json
 
@@ -24,59 +26,87 @@ def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
 
 
+class ImageData(models.Model):
+    mtime = models.DateTimeField()
+    image = models.ImageField(upload_to=getNewImageFileName)
+    contentType = models.CharField(max_length=50)
+    overlay = models.ForeignKey('Overlay', null=True, blank=True)
+    checksum = models.CharField(max_length=128, blank=True)
+
+    def __unicode__(self):
+        return ('ImageData overlay_id=%d checksum=%s %s'
+                % (self.overlay.key, self.checksum, self.mtime))
+
+    def save(self, *args, **kwargs):
+        self.mtime = datetime.datetime.utcnow()
+        super(ImageData, self).save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self.image.delete()
+        super(ImageData, self).delete(*args, **kwargs)
+
+
 class QuadTree(models.Model):
-    overlay = models.ForeignKey('Overlay', null=True, db_index=True,
-                                on_delete=models.SET_NULL  # avoid circular FK constraints making deletes impossible
-                                )
+    mtime = models.DateTimeField()
+    imageData = models.ForeignKey('ImageData')
     # transform is either an empty string (simple quadTree) or a JSON-formatted
     # definition of the warping transform (warped quadTree)
     transform = models.TextField(blank=True)
+
+    def __unicode__(self):
+        return ('QuadTree imageData_id=%s transform=%s %s'
+                % (self.imageData.id, self.transform, self.mtime))
+
+    def save(self, *args, **kwargs):
+        self.mtime = datetime.datetime.utcnow()
+        super(QuadTree, self).save(*args, **kwargs)
 
     def getBasePath(self):
         return settings.DATA_ROOT + 'geocamTiePoint/tiles/%d' % self.id
 
     def getGenerator(self):
-        image = PIL.Image.open(self.overlay.image.file)
+        image = PIL.Image.open(self.imageData.image.file)
         if self.transform:
             return quadTree.WarpedQuadTreeGenerator(image, json.loads(self.transform))
         else:
             return quadTree.SimpleQuadTreeGenerator(image)
 
 
-# FIX: may want to pull out Overlay.image field into a separate model to
-# support versioning:
-
-# class OverlayImage(models.Model):
-#    image = models.ImageField(upload_to=getNewImageFileName)
-
-
 class Overlay(models.Model):
-    data = models.TextField()
-    image = models.ImageField(upload_to=getNewImageFileName)
-    imageType = models.CharField(max_length=50)
-    name = models.CharField(max_length=50)
     key = models.AutoField(primary_key=True, unique=True)
+    author = models.ForeignKey(User, null=True, blank=True)
+    mtime = models.DateTimeField()
+    name = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    imageUrl = models.URLField(blank=True, verify_exists=False)
+    imageData = models.ForeignKey(ImageData, null=True, blank=True,
+                                  related_name='currentOverlays',
+                                  on_delete=models.SET_NULL)
     unalignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
-                                          related_name='unaligned_overlays')
+                                          related_name='unalignedOverlays',
+                                          on_delete=models.SET_NULL)
     alignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
-                                        related_name='aligned_overlays')
+                                        related_name='alignedOverlays',
+                                        on_delete=models.SET_NULL)
+
+    # data is a special JSON-format field that redundantly holds many of
+    # the specific fields defined above in the django model as well as
+    # some additional fields not captured in the model schema.
+    data = models.TextField()
 
     class Meta:
         ordering = ['-key']
 
-    def __str__(self):
-        return str(self.name)
-
     def __unicode__(self):
-        return unicode(self.name)
+        return ('Overlay name=%s author=%s %s'
+                % (self.name, self.author.username, self.mtime))
 
-    def delete(self, *args, **kwargs):
-        self.image.delete()
-        # self.last_quadTree.delete()  # FIX: delete quadTrees associated with overlay
-        super(Overlay, self).delete(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.mtime = datetime.datetime.utcnow()
+        super(Overlay, self).save(*args, **kwargs)
 
     def generateUnalignedQuadTree(self):
-        qt = QuadTree(overlay=self)
+        qt = QuadTree(imageData=self.imageData)
         qt.save()
 
         if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
@@ -84,6 +114,9 @@ class Overlay(models.Model):
             gen.writeQuadTree(qt.getBasePath())
 
         self.unalignedQuadTree = qt
+        data = json.loads(self.data)
+        data['tilesUrl'] = reverse('geocamTiePoint_tileRoot', args=[qt.id])
+        self.data = dumps(data)
         self.save()
 
         return qt
@@ -91,7 +124,8 @@ class Overlay(models.Model):
     def generateAlignedQuadTree(self):
         data = json.loads(self.data)
 
-        qt = QuadTree(overlay=self, transform=dumps(data['transform']))
+        qt = QuadTree(imageData=self.imageData,
+                      transform=dumps(data['transform']))
         qt.save()
 
         if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
