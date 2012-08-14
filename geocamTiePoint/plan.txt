@@ -1,0 +1,26 @@
+Models-
+
+Overlay
+Tie Point - both sides of the tie point
+
+Views
+
+new map overlay (w/ drag and drop)
+edit info page
+choose alignment method page
+Place tie points page
+Align tie points page
+View page
+
+
+structure
+
+views directory, with javascript files containing the views described above and their controllers
+models.js file with all the models
+router.js file with routing stuff
+app.js contains the application and all the initalization code
+
+/ember/#/id - loads user image, puts tie points where user specified in the base layer,
+	      make live affine projection with them, dragging should also work to update
+	      the affine projection.
+
