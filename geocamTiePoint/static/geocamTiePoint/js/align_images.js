@@ -1,3 +1,9 @@
+// __BEGIN_LICENSE__
+// Copyright (C) 2008-2010 United States Government as represented by
+// the Administrator of the National Aeronautics and Space Administration.
+// All Rights Reserved.
+// __END_LICENSE__
+
 function linear_regression(V, U)
 {
     // Let V and U be two d x n matrices whose columns are length-d

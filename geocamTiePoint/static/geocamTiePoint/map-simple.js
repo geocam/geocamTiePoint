@@ -1,3 +1,9 @@
+// __BEGIN_LICENSE__
+// Copyright (C) 2008-2010 United States Government as represented by
+// the Administrator of the National Aeronautics and Space Administration.
+// All Rights Reserved.
+// __END_LICENSE__
+
 //USGSOverlay.prototype = new google.maps.OverlayView();
 var labels = ["1","2","3","4","5","6","7","8","9"];
 var i=0; var j=0;
