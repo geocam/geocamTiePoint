@@ -28,14 +28,20 @@ def dumps(obj):
 
 class ImageData(models.Model):
     mtime = models.DateTimeField()
-    image = models.ImageField(upload_to=getNewImageFileName)
+    # image.max_length needs to be long enough to hold a blobstore key
+    image = models.ImageField(upload_to=getNewImageFileName,
+                              max_length=255)
     contentType = models.CharField(max_length=50)
     overlay = models.ForeignKey('Overlay', null=True, blank=True)
     checksum = models.CharField(max_length=128, blank=True)
 
     def __unicode__(self):
-        return ('ImageData overlay_id=%d checksum=%s %s'
-                % (self.overlay.key, self.checksum, self.mtime))
+        if self.overlay:
+            overlay_id = self.overlay.key
+        else:
+            overlay_id = None
+        return ('ImageData overlay_id=%s checksum=%s %s'
+                % (overlay_id, self.checksum, self.mtime))
 
     def save(self, *args, **kwargs):
         self.mtime = datetime.datetime.utcnow()
@@ -48,7 +54,7 @@ class ImageData(models.Model):
 
 class QuadTree(models.Model):
     mtime = models.DateTimeField()
-    imageData = models.ForeignKey('ImageData')
+    imageData = models.ForeignKey('ImageData', null=True, blank=True)
     # transform is either an empty string (simple quadTree) or a JSON-formatted
     # definition of the warping transform (warped quadTree)
     transform = models.TextField(blank=True)

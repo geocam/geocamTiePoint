@@ -17,10 +17,12 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 from django.views.decorators.cache import cache_page
+from django.core.files.base import ContentFile    
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
 from geocamTiePoint import quadTree
+from geocamTiePoint import anypdf as pdf
 
 TRANSPARENT_PNG_BINARY = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x01sRGB\x00\xae\xce\x1c\xe9\x00\x00\x00\rIDAT\x08\xd7c````\x00\x00\x00\x05\x00\x01^\xf3*:\x00\x00\x00\x00IEND\xaeB`\x82'
 
@@ -65,9 +67,15 @@ def overlayNew(request):
 
             # save imageData
             imageRef = form.cleaned_data['image']
-            imageData = models.ImageData(image=imageRef,
-                                         contentType=imageRef.content_type,
+            imageData = models.ImageData(contentType=imageRef.content_type,
                                          overlay=overlay)
+            if imageRef.content_type == 'application/pdf':
+                pngData = pdf.convertPdf(imageRef.file.read())
+                imageData.image.save('dummy.png', ContentFile(pngData), save=False)
+                imageData.contentType = 'image/png'
+            else:
+                imageData.image.file = imageRef.file
+                imageData.contentType = imageRef.content_type
             imageData.save()
 
             # fill in overlay info
