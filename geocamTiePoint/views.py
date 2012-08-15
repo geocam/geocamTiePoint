@@ -74,7 +74,7 @@ def overlayNew(request):
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
-                imageData.image.file = imageRef.file
+                imageData.image = imageRef
                 imageData.contentType = imageRef.content_type
             imageData.save()
 
