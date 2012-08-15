@@ -20,7 +20,9 @@ models.js file with all the models
 router.js file with routing stuff
 app.js contains the application and all the initalization code
 
-/ember#/id - loads user image, puts tie points where user specified in the base layer,
-	      make live affine projection with them, dragging should also work to update
-	      the affine projection.
+/ember#/align/id - loads user image, puts tie points where user specified in the base layer,
+	      	   make live affine projection with them, dragging should also work to update
+	      	   the affine projection.
 
+/ember#/place/id - same as above, but lets user place tie points on image before aligning them
+		   to the actual google map
