@@ -7,39 +7,18 @@
 /* f1dim: Breaks down the multidimensional function to one-d function
  * for golden to handle. */
 
-function f1dim(x, ncom, pcom, xicom, points)
+function f1dim(func, x, ncom, pcom, xicom)
 {
-    var xt=new Array(ncom);
-    for (var i=0; i<ncom; i++) {
-        xt[i] = pcom[i]+x*xicom[i];
+    var xt = new Array(ncom);
+    for (var i = 0; i < ncom; i++) {
+        xt[i] = pcom[i] + x * xicom[i];
     }
-    return func(xt,ncom,pcom,xicom,points);
-}
-
-/* func: The function we are trying to optimize. FIX: This should be passed into
- * the optimization procedure as a parameter. */
-function func(p, ncom, pcom, xicom, points) //p is params to tMtx
-{
-    var V = getVMatrixFromPoints(points);
-    var tform = getTransform(p);
-    var Vapprox = applyTransform(tform, points);
-    var Verror = Vapprox.subtract(V);
-    var error = Verror.squareSum();
-
-    /*
-    console.log('V: ' + JSON.stringify(V));
-    console.log('tform: ' + JSON.stringify(tform));
-    console.log('Vapprox: ' + JSON.stringify(Vapprox));
-    console.log('Verror: ' + JSON.stringify(Verror));
-    console.log('error: ' + error.toExponential(8));
-    */
-
-    return error;
+    return func(xt);
 }
 
 /* Performs one-dimensional Golden Section Search. Referenced
  * pseudo-code in Numerical Recipes. */
-function golden(ax, bx, cx, tol, ncom, pcom, xicom, points)
+function golden(func, ax, bx, cx, tol, ncom, pcom, xicom)
 {
     var ITMAX = 100;
     var R = 0.61803399;
@@ -57,8 +36,8 @@ function golden(ax, bx, cx, tol, ncom, pcom, xicom, points)
         x1 = bx - C * (bx - ax);
     }
 
-    var f1 = f1dim(x1, ncom, pcom, xicom, points);
-    var f2 = f1dim(x2, ncom, pcom, xicom, points);
+    var f1 = f1dim(func, x1, ncom, pcom, xicom);
+    var f2 = f1dim(func, x2, ncom, pcom, xicom);
 
     var step = 0;
     var tmp;
@@ -69,7 +48,7 @@ function golden(ax, bx, cx, tol, ncom, pcom, xicom, points)
             x1 = x2;
             x2 = tmp;
 
-            var tmp = f1dim(x2, ncom, pcom, xicom, points);
+            var tmp = f1dim(func, x2, ncom, pcom, xicom);
             f1 = f2;
             f2 = tmp;
         } else {
@@ -78,7 +57,7 @@ function golden(ax, bx, cx, tol, ncom, pcom, xicom, points)
             x2 = x1;
             x1 = tmp;
 
-            var tmp = f1dim(x1, ncom, pcom, xicom, points);
+            var tmp = f1dim(func, x1, ncom, pcom, xicom);
             f2 = f1;
             f1 = tmp;
         }
@@ -103,26 +82,25 @@ function golden(ax, bx, cx, tol, ncom, pcom, xicom, points)
  * to multi-dimensional optimization. Need to call golden section search
  * from linmin in order for it to be used by powell, which performs
  * multi-dimensional optimization. */
-function linmin(p, xi, ncom, pcom, xicom, points)
+function linmin(func, p, xi, ncom, pcom, xicom)
 {
     var TOL = Math.exp(-8);
     var n = p.length;
     ncom = n;
     pcom = p;
     xicom = xi;
-    var numTiePts = points.length;
 
     var ax = 0.0;
     var xx = 1.0;
     var fret = 0;
 
-    var mnbrak_ret = mnbrak(ax, xx, ncom, pcom, xicom, points);
+    var mnbrak_ret = mnbrak(func, ax, xx, ncom, pcom, xicom);
 
     ax = mnbrak_ret.ax;
     xx = mnbrak_ret.bx;
     var bx = mnbrak_ret.cx;
 
-    var golden_ret = golden(ax, xx, bx, TOL, ncom, pcom, xicom, points);
+    var golden_ret = golden(func, ax, xx, bx, TOL, ncom, pcom, xicom);
     var xmin = golden_ret.xmin;
     var fret = golden_ret.fret;
 
@@ -139,14 +117,14 @@ function linmin(p, xi, ncom, pcom, xicom, points)
 
 /* mnbrak: Given two initial points, finds three points that brackets the minimum.
  * The bracket points are passed to golden section search. */
-function mnbrak(ax,bx,ncom,pcom,xicom,points)
+function mnbrak(func, ax, bx, ncom, pcom, xicom)
 {
     var GOLD = 1.618034;
     var GLIMIT = 100.0;
     var TINY = 1e-20;
     var ITMAX = 100;
-    var fa = f1dim(ax, ncom, pcom, xicom, points);
-    var fb = f1dim(bx, ncom, pcom, xicom, points);
+    var fa = f1dim(func, ax, ncom, pcom, xicom);
+    var fb = f1dim(func, bx, ncom, pcom, xicom);
 
     if (fb > fa) {
         var temp = ax;
@@ -159,7 +137,7 @@ function mnbrak(ax,bx,ncom,pcom,xicom,points)
     }
 
     var cx = bx + GOLD * (bx - ax);
-    var fc = f1dim(cx, ncom, pcom, xicom, points);
+    var fc = f1dim(func, cx, ncom, pcom, xicom);
 
     var step = 0;
 
@@ -171,7 +149,7 @@ function mnbrak(ax,bx,ncom,pcom,xicom,points)
             / (2.0 * SIGN(Math.max(Math.abs(q - r), TINY), q - r));
         var ulim = bx + GLIMIT * (cx - bx);
         if ((bx - u) * (u - cx) > 0.0) {
-            var fu = f1dim(u, ncom, pcom, xicom, points);
+            var fu = f1dim(func, u, ncom, pcom, xicom);
             if(fu < fc) {
                 ax = bx;
                 bx = u;
@@ -184,26 +162,26 @@ function mnbrak(ax,bx,ncom,pcom,xicom,points)
                 return {ax: ax, bx: bx, cx: cx};
             }
             u = cx + GOLD * (cx - bx);
-            fu = f1dim(u, ncom, pcom, xicom, points);
+            fu = f1dim(func, u, ncom, pcom, xicom);
         } else if ((cx - u) * (u - ulim) > 0.0) {
-            fu = f1dim(u, ncom, pcom, xicom, points);
+            fu = f1dim(func, u, ncom, pcom, xicom);
             if (fu < fc) {
                 var tmp = cx + GOLD * (cx - bx);
                 bx = cx;
                 cx = u;
                 u = tmp;
 
-                var tmp = f1dim(u, ncom, pcom, xicom, points);
+                var tmp = f1dim(func, u, ncom, pcom, xicom);
                 fb = fc;
                 fc = fu;
                 fu = tmp;
             }
         } else if ((u - ulim) * (ulim - cx) >= 0.0) {
             u = ulim;
-            fu = f1dim(u, ncom, pcom, xicom, points);
+            fu = f1dim(func, u, ncom, pcom, xicom);
         } else {
             u = cx + GOLD * (cx - bx);
-            fu = f1dim(u, ncom, pcom, xicom, points);
+            fu = f1dim(func, u, ncom, pcom, xicom);
         }
 
         ax = bx;
@@ -233,7 +211,7 @@ function SIGN(a, b)
 
 /* Uses Powell's Method to find a local minimum of a function. No derivatives are
  * needed to find the minimum. */
-function powell(p, xi, ftol, ncom, pcom, xicom, points)
+function powell(func, p, xi, ftol, ncom, pcom, xicom)
 {
     var ITMAX = 200;
     var TINY = 1e-25;
@@ -248,7 +226,7 @@ function powell(p, xi, ftol, ncom, pcom, xicom, points)
     var pt = new Array(n);
     var ptt = new Array(n);
     var xit = new Array(n);
-    var fret = func(p, ncom, pcom, xicom, points);
+    var fret = func(p, ncom, pcom, xicom);
 
     for (var j = 0; j < n; j++) {
         pt[j] = p[j];
@@ -264,7 +242,7 @@ function powell(p, xi, ftol, ncom, pcom, xicom, points)
                 xit[j] = xi.values[j][i];
             }
             fptt = fret;
-            linmin_ret = linmin(p, xit, ncom, pcom, xicom, points);
+            linmin_ret = linmin(func, p, xit, ncom, pcom, xicom);
             p = linmin_ret.p;
             xit = linmin_ret.xi;
             fret = linmin_ret.fret;
@@ -276,7 +254,7 @@ function powell(p, xi, ftol, ncom, pcom, xicom, points)
         }
 
         if ((2.0 * (fp - fret)) <= (ftol * (Math.abs(fp) + Math.abs(fret)) + TINY)){
-            return {finalpts: p, iter: iter, fret: fret, xi: xi};
+            return {finalParams: p, iter: iter, fret: fret, xi: xi};
         }
 
         for (var i = 0; i < n; i++) {
@@ -286,7 +264,7 @@ function powell(p, xi, ftol, ncom, pcom, xicom, points)
         }
 
 
-        fptt = func(ptt, ncom, pcom, xicom, points);
+        fptt = func(ptt, ncom, pcom, xicom);
 
         if(fptt < fp) {
 
@@ -295,7 +273,7 @@ function powell(p, xi, ftol, ncom, pcom, xicom, points)
                 del * (Math.pow(fp - fptt, 2));
 
             if(t < 0.0) {
-                linmin_ret = linmin(p, xit, ncom, pcom, xicom, points);
+                linmin_ret = linmin(func, p, xit, ncom, pcom, xicom);
                 p = linmin_ret.p;
                 xit = linmin_ret.xi;
                 fret = linmin_ret.fret;
@@ -309,72 +287,48 @@ function powell(p, xi, ftol, ncom, pcom, xicom, points)
     throw "ERROR in powell.js: iteration maxed out";
 }
 
-var ncom; var pcom; var xicom;
-
-/* generateMatrix: An application-specific wrapper function that drives the optimizer for
-   tie-point alignment. FIX: move this elsewhere */
-function generateMatrix(points, numTiePts)
+function linear_regression(V, U)
 {
-    var x1 = new Array(); //to_pts (target pts)
-    var y1 = new Array(); //to_pts (target pts)
-    var x2 = new Array(); //from_pts
-    var y2  = new Array(); //from_pts
+    // Let V and U be two d x n matrices whose columns are length-d
+    // vectors v_i and u_i.  We want to fit a model v_i = m * u_i + b,
+    // where m and b are length-d vectors and * is element-wise
+    // multiplication.  We'll choose the model to minimize least-squares
+    // error.
 
-    for (var i =0; i<points.length; i++) {
-        x1[i] = points[i][0];
-        y1[i] = points[i][1];
-        x2[i] = points[i][2];
-        y2[i] = points[i][3];
+    // http://en.wikipedia.org/wiki/Simple_linear_regression
+
+    // The solution looks like:
+    //   m = [mean(uv) - mean(u) mean(v)] / [mean(u**2) - mean(u)**2]
+    //   b = mean(v) - m * mean(u)
+
+    var mean_uv = U.elementMultiply(V).meanColumn();
+    var mean_u = U.meanColumn();
+    var mean_v = V.meanColumn();
+    var mean_uu = U.elementMultiply(U).meanColumn();
+    var m = (mean_uv.subtract(mean_u.elementMultiply(mean_v)))
+        .elementDivide(mean_uu.subtract(mean_u.elementMultiply(mean_u)));
+    var b = mean_v.subtract(m.elementMultiply(mean_u));
+    if (0) {
+        console.log('U: ' + JSON.stringify(U));
+        console.log('V: ' + JSON.stringify(V));
+        console.log('mean_uv: ' + JSON.stringify(mean_uv));
+        console.log('mean_u: ' + JSON.stringify(mean_u));
+        console.log('mean_v: ' + JSON.stringify(mean_v));
+        console.log('mean_uu: ' + JSON.stringify(mean_uu));
+        console.log('m: ' + JSON.stringify(m));
+        console.log('b: ' + JSON.stringify(b));
     }
+    return [m, b];
+}
 
-    var numTiePts = points.length;
-    var ncom, pcom, xicom;
-    var align_images_ret = align_images(points);
-    console.log('points: ' + JSON.stringify(points));
-    //test_align_error2('generateMatrix', points);
+var ncom;
+var pcom;
+var xicom;
 
-    //to access return values, do, align_images_ret.xscale
-    console.log('align_images_ret: ' + JSON.stringify(align_images_ret));
-    var xscale = align_images_ret.xscale;
-    var yscale = align_images_ret.yscale;
-    var tx = align_images_ret.tx;
-    var ty = align_images_ret.ty;
-
-
-
-    var theta = 0;
-    var ftol = 0.001;
-
-    // see func.js for implementation of these transforms
-    console.log('numTiePts: ' + numTiePts);
-    if (numTiePts >= 4) {
-        // set up affine part
-        var a = [Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx,
-                 Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty];
-
-        var USE_QUADRATIC = true;
-        if (USE_QUADRATIC && (numTiePts >= 7)) {
-            // 12-parameter quadratic
-            p = [0, 0, a[0], a[1], a[2],
-                 0, 0, a[3], a[4], a[5],
-                 0, 0];
-        } else if (numTiePts >= 5) {
-            // 8-parameter projective
-            p = a.concat([0, 0]);
-        } else {
-            // 6-parameter affine
-            p = a;
-        }
-
-    } else if (numTiePts >= 3) {
-        // 5-parameter: scale, translation, rotation
-        p = [xscale, yscale, theta, tx, ty];
-    } else if (numTiePts >= 2) {
-        // 4-parameter: scale, translation
-        p = [xscale, yscale, tx, ty];
-    } else {
-        throw "ERROR: generateMatrix: not enough tie points!";
-    }
+function minimize(fun, x0) {
+    ncom = 0;
+    pcom = [];
+    xicom = [];
 
     //matrix of unit vectors
     var xi = new Array(p.length);
@@ -389,15 +343,7 @@ function generateMatrix(points, numTiePts)
         }
     }
     var xiM = new Matrix(p.length, p.length, xi);
+    var ftol = 0.001;
 
-    ncom = 0;
-    pcom = [];
-    xicom = [];
-    powell_ret = powell(p, xiM, ftol, ncom, pcom, xicom, points);
-
-    finalpts = powell_ret.finalpts;
-    iter = powell_ret.iter;
-    fret = powell_ret.fret;
-    xi = powell_ret.xi;
-    return getTransform(powell_ret.finalpts);
+    return powell(fun, x0, xiM, ftol, ncom, pcom, xicom);
 }

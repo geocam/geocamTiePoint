@@ -379,7 +379,7 @@ function save(jsonData) {
 	}
 	var data = jsonData['data'];
 	data['points'] = points;
-	data['transform'] = generateMatrix(points, points.length);
+	data['transform'] = calculateAlignmentModel(points);
 	var newJson = JSON.stringify(data);
     } else {
 	var data = jsonData['data'];
