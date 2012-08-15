@@ -46,10 +46,11 @@ class OutOfBounds(Exception):
 
 
 class Bounds(object):
-    def __init__(self, points):
+    def __init__(self, points=None):
         self.bounds = [None, None, None, None]
-        for point in points:
-            self.extend(point)
+        if points:
+            for point in points:
+                self.extend(point)
 
     def __getattribute__(self, name):
         if name == 'xmin':
