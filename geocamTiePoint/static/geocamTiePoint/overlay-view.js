@@ -167,8 +167,6 @@ function initialize_map() {
 
 function initialize_image() {
     var mapOptions = {
-	center: new google.maps.LatLng(83, -165),
-	zoom: 1,
 	streetViewControl: false,
 	backgroundColor: "rgb(0,0,0)",
 	mapTypeControlOptions: {
@@ -177,6 +175,13 @@ function initialize_image() {
     };
 
     image_map = new google.maps.Map(document.getElementById("image_canvas"), mapOptions);
+
+    // initialize viewport to contain image
+    var w = overlay.imageSize[0];
+    var h = overlay.imageSize[1];
+    var sw = pixelsToLatLon({x: 0, y: h});
+    var ne = pixelsToLatLon({x: w, y: 0});
+    image_map.fitBounds(new google.maps.LatLngBounds(sw, ne));
 
     image_map.mapTypes.set('image-map', imageMapType);
     image_map.setMapTypeId('image-map');
