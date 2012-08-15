@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 
+{% block head %}
+{{ block.super }}
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+{% endblock %}
+
 {% block scripts %}
+{{ block.super }}
 <script type="text/javascript" src="/static/external/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="/static/external/js/handlebars-1.0.0.beta.6.js"></script>
 <!--<script type="text/javascript" src="/static/external/js/ember-1.0.pre.min.js"></script>-->
 <script type="text/javascript" src="/static/external/js/ember-1.0.pre.js"></script>
+
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
 
 <script type="text/javascript" src="/static/geocamTiePoint/js/app.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/models.js"></script>
@@ -19,5 +27,6 @@
 {% endblock %}
 
 {% block jsInit %}
+{{ block.super }}
 App.initialize(App.router);
 {% endblock %}
