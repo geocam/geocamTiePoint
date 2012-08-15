@@ -4,9 +4,10 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django import forms
-from geocamTiePoint import models
+# suppress warning about wildcard imports
+# pylint: disable=W0401
 
-
-class NewImageDataForm(forms.Form):
-    image = forms.FileField()
+try:
+    from geocamAppEngine.pdf import *
+except ImportError:
+    from geocamUtil.pdf import *
