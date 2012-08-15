@@ -4,9 +4,6 @@
 // All Rights Reserved.
 // __END_LICENSE__
 
-//var overlay = {{ overlay.data|safe }};
-//var data_url = "{{ DATA_URL }}";
-
 var tileSize = 256;
 var initialResolution = 2 * Math.PI * 6378137 / tileSize;
 var originShift = 2 * Math.PI * 6378137 / 2.0;
@@ -115,7 +112,9 @@ function initialize_map() {
 
     map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
 
-    if (navigator.geolocation) {
+    if (overlay.bounds) {
+        fitNamedBounds(overlay.bounds);
+    } else if (navigator.geolocation) {
 	navigator.geolocation.getCurrentPosition(function (position) {
 	    var pos = new google.maps.LatLng(position.coords.latitude,
 					     position.coords.longitude);
@@ -220,8 +219,14 @@ function initialize_image() {
     }
 }
 
+function fitNamedBounds(b) {
+    var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(b.south, b.west),
+                                              new google.maps.LatLng(b.north, b.east));
+    map.fitBounds(bounds);
+}
+
 function handleNoGeolocation(errorFlag) {
-    map.setCenter(new google.maps.LatLng(60, 105));
+    fitNamedBounds(settings.GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT);
 }
 
 function getNormalizedCoord(coord, zoom) {

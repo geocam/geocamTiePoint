@@ -46,7 +46,7 @@ class OutOfBounds(Exception):
 
 
 class Bounds(object):
-    def __init__(self, *points):
+    def __init__(self, points):
         self.bounds = [None, None, None, None]
         for point in points:
             self.extend(point)
@@ -275,18 +275,20 @@ def resolution(zoom):
     return INITIAL_RESOLUTION / (2 ** zoom)
 
 
-def latLonTometers(lat, lng):
-    mx = lng * ORIGIN_SHIFT / 180
+def lonLatToMeters(lonLat):
+    lon, lat = lonLat
+    mx = lon * ORIGIN_SHIFT / 180
     my = math.log(math.tan((90 + lat) * math.pi / 360)) / (math.pi / 180)
     my = my * ORIGIN_SHIFT / 180
     return mx, my
 
 
-def metersToLatLon(x, y):
-    lng = x * 180 / ORIGIN_SHIFT
+def metersToLatLon(mercatorPt):
+    x, y = mercatorPt
+    lon = x * 180 / ORIGIN_SHIFT
     lat = y * 180 / ORIGIN_SHIFT
-    lat = ((math.atan(2 ** (y * (math.pi / 180))) * 360) / math.pi) - 90
-    return lat, lng
+    lat = ((math.atan(math.exp((lat * (math.pi / 180)))) * 360) / math.pi) - 90
+    return lon, lat
 
 
 def pixelsToMeters(x, y, zoom):
@@ -301,6 +303,18 @@ def metersToPixels(x, y, zoom):
     px = (x + ORIGIN_SHIFT) / res
     py = (-y + ORIGIN_SHIFT) / res
     return [px, py]
+
+
+def imageMapBounds(imageSize, transform):
+    w, h = imageSize
+    imageCorners = cornerPoints([0, 0, w, h])
+    mercatorCorners = [transform.forward(c) for c in imageCorners]
+    latLonCorners = [metersToLatLon(c) for c in mercatorCorners]
+    bounds = Bounds(latLonCorners)
+    return {'west': bounds.xmin,
+            'south': bounds.ymin,
+            'east': bounds.xmax,
+            'north': bounds.ymax}
 
 
 class SimpleQuadTreeGenerator(object):

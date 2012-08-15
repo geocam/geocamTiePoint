@@ -117,8 +117,11 @@ def overlayNew(request):
 def overlayId(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
+        settingsExportVars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',)
+        settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
         return render_to_response('geocamTiePoint/overlay-view.html',
                                   {'overlay': overlay,
+                                   'settings': dumps(settingsExportDict),
                                    'DATA_URL': settings.DATA_URL},
                                   context_instance=RequestContext(request))
     else:
@@ -156,9 +159,17 @@ def overlayIdJson(request, key):
             overlay.name = request.POST['name']
         if 'contentType' in request.POST:
             overlay.imageData.contentType = request.POST['contentType']
+
+        data = json.loads(overlay.data)
+        transformDict = data.get('transform', None)
+        if transformDict:
+            data['bounds'] = quadTree.imageMapBounds(data['imageSize'],
+                                                     quadTree.makeTransform(transformDict))
+        overlay.data = dumps(data)
+
         overlay.save()
         data = {
-            "data": json.loads(overlay.data),
+            "data": data,
             "name": overlay.name,
             "contentType": overlay.imageData.contentType
             }
