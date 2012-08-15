@@ -42,4 +42,6 @@ urlpatterns = patterns(
         'getTile',
         {}, 'geocamTiePoint_tile'),
 
+    url(r'^ember/$', 'ember',
+        {}, 'geocamTiePoint_ember'),
 )

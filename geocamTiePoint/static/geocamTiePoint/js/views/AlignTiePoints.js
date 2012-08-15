@@ -1,4 +1,4 @@
-App.AlignTiePointsHandlebars = "";
+App.AlignTiePointsHandlebars = "HELLO THERE";
 
 App.AlignTiePoints = {
     // empty class in case we need functions specific to this view

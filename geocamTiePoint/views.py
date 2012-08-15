@@ -34,6 +34,13 @@ def transparentPngResponse():
 def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
 
+def ember(request):
+    if request.method == 'GET':
+        return render_to_response('geocamTiePoint/ember-base.html', {},
+                                  context_instance=RequestContext(request))
+    else:
+        return HttpResponseNotAllowed(['GET'])
+
 
 def overlayIndex(request):
     if request.method == 'GET':
