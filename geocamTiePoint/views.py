@@ -128,9 +128,11 @@ def overlayId(request, key):
 def overlayIdPreview(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
+        settingsExportVars = ('STATIC_URL',)
+        settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
         return render_to_response('geocamTiePoint/overlay-preview.html',
                                   {'overlay': overlay,
-                                   'DATA_URL': settings.DATA_URL},
+                                   'settings': dumps(settingsExportDict)},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])

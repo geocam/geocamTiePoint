@@ -85,7 +85,7 @@ function getNormalizedCoord(coord, zoom) {
 
 //set up a transparency slider
 function createOpacityControl(map, opacity) {
-    var sliderImageUrl =  data_url+"geocamTiePoint/images/opacity-slider3d6.png";
+    var sliderImageUrl =  settings.STATIC_URL + "geocamTiePoint/images/opacity-slider3d6.png";
 
     // Create main div to hold the control.
     var opacityDiv = document.createElement('DIV');
@@ -120,14 +120,14 @@ function createOpacityControl(map, opacity) {
 
 
 function setOpacity(pixelX) {
-    //Range 0 to OPACITY_MAX_PIXELS
-    var value = (100 / OPACITY_MAX_PIXELS)* pixelX;
-    if (value < 0) value = 0;
-    if (value ==0) {
-    } else {
-        transformedImageMapType.setOpacity((100 / OPACITY_MAX_PIXELS) * pixelX /100);
-        console.log("opacity : "+(100 / OPACITY_MAX_PIXELS) * pixelX)/100;
-    }   
+    // pixelX in range 0 to OPACITY_MAX_PIXELS
+    var opacityPercent = (100 / OPACITY_MAX_PIXELS) * pixelX;
+
+    if (opacityPercent < 0) opacityPercent = 0;
+    if (opacityPercent > 100) opacityPercent = 100;
+
+    //console.log("opacity: " + opacityPercent);
+    transformedImageMapType.setOpacity(opacityPercent / 100.0);
 }
 
 
