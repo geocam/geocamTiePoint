@@ -1,8 +1,11 @@
-App.AlignTiePointsHandlebars = "HELLO THERE";
+App.AlignTiePointsHandlebars = '<div class="page-title">Overlay number: {{App.AlignTiePoints.overlay}}</div>';
 
-App.AlignTiePoints = {
-    // empty class in case we need functions specific to this view
-};
+App.AlignTiePoints = Ember.Object.create({
+    overlay: null,
+    setOverlay: function (overlay) {
+	this.overlay = overlay;
+    }
+});
 App.AlignTiePointsController = Ember.Controller.extend();
 App.AlignTiePointsView = Ember.View.extend({
     template: Ember.Handlebars.compile(App.AlignTiePointsHandlebars)
