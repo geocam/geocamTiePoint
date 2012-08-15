@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block scripts %}
 <script type="text/javascript" src="/static/geocamTiePoint/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/handlebars-1.0.0.beta.6.js"></script>
@@ -15,4 +16,8 @@
 <script type="text/javascript" src="/static/geocamTiePoint/js/views/NewMapOverlay.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/views/PlaceTiePoints.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/views/ViewPage.js"></script>
-{% end block %}
+{% endblock %}
+
+{% block jsInit %}
+App.initialize(App.router);
+{% endblock %}
