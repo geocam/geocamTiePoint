@@ -7,7 +7,7 @@
 {% block style %}
 {{ block.super }}
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/css/overlay-view.css"></link>
 {% endblock style %}
 
 {% block scripts %}
@@ -19,9 +19,10 @@
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-preview.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/ExtDraggableObject.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/markerwithlabel.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/ExtDraggableObject.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/overlay-preview.js"></script>
 {% endblock scripts %}
 
 {% block jsInit %}
