@@ -48,11 +48,10 @@ var currCity = new google.maps.LatLng(0,0);//figure this out form tie points
 
 function initialize() {
     var mapOptions = {
-        zoom: 1,
-        center: currCity,
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
     map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
+    fitNamedBounds(overlay.bounds);
 
     //insert the overlay map as first overlay map type at position 0
     map.overlayMapTypes.insertAt(0, transformedImageMapType);
@@ -64,6 +63,11 @@ function initialize() {
     createOpacityControl(map,initialOpacity);
 }
 
+function fitNamedBounds(b) {
+    var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(b.south, b.west),
+                                              new google.maps.LatLng(b.north, b.east));
+    map.fitBounds(bounds);
+}
 
 function getNormalizedCoord(coord, zoom) {
     var y = coord.y;
