@@ -390,7 +390,7 @@ function save(jsonData) {
 	var newJson = JSON.stringify(data);
     } else {
 	var data = jsonData.data;
-	datad.points = new Array();
+	data.points = new Array();
 	data.transform = {
 	    'type': "",
 	    'matrix': new Array()
@@ -507,7 +507,7 @@ function popState(stack) {
     if (data.points) {
 	for (var point = 0; point < data.points.length; point++) {
 	    var pixels = {
-		x: datad.points[point].slice(2)[0],
+		x: data.points[point].slice(2)[0],
 		y: data.points[point].slice(2)[1],
 	    };
 	    var meters = {
