@@ -10,24 +10,12 @@ var originShift = 2 * Math.PI * 6378137 / 2.0;
 
 // find max zoom
 var offset = 3;
-var maxDimension = Math.max(overlay['imageSize'][0], overlay['imageSize'][1]);
-var maxZoom = Math.ceil(Math.log(maxDimension / tileSize)/Math.log(2)) + offset;
-console.log(Math.max(overlay['imageSize'][0], overlay['imageSize'][1]));
-console.log(overlay['imageSize']);
-console.log(maxZoom);
+var maxDimension = null;
+var maxZoom = null;
+var imageMapTypeOptions = null;
+
 
 var map; var image_map;
-
-var imageMapTypeOptions = {
-    getTileUrl: getImageTileUrl,
-    tileSize: new google.maps.Size(tileSize, tileSize),
-    maxZoom: maxZoom,
-    minZoom: offset,
-    radius: 1738000,
-    name: "image-map"
-};
-
-var imageMapType = new google.maps.ImageMapType(imageMapTypeOptions);
 
 var imageMarkers = new Array();
 var mapMarkers = new Array();
@@ -62,6 +50,25 @@ function getImageTileUrl(coord, zoom) {
 }
 
 function initialize() {
+    maxDimension = Math.max(overlay['imageSize'][0], overlay['imageSize'][1]);
+    maxZoom = Math.ceil(Math.log(maxDimension / tileSize)/Math.log(2)) + offset;
+    if (0) {
+        console.log(Math.max(overlay['imageSize'][0], overlay['imageSize'][1]));
+        console.log(overlay['imageSize']);
+        console.log(maxZoom);
+    }
+
+    imageMapTypeOptions = {
+        getTileUrl: getImageTileUrl,
+        tileSize: new google.maps.Size(tileSize, tileSize),
+        maxZoom: maxZoom,
+        minZoom: offset,
+        radius: 1738000,
+        name: "image-map"
+    };
+
+    imageMapType = new google.maps.ImageMapType(imageMapTypeOptions);
+
     initialize_map();
     initialize_image();
     initialize_search_bar();
@@ -379,7 +386,7 @@ function save(jsonData) {
 	}
 	var data = jsonData['data'];
 	data['points'] = points;
-	data['transform'] = generateMatrix(points, points.length);
+	data['transform'] = calculateAlignmentModel(points);
 	var newJson = JSON.stringify(data);
     } else {
 	var data = jsonData['data'];

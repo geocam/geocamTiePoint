@@ -7,8 +7,8 @@
 
 {% block style %}
 {{ block.super }}
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/overlay-view.css"></link>
 <link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/css/overlay-view.css"></link>
 {% endblock style %}
 
 {% block contents %}
@@ -41,21 +41,17 @@
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/markerwithlabel.js"></script>
-<script type="text/javascript">
-  var overlay = {{ overlay.data|safe }};
-  var settings = {{ settings|safe }};
-  var data_url = "{{ DATA_URL }}";
-</script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/overlay-view.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/markerwithlabel.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/matrix.js"></script>
 
-<!-- Grace's javascript matrix library -->
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/optimize.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/transform.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}external/js/matrix.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/optimize.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/overlay-view.js"></script>
 {% endblock scripts %}
 
 {% block jsInit %}
-initialize();
+  var overlay = {{ overlay.data|safe }};
+  var settings = {{ settings|safe }};
+  initialize();
 {% endblock %}
