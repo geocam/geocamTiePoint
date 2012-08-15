@@ -50,11 +50,11 @@ function getImageTileUrl(coord, zoom) {
 }
 
 function initialize() {
-    maxDimension = Math.max(overlay['imageSize'][0], overlay['imageSize'][1]);
+    maxDimension = Math.max(overlay.imageSize[0], overlay.imageSize[1]);
     maxZoom = Math.ceil(Math.log(maxDimension / tileSize)/Math.log(2)) + offset;
     if (0) {
-        console.log(Math.max(overlay['imageSize'][0], overlay['imageSize'][1]));
-        console.log(overlay['imageSize']);
+        console.log(Math.max(overlay.imageSize[0], overlay.imageSize[1]));
+        console.log(overlay.imageSize);
         console.log(maxZoom);
     }
 
@@ -136,11 +136,11 @@ function initialize_map() {
 
     google.maps.event.addListener(map, "click", handleMapClick);
 
-    if (overlay['points']) {
-	for (var point=0;point<overlay['points'].length;point++) {
+    if (overlay.points) {
+	for (var point = 0; point < overlay.points.length;point++) {
 	    var meters = {
-		x:overlay['points'][point].slice(0,2)[0],
-		y:overlay['points'][point].slice(0,2)[1],
+		x: overlay.points[point].slice(0,2)[0],
+		y: overlay.points[point].slice(0,2)[1],
 	    };
 	    var latLng = metersToLatLon(meters);
 	    var coord = meters;
@@ -195,14 +195,14 @@ function initialize_image() {
 
     google.maps.event.addListener(image_map, "click", handleImageClick);
 
-    if (overlay['points']) {
-	for (var point=0; point<overlay['points'].length; point++) {
+    if (overlay.points) {
+	for (var point = 0; point < overlay.points.length; point++) {
 	    var pixels = {
-		x: overlay['points'][point].slice(2)[0],
-		y: overlay['points'][point].slice(2)[1],
+		x: overlay.points[point].slice(2)[0],
+		y: overlay.points[point].slice(2)[1],
 	    };
 	    var latLng = pixelsToLatLon(pixels);
-	    var coord = overlay['points'][point].slice(2);
+	    var coord = overlay.points[point].slice(2);
 	    var index = imageMarkers.length;
 	    var markerOpts ={
 		title: "" + (index + 1),
@@ -384,22 +384,22 @@ function save(jsonData) {
 	    coords[3] = imageCoords[i].y;
 	    points[points.length] = coords;
 	}
-	var data = jsonData['data'];
-	data['points'] = points;
-	data['transform'] = calculateAlignmentModel(points);
+	var data = jsonData.data;
+	data.points = points;
+	data.transform = calculateAlignmentModel(points);
 	var newJson = JSON.stringify(data);
     } else {
-	var data = jsonData['data'];
-	data['points'] = new Array();
-	data['transform'] = {
+	var data = jsonData.data;
+	datad.points = new Array();
+	data.transform = {
 	    'type': "",
 	    'matrix': new Array()
 	}
 	var newJson = JSON.stringify(data);
     }
 
-    jsonData['data'] = newJson;
-    jsonData['name'] = $('#title')[0].value;
+    jsonData.data = newJson;
+    jsonData.name = $('#title')[0].value;
 
     $.post(overlay.url, jsonData)
 	.success(function(data, status, xhr) {
@@ -474,7 +474,7 @@ function pushState(stack) {
     var data = overlay;
     if (imageCoords.length || mapCoords.length) {
 	var points = new Array();
-	for (var i=0; i < Math.max(imageCoords.length, mapCoords.length); i++) {
+	for (var i = 0; i < Math.max(imageCoords.length, mapCoords.length); i++) {
 	    var coords = new Array();
 	    if (i < mapCoords.length) {
 		coords[0] = mapCoords[i].x;
@@ -491,9 +491,9 @@ function pushState(stack) {
 	    }
 	    points[points.length] = coords;
 	}
-	data['points'] = points;
+	data.points = points;
     } else {
-	data['points'] = new Array();
+	data.points = new Array();
     }
     var newJson = JSON.stringify(data);
     stack.push(newJson);
@@ -504,19 +504,19 @@ function popState(stack) {
     reset(); // clear state
     var data = JSON.parse(stack.pop());
 
-    if (data['points']) {
-	for (var point=0; point<data['points'].length; point++) {
+    if (data.points) {
+	for (var point = 0; point < data.points.length; point++) {
 	    var pixels = {
-		x: data['points'][point].slice(2)[0],
-		y: data['points'][point].slice(2)[1],
+		x: datad.points[point].slice(2)[0],
+		y: data.points[point].slice(2)[1],
 	    };
 	    var meters = {
-		x: data['points'][point].slice(0,2)[0],
-		y: data['points'][point].slice(0,2)[1],
+		x: data.points[point].slice(0,2)[0],
+		y: data.points[point].slice(0,2)[1],
 	    };
 	    if (pixels.x != null && pixels.y != null) {
 		var latLng = pixelsToLatLon(pixels);
-		var coord = data['points'][point].slice(2);
+		var coord = data.points[point].slice(2);
 		var index = imageMarkers.length;
 		var markerOpts ={
 		    title: "" + (index + 1),
