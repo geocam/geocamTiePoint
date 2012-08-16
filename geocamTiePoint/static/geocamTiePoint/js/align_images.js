@@ -156,7 +156,7 @@ function calculateAlignmentModel(points)
 
     var minFunc = function (p) { return calculateAlignmentError(p, points); }
 
-    var minimizeResult = minimize(minFunc, p);
+    var minimizeResult = geocamTiepoint.minimize(minFunc, p);
 
     return getTransform(minimizeResult.finalParams);
 }
