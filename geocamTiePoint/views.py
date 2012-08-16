@@ -18,6 +18,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 from django.views.decorators.cache import cache_page
 from django.core.files.base import ContentFile    
+from django.db import transaction
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
@@ -64,6 +65,7 @@ def overlayDelete(request, key):
         return HttpResponseRedirect(reverse('geocamTiePoint_overlayIndex'))
 
 
+@transaction.commit_on_success
 def overlayNew(request):
     if request.method == 'POST':
         form = forms.NewImageDataForm(request.POST, request.FILES)
