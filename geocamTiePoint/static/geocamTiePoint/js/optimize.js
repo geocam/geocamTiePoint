@@ -6,6 +6,11 @@
 
 if (! window.geocamTiepoint ) { window.geocamTiepoint = {}; }
 
+/*
+optimize.js exports the following to the geocamTiepoint namespace:
+geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0.
+*/
+
 (function ()
 {
 
