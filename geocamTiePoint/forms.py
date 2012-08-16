@@ -5,7 +5,6 @@
 # __END_LICENSE__
 
 from django import forms
-from geocamTiePoint import models
 
 
 class NewImageDataForm(forms.Form):

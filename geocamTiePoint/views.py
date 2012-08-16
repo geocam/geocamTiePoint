@@ -5,7 +5,6 @@
 # __END_LICENSE__
 
 import json
-import os
 
 import PIL.Image
 
@@ -17,7 +16,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
 from django.views.decorators.cache import cache_page
-from django.core.files.base import ContentFile    
+from django.core.files.base import ContentFile
 from django.db import transaction
 
 from geocamTiePoint import models, forms, settings
@@ -34,6 +33,7 @@ def transparentPngResponse():
 
 def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
+
 
 def ember(request):
     if request.method == 'GET':
@@ -100,7 +100,7 @@ def overlayNew(request):
             overlay.save()
 
             # generate initial quad tree
-            qt = overlay.generateUnalignedQuadTree()
+            overlay.generateUnalignedQuadTree()
 
             return render_to_response('geocamTiePoint/new-overlay-result.html',
                                       {'status': 'success',
