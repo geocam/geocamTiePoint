@@ -16,14 +16,18 @@ function saveImage() {
 }
 */
 function rotateLeftButtonClicked() {
-    angle = angle-90; 
-    document.getElementById('rotate_image').style['-webkit-transform'] = 'rotate('+angle+'deg)';
+    angle = angle - 90;
+    (document
+     .getElementById('rotate_image')
+     .style['-webkit-transform'] = 'rotate(' + angle + 'deg)');
 
-   $("#angle_value").val(angle); 
-}    
+   $('#angle_value').val(angle);
+}
 
 function rotateRightButtonClicked() {
-    angle = angle+90;
-    document.getElementById('rotate_image').style['-webkit-transform'] = 'rotate('+angle+'deg)';
-   $("#angle_value").val(angle); 
+    angle = angle + 90;
+    (document
+     .getElementById('rotate_image')
+     .style['-webkit-transform'] = 'rotate(' + angle + 'deg)');
+   $('#angle_value').val(angle);
 }

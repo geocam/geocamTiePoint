@@ -1,3 +1,4 @@
+/** Root geocamTiePoint Ember app object */
 window.App = Ember.Application.create({
     rootElement: '#contents'
 });

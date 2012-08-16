@@ -4,14 +4,14 @@
 // All Rights Reserved.
 // __END_LICENSE__
 
-if (! window.geocamTiepoint ) { window.geocamTiepoint = {}; }
+if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
 
-/*
-optimize.js exports the following to the geocamTiepoint namespace:
-geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0.
-*/
+/* optimize.js exports the following to the geocamTiepoint namespace:
+ * geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function
+ * near x0.
+ */
 
-(function ()
+(function()
 {
 
     /* f1dim: Breaks down the multidimensional function to one-d function
@@ -51,7 +51,7 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
 
         var step = 0;
         var tmp;
-        while(Math.abs(x3 - x0) > tol * (Math.abs(x1) + Math.abs(x2))) {
+        while (Math.abs(x3 - x0) > tol * (Math.abs(x1) + Math.abs(x2))) {
             if (f2 < f1) {
                 var tmp = R * x2 + C * x3;
                 x0 = x1;
@@ -72,12 +72,12 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
                 f1 = tmp;
             }
             if (step >= ITMAX) {
-                throw "golden: iterations maxed out";
+                throw 'golden: iterations maxed out';
             }
             step++;
         }
 
-        if(f1 < f2) {
+        if (f1 < f2) {
             xmin = x1;
             fret = f1;
             return {xmin: xmin, fret: fret};
@@ -88,10 +88,10 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
         }
     }
 
-    /* linmin: Basically a wrapper to extend one-dimensional optimization function
-     * to multi-dimensional optimization. Need to call golden section search
-     * from linmin in order for it to be used by powell, which performs
-     * multi-dimensional optimization. */
+    /* linmin: Basically a wrapper to extend one-dimensional
+     * optimization function to multi-dimensional optimization. Need to
+     * call golden section search from linmin in order for it to be used
+     * by powell, which performs multi-dimensional optimization. */
     function linmin(func, p, xi, ncom, pcom, xicom)
     {
         var TOL = Math.exp(-8);
@@ -125,8 +125,9 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
         return {p: p, xi: xi, fret: fret};
     }
 
-    /* mnbrak: Given two initial points, finds three points that brackets the minimum.
-     * The bracket points are passed to golden section search. */
+    /* mnbrak: Given two initial points, finds three points that
+     * brackets the minimum.  The bracket points are passed to golden
+     * section search. */
     function mnbrak(func, ax, bx, ncom, pcom, xicom)
     {
         var GOLD = 1.618034;
@@ -155,12 +156,12 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
 
             var r = (bx - ax) * (fb - fc);
             var q = (bx - cx) * (fb - fa);
-            var u = bx - ((bx - cx) * q - (bx - ax) * r)
-                / (2.0 * SIGN(Math.max(Math.abs(q - r), TINY), q - r));
+            var u = bx - ((bx - cx) * q - (bx - ax) * r) /
+                (2.0 * SIGN(Math.max(Math.abs(q - r), TINY), q - r));
             var ulim = bx + GLIMIT * (cx - bx);
             if ((bx - u) * (u - cx) > 0.0) {
                 var fu = f1dim(func, u, ncom, pcom, xicom);
-                if(fu < fc) {
+                if (fu < fc) {
                     ax = bx;
                     bx = u;
                     fa = fb;
@@ -203,11 +204,11 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
             fc = fu;
 
             if (step >= ITMAX) {
-                throw "mnbrak iterations maxed out";
+                throw 'mnbrak iterations maxed out';
             }
             step++;
         }
-        return {ax: ax, bx: bx, cx: cx}
+        return {ax: ax, bx: bx, cx: cx};
     }
 
     function SIGN(a, b)
@@ -219,8 +220,8 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
         }
     }
 
-    /* Uses Powell's Method to find a local minimum of a function. No derivatives are
-     * needed to find the minimum. */
+    /* Uses Powell's Method to find a local minimum of a function. No
+     * derivatives are needed to find the minimum. */
     function powell(func, p, xi, ftol, ncom, pcom, xicom)
     {
         var ITMAX = 200;
@@ -242,7 +243,7 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
             pt[j] = p[j];
         }
 
-        for(iter = 0; iter < ITMAX; ++iter) {
+        for (iter = 0; iter < ITMAX; ++iter) {
             fp = fret;
             ibig = 0;
             del = 0.0;
@@ -263,7 +264,8 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
                 }
             }
 
-            if ((2.0 * (fp - fret)) <= (ftol * (Math.abs(fp) + Math.abs(fret)) + TINY)){
+            if ((2.0 * (fp - fret)) <=
+                (ftol * (Math.abs(fp) + Math.abs(fret)) + TINY)) {
                 return {finalParams: p, iter: iter, fret: fret, xi: xi};
             }
 
@@ -276,13 +278,13 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
 
             fptt = func(ptt, ncom, pcom, xicom);
 
-            if(fptt < fp) {
+            if (fptt < fp) {
 
-                t = 2.0 * (fp - 2.0 * fret + fptt)*
-                    (Math.pow(fp - fret - del, 2))-
+                t = 2.0 * (fp - 2.0 * fret + fptt) *
+                    (Math.pow(fp - fret - del, 2)) -
                     del * (Math.pow(fp - fptt, 2));
 
-                if(t < 0.0) {
+                if (t < 0.0) {
                     linmin_ret = linmin(func, p, xit, ncom, pcom, xicom);
                     p = linmin_ret.p;
                     xit = linmin_ret.xi;
@@ -294,7 +296,7 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
                 }
             }
        }
-        throw "ERROR in powell.js: iteration maxed out";
+        throw 'ERROR in powell.js: iteration maxed out';
     }
 
     function linear_regression(V, U)
@@ -343,9 +345,9 @@ geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function near x0
         //matrix of unit vectors
         var xi = new Array(p.length);
         for (var i = 0; i < p.length; i++) {
-            xi[i]= new Array(p.length);
+            xi[i] = new Array(p.length);
             for (var j = 0; j < p.length; j++) {
-                if(i == j) {
+                if (i == j) {
                     xi[i][j] = 1;
                 } else {
                     xi[i][j] = 0;

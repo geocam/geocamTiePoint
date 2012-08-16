@@ -6,7 +6,7 @@
 
 function getVMatrixFromPoints(points) {
     var V = new Matrix(points.length, 2);
-    for (var i=0; i < points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
         V.values[0][i] = points[i][0];
         V.values[1][i] = points[i][1];
     }
@@ -15,7 +15,7 @@ function getVMatrixFromPoints(points) {
 
 function getSimpleUMatrixFromPoints(points) {
     var U = new Matrix(points.length, 2);
-    for (var i=0; i < points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
         U.values[0][i] = points[i][2];
         U.values[1][i] = points[i][3];
     }
@@ -24,7 +24,7 @@ function getSimpleUMatrixFromPoints(points) {
 
 function getProjectiveUMatrixFromPoints(points) {
     var U = new Matrix(points.length, 3);
-    for (var i=0; i < points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
         U.values[0][i] = points[i][2];
         U.values[1][i] = points[i][3];
         U.values[2][i] = 1;
@@ -34,7 +34,7 @@ function getProjectiveUMatrixFromPoints(points) {
 
 function getQuadraticUMatrixFromPoints(points) {
     var U = new Matrix(points.length, 5);
-    for (var i=0; i < points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
         U.values[0][i] = Math.pow(points[i][2], 2);
         U.values[1][i] = Math.pow(points[i][3], 2);
         U.values[2][i] = points[i][2];
@@ -51,7 +51,7 @@ function getTransform(p) {
         var tx = p[2];
         var ty = p[3];
         return {
-            type: "projective",
+            type: 'projective',
             n: 4,
             params: {
                 xscale: xscale,
@@ -71,14 +71,14 @@ function getTransform(p) {
         var tx = p[3];
         var ty = p[4];
         return {
-            type: "projective",
+            type: 'projective',
             n: 5,
             params: {
                 xscale: xscale,
                 yscale: yscale,
                 theta: theta,
                 tx: tx,
-                ty: ty,
+                ty: ty
             },
             matrix: [[Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx],
                      [Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty],
@@ -87,7 +87,7 @@ function getTransform(p) {
 
     } else if (p.length == 6) {
         return {
-            type: "projective",
+            type: 'projective',
             n: 6,
             matrix: [[p[0], p[1], p[2]],
                      [p[3], p[4], p[5]],
@@ -96,7 +96,7 @@ function getTransform(p) {
 
     } else if (p.length == 8) {
         return {
-            type: "projective",
+            type: 'projective',
             n: 8,
             matrix: [[p[0], p[1], p[2]],
                      [p[3], p[4], p[5]],
@@ -105,7 +105,7 @@ function getTransform(p) {
 
     } else if (p.length == 12) {
         return {
-            type: "quadratic",
+            type: 'quadratic',
             n: 12,
             matrix: [[p[0], p[1], p[2], p[3], p[4]],
                      [p[5], p[6], p[7], p[8], p[9]],
@@ -113,15 +113,15 @@ function getTransform(p) {
         };
 
     } else {
-        throw "error in getTransform: wrong number of parameters!";
-    }    
+        throw 'error in getTransform: wrong number of parameters!';
+    }
 }
 
 function applyTransform(tform, points) {
     var U;
-    if (tform.type == "projective") {
+    if (tform.type == 'projective') {
         U = getProjectiveUMatrixFromPoints(points);
-    } else if (tform.type == "quadratic") {
+    } else if (tform.type == 'quadratic') {
         U = getQuadraticUMatrixFromPoints(points);
     }
     var height = tform.matrix.length;
@@ -140,7 +140,7 @@ function applyTransform(tform, points) {
     // projective rescale and truncate the bottom row
     var n = points.length;
     var Vapprox = new Matrix(n, 2);
-    for (var i=0; i < n; i++) {
+    for (var i = 0; i < n; i++) {
         var z = Vapprox0.values[2][i];
         Vapprox.values[0][i] = Vapprox0.values[0][i] / z;
         Vapprox.values[1][i] = Vapprox0.values[1][i] / z;

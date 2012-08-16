@@ -28,7 +28,7 @@ function test_align_error(name, a, b) {
                        Math.abs(a.ty - b.ty));
     if (err > 0.001) {
         console.log('ERROR case "' + name + '": values do not match');
-        console.log(a)
+        console.log(a);
         console.log(b);
     } else {
         console.log('OK case "' + name + '"');
@@ -44,7 +44,7 @@ function test_align_error2(name, points) {
     var u = new Matrix(points.length, 3);
     var v = new Matrix(points.length, 2);
     var correctV = new Matrix(points.length, 2);
-    for (var i=0; i < points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
         correctV.values[0][i] = points[i][0];
         correctV.values[1][i] = points[i][1];
         u.values[0][i] = points[i][2];
@@ -56,7 +56,7 @@ function test_align_error2(name, points) {
     var err = diff.meanNorm();
     if (err > 0.001) {
         console.log('ERROR case "' + name + '": values do not match');
-        console.log('v: ' + JSON.stringify(v))
+        console.log('v: ' + JSON.stringify(v));
         console.log('correctV: ' + JSON.stringify(correctV));
     } else {
         console.log('OK case "' + name + '"');
@@ -92,16 +92,16 @@ function calculateAlignmentError(p, points)
     return error;
 }
 
-/* generateMatrix: An application-specific wrapper function that drives the optimizer for
-   tie-point alignment. FIX: move this elsewhere */
+/* calculateAlignmentModel: Driver function that calls optimizer to
+   generate tie point alignment. */
 function calculateAlignmentModel(points)
 {
     var x1 = new Array(); //to_pts (target pts)
     var y1 = new Array(); //to_pts (target pts)
     var x2 = new Array(); //from_pts
-    var y2  = new Array(); //from_pts
+    var y2 = new Array(); //from_pts
 
-    for (var i =0; i<points.length; i++) {
+    for (var i = 0; i < points.length; i++) {
         x1[i] = points[i][0];
         y1[i] = points[i][1];
         x2[i] = points[i][2];
@@ -151,10 +151,10 @@ function calculateAlignmentModel(points)
         // 4-parameter: scale, translation
         p = [xscale, yscale, tx, ty];
     } else {
-        throw "ERROR: generateMatrix: not enough tie points!";
+        throw 'ERROR: generateMatrix: not enough tie points!';
     }
 
-    var minFunc = function (p) { return calculateAlignmentError(p, points); }
+    var minFunc = function(p) { return calculateAlignmentError(p, points); }
 
     var minimizeResult = geocamTiepoint.minimize(minFunc, p);
 

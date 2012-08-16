@@ -4,53 +4,56 @@
 // All Rights Reserved.
 // __END_LICENSE__
 
-var tileSize=256;
-var offset=3;
+var tileSize = 256;
+var offset = 3;
 var opac = 0.6;
-var OPACITY_MAX_PIXELS = 57; 
+var OPACITY_MAX_PIXELS = 57;
 var imageOverlay;
 
 // find max zoom
 var maxZoom = 0; var offset = 3;
 if (overlay['imageSize'][0] > overlay['imageSize'][1]) {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][0] / tileSize, 2)) + offset;
+    maxZoom = Math.ceil(Math.log(overlay['imageSize'][0] / tileSize, 2)) +
+        offset;
 } else {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / tileSize, 2)) + offset;
+    maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / tileSize, 2)) +
+        offset;
 }
 
-function getTransformedImageTileUrl(coord,zoom) {
-    var normalizedCoord = getNormalizedCoord(coord,zoom);
-        
-    if(!normalizedCoord)
+function getTransformedImageTileUrl(coord, zoom) {
+    var normalizedCoord = getNormalizedCoord(coord, zoom);
+
+    if (!normalizedCoord)
         return null;
-    var bounds = Math.pow(2,zoom);
-    return overlay.alignedTilesUrl
-        + zoom
-        + '/' + normalizedCoord.x
-        + '/' + normalizedCoord.y
-        + '.png';
+    var bounds = Math.pow(2, zoom);
+    return overlay.alignedTilesUrl +
+        zoom +
+        '/' + normalizedCoord.x +
+        '/' + normalizedCoord.y +
+        '.png';
 }
 
 var transformedImageMapTypeOptions = {
     getTileUrl: getTransformedImageTileUrl,
-    tileSize: new google.maps.Size(tileSize,tileSize),
+    tileSize: new google.maps.Size(tileSize, tileSize),
     maxZoom: maxZoom,
     minZoom: offset,
     radius: 1738000,
     opacity: parseFloat(opac),
-    name: "transformed-image-map"
-}
+    name: 'transformed-image-map'
+};
 
-var transformedImageMapType = new google.maps.ImageMapType(transformedImageMapTypeOptions);
+var transformedImageMapType = (new google.maps.ImageMapType
+                               (transformedImageMapTypeOptions));
 
 var map;
-var currCity = new google.maps.LatLng(0,0);//figure this out form tie points
 
 function initialize() {
     var mapOptions = {
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
-    map = new google.maps.Map(document.getElementById("map_canvas"),mapOptions);
+    map = new google.maps.Map(document.getElementById('map_canvas'),
+                              mapOptions);
     fitNamedBounds(overlay.bounds);
 
     //insert the overlay map as first overlay map type at position 0
@@ -60,12 +63,13 @@ function initialize() {
    // imageOverlay = new CustomTileOverlay(map,initialOpacity);
    // imageOverlay.show();
 
-    createOpacityControl(map,initialOpacity);
+    createOpacityControl(map, initialOpacity);
 }
 
 function fitNamedBounds(b) {
-    var bounds = new google.maps.LatLngBounds(new google.maps.LatLng(b.south, b.west),
-                                              new google.maps.LatLng(b.north, b.east));
+    var bounds = (new google.maps.LatLngBounds
+                  (new google.maps.LatLng(b.south, b.west),
+                   new google.maps.LatLng(b.north, b.east)));
     map.fitBounds(bounds);
 }
 
@@ -76,28 +80,45 @@ function getNormalizedCoord(coord, zoom) {
     var tileRange = 1 << zoom;
 
     if (y < 0 || y >= tileRange)
-	return null;
+    return null;
 
     if (x < 0 || x >= tileRange)
-	x = (x % tileRange + tileRange) % tileRange;
+    x = (x % tileRange + tileRange) % tileRange;
 
     return {
-	x: x,
-	y: y
+    x: x,
+    y: y
     };
 }
 
 //set up a transparency slider
 function createOpacityControl(map, opacity) {
-    var sliderImageUrl =  settings.STATIC_URL + "geocamTiePoint/images/opacity-slider3d6.png";
+    var sliderImageUrl = settings.STATIC_URL +
+        'geocamTiePoint/images/opacity-slider3d6.png';
 
     // Create main div to hold the control.
     var opacityDiv = document.createElement('DIV');
-    opacityDiv.setAttribute("style", "margin:5px;overflow-x:hidden;overflow-y:hidden;background:url(" + sliderImageUrl + ") no-repeat;width:71px;height:21px;cursor:pointer;");
+    (opacityDiv.setAttribute
+     ('style',
+      'margin: 5px;' +
+      ' overflow-x: hidden;' +
+      ' overflow-y: hidden;' +
+      ' background: url(' + sliderImageUrl + ') no-repeat;' +
+      ' width: 71px;' +
+      ' height: 21px;' +
+      ' cursor: pointer;'));
 
     // Create knob
     var opacityKnobDiv = document.createElement('DIV');
-    opacityKnobDiv.setAttribute("style", "padding:0;margin:0;overflow-x:hidden;overflow-y:hidden;background:url(" + sliderImageUrl + ") no-repeat -71px 0;width:14px;height:21px;");
+    (opacityKnobDiv.setAttribute
+     ('style',
+      'padding: 0;' +
+      ' margin: 0;' +
+      ' overflow-x: hidden;' +
+      ' overflow-y: hidden;' +
+      ' background: url(' + sliderImageUrl + ') no-repeat -71px 0;' +
+      ' width: 14px;' +
+      ' height: 21px;'));
     opacityDiv.appendChild(opacityKnobDiv);
 
     var opacityCtrlKnob = new ExtDraggableObject(opacityKnobDiv, {
@@ -105,11 +126,11 @@ function createOpacityControl(map, opacity) {
                             container: opacityDiv
     });
 
-    google.maps.event.addListener(opacityCtrlKnob, "dragend", function() {
+    google.maps.event.addListener(opacityCtrlKnob, 'dragend', function() {
             setOpacity(opacityCtrlKnob.valueX());
     });
 
-    google.maps.event.addDomListener(opacityDiv, "click", function(e) {
+    google.maps.event.addDomListener(opacityDiv, 'click', function(e) {
         var left = findPosLeft(this);
         var x = e.pageX - left - 5;
         opacityCtrlKnob.setValueX(x);
@@ -157,7 +178,7 @@ function findPosLeft(obj) {
     var curleft = 0;
     if (obj.offsetParent) {
         do {
-            curleft +=obj.offsetLeft;
+            curleft += obj.offsetLeft;
         } while (obj = obj.offsetParent);
         return curleft;
     }
