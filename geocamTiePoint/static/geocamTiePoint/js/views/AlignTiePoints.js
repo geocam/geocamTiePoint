@@ -1,3 +1,28 @@
+App.AlignTiePointsHandlebars = '<div>Mountain View Topo: Align Tie Points</div>\
+                                <div class="page-title">Overlay number: {{App.AlignTiePoints.overlay}}</div>\
+                                <div style="float: left"><button {{action help target="App.alignTiePointsController"}}>Help</button>\					             <input value="Place Search"></input><button>Go</button>\
+				<button id="start_aligning">Start Aligning Overlay Here</button></div>\
+				<div id="opacity" style="float: left;"></div>\
+                                <div id="align_map_preview" style="height:400px; width:600px; margin: 0;"></div>\
+                                ';
+App.AlignTiePoints = Ember.Object.create({
+    overlay: null,
+    setOverlay: function (overlay) {
+	this.overlay = overlay;
+    }
+});
+App.AlignTiePointsController = Ember.Controller.extend();
+App.AlignTiePointsView = Ember.View.extend({
+    template: Ember.Handlebars.compile(App.AlignTiePointsHandlebars)
+});
+
+
+
+
+
+
+
+/*
 App.alignTiePointsContainerView = Ember.ContainerView.create({
     childViews: [],
 }).appendTo('body');
@@ -25,7 +50,7 @@ App.controls = Ember.View.create({
 });
 
 App.map = Ember.View.create({
-  template: Ember.Handlebars.compile('<div id="align_map_preview" style="width:100%; height:100%;"></div>'),
+  template: Ember.Handlebars.compile('<div id="align_map_preview" style="height:400px; width:600px; margin: 0;"></div>'),
 	classNameBindings: ['align_map_preview'],
   attributeBindings: ['style'],
   style: 'height:400px; width:600px; margin: 0;',
@@ -41,7 +66,7 @@ App.alignTiePointsContainerView.get('childViews').pushObject(App.title);
 App.alignTiePointsContainerView.get('childViews').pushObject(App.controls);
 App.alignTiePointsContainerView.get('childViews').pushObject(App.map);
 
-
+*/
 
 
 
@@ -76,7 +101,7 @@ App.alignTiePointsController = Em.ObjectController.create({
 	
   /**
    * @type {Array.<google.maps.Marker>}
-   */
+  */
   this.markers_ = [
     this.addGCPControl_('topLeft'),
     this.addGCPControl_('topRight'),
@@ -149,14 +174,14 @@ Overlay.prototype = new google.maps.OverlayView;
 
 /**
  * @const
- */
+*/
 Overlay.MAX_DIMENSION_ = 800;
 
 /**
  * Resize the target image
  * @param {number} maxDimension the maximum width of the generated image.
  * @private
- */
+*/
 Overlay.prototype.resize_ = function(maxDimension) {
   var el = this.el_;
 
@@ -172,7 +197,7 @@ Overlay.prototype.resize_ = function(maxDimension) {
 
 /**
  * @inheritDoc
- */
+*/
 Overlay.prototype.onAdd = function() {
   this.added_ = true;
 };
