@@ -1,3 +1,5 @@
+var originShift = 2 * Math.PI * 6378137 / 2.0;
+
 function latLonToMeters(latLon) {
     var mx = latLon.lng() * originShift / 180;
     var my = Math.log(Math.tan((90 + latLon.lat()) * Math.PI / 360)) /
@@ -15,7 +17,7 @@ function metersToLatLon(meters) {
     return latLng;
 }
 
-function fitNamedBounds(b) {
+function fitNamedBounds(b, map) {
     var bounds = (new google.maps.LatLngBounds
                   (new google.maps.LatLng(b.south, b.west),
                    new google.maps.LatLng(b.north, b.east)));

@@ -1,72 +1,34 @@
 App.AlignTiePointsHandlebars = '<div>Mountain View Topo: Align Tie Points</div>\
-                                <div class="page-title">Overlay number: {{App.AlignTiePoints.overlay}}</div>\
-                                <div style="float: left"><button {{action help target="App.alignTiePointsController"}}>Help</button>\					             <input value="Place Search"></input><button>Go</button>\
+                                <div class="page-title">Overlay number: {{App.AlignTiePoints.overlay.data.key}}</div>\
+                                <div><div style="float: left"><button {{action help target="App.alignTiePointsController"}}>Help</button>\					     <input value="Place Search"></input><button>Go</button>\
 				<button id="start_aligning">Start Aligning Overlay Here</button></div>\
-				<div id="opacity" style="float: left;"></div>\
-                                <div id="align_map_preview" style="height:400px; width:600px; margin: 0;"></div>\
+				<div id="opacity" style="float: left;"></div></div><br><br>\
+                                <div id="align_map_preview" style="height:400px; width:600px;"></div>\
                                 ';
+
 App.AlignTiePoints = Ember.Object.create({
     overlay: null,
     setOverlay: function (overlay) {
-	this.overlay = overlay;
+	$.get('http://'+window.location.host+'/'+'overlay/'+overlay+'.json', function(data){
+          console.log(data);  
+            App.AlignTiePoints.set('overlay',  data);
+            console.log(App.AlignTiePoints.get('overlay').data);
+            fitNamedBounds(data.data.bounds, App.alignTiePointsController.get('map'));
+           // App.alignTiePointsController.imageSetup(App.alignTiePointsController.map);
+	});
     }
 });
+
 App.AlignTiePointsController = Ember.Controller.extend();
+
 App.AlignTiePointsView = Ember.View.extend({
-    template: Ember.Handlebars.compile(App.AlignTiePointsHandlebars)
-});
-
-
-
-
-
-
-
-/*
-App.alignTiePointsContainerView = Ember.ContainerView.create({
-    childViews: [],
-}).appendTo('body');
-
-
-
-App.title = Ember.View.create({
-  template: Ember.Handlebars.compile('Mountain View Topo: Align Tie Points'),
-	
-	classNameBindings: ['title'],
-  attributeBindings: ['style'],
-  style: 'weight: bold;',
-});
-
-App.controls = Ember.View.create({
-  template: Ember.Handlebars.compile('<div style="float: left"><button {{action help target="App.alignTiePointsController"}}>Help</button>\
-																			<input value="Place Search"></input><button>Go</button>\
-																			<button id="start_aligning">Start Aligning Overlay Here</button></div>\
-																			<div id="opacity" style="float: left;"></div>\
-																			'),
-	
-	classNameBindings: ['controls'],
-  attributeBindings: ['style'],
-  style: 'width: 1000px;',
-});
-
-App.map = Ember.View.create({
-  template: Ember.Handlebars.compile('<div id="align_map_preview" style="height:400px; width:600px; margin: 0;"></div>'),
-	classNameBindings: ['align_map_preview'],
-  attributeBindings: ['style'],
-  style: 'height:400px; width:600px; margin: 0;',
-	didInsertElement : function() {
-			this._super();
+    template: Ember.Handlebars.compile(App.AlignTiePointsHandlebars),
+    didInsertElement : function() {
+      this._super();
       App.alignTiePointsController.insertMap();
-  				
-        
-	}
+	
+    }
 });
-
-App.alignTiePointsContainerView.get('childViews').pushObject(App.title);
-App.alignTiePointsContainerView.get('childViews').pushObject(App.controls);
-App.alignTiePointsContainerView.get('childViews').pushObject(App.map);
-
-*/
 
 
 
@@ -77,85 +39,75 @@ App.alignTiePointsController = Em.ObjectController.create({
 	markers: [],
 	insertMap: function(){
 			
-      var latlng = new google.maps.LatLng(37.388163, -122.082138);
-			// Creating an object literal containing the properties we want to pass to the map
-			var options = {
-		 		zoom: 6,
-		  	center: latlng,
-		  	mapTypeId: google.maps.MapTypeId.ROADMAP
-			}; 
-			// Calling the constructor, thereby initializing the map
-			var map = new google.maps.Map(document.getElementById("align_map_preview"), options);
-			this.map = map;
+	    var latlng = new google.maps.LatLng(37.388163, -122.082138);
+	    // Creating an object literal containing the properties we want to pass to the map
+	    var options = {
+		zoom: 6,
+		center: latlng,
+	 	mapTypeId: google.maps.MapTypeId.ROADMAP
+	    }; 
+	    // Calling the constructor, thereby initializing the map
+	    var map = new google.maps.Map(document.getElementById("align_map_preview"), options);
+            this.set('map', map);
 
-			this.addDragAndDrop(map);
+
 	},
 	help: function(){
-		console.log('runs when you press help button');
+	    console.log('runs when you press help button');
 	},
 
 
 	setOverlay: function(){
-  this.set('overlay', overlay);
-  this.bindTo('map', overlay);
+	    this.set('overlay', overlay);
+	    this.bindTo('map', overlay);
 	
-  /**
-   * @type {Array.<google.maps.Marker>}
-  */
-  this.markers_ = [
-    this.addGCPControl_('topLeft'),
-    this.addGCPControl_('topRight'),
-    this.addGCPControl_('bottomRight')
-  ];
+	    /**
+	     * @type {Array.<google.maps.Marker>}
+	     */
+	    this.markers_ = [
+		this.addGCPControl_('topLeft'),
+		this.addGCPControl_('topRight'),
+		this.addGCPControl_('bottomRight')
+	    ];
 
-  var mover = this.addMover_();
-  this.handleTranslate_();
+	    var mover = this.addMover_();
+	    this.handleTranslate_();
 	},
 	
 
-	addDragAndDrop: function(map){
-		var drop = document.querySelector("#align_map_preview");
-
-		drop.addEventListener('dragenter', this.stopEvent, false);
-		drop.addEventListener('dragexit', this.stopEvent, false);
-		drop.addEventListener('dragover', this.stopEvent, false);
-
-	drop.addEventListener('drop', this.stopEvent, false);
-		drop.addEventListener('drop', function(e) {
-
-		  App.alignTiePointsController.stopEvent(e);
-
-		  var files = e.dataTransfer.files;
-		  if (!files.length) {
-		    window.alert('No file uploaded');
-		    return;
-		  }
-		  var imageURL = (window.URL || window.webkitURL).createObjectURL(files[0]);
-
-		  var rect = map.getDiv().getBoundingClientRect();
-		  var x = e.pageX - rect.left;
-		  var y = e.pageY - rect.top;
-		  var overlay = new Overlay(imageURL, x, y);
-
-		//  map.controls[google.maps.ControlPosition.TOP_RIGHT].push( new OpacityWidget(overlay));
-			document.getElementById("opacity").appendChild(new OpacityWidget(overlay));
-			
-		  overlay.setMap(map);
-
-		  var editor = new OverlayEditor(overlay);
-
-		//  uploadInBackground(files[0], map, overlay);
-		}, false);
-	
+	imageSetup: function(map){ 
+	    overlay = App.AlignTiePoints.get('overlay').data;
+	    markers = [];
+	    for (var point = 0; point < overlay.points.length;point++) {
+	    var meters = {
+		x: overlay.points[point].slice(0,2)[0],
+		y: overlay.points[point].slice(0,2)[1],
+	    };
+	    var latLng = metersToLatLon(meters);
+	    var coord = meters;
+	    var index = markers.length;
+	    var markerOpts = {
+		title: "" + (index + 1),
+		draggable: true,
+		optimized: false,
+		position: latLng,
+		map: map,
+		labelContent: "" + (index + 1),
+		labelAnchor: new google.maps.Point(20,30),
+		labelClass: "labels",
+	    };
+		markers[index] = google.maps.Marker(markerOpts);
+	    }
+   
 	},
-	stopEvent: function(e) {
-  e.stopPropagation();
-  e.preventDefault();
-	},
+    stopEvent: function(e) {
+	e.stopPropagation();
+	e.preventDefault();
+    },
 	
 });
 
-//--------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------Have the some of the sydney code here temporarily
 
 function Overlay(src, x, y) {
   var el = this.el_ = document.createElement('img');
@@ -401,7 +353,7 @@ OverlayEditor.prototype.addGCPControl_ = function(anchor) {
 		
   });
   marker.bindTo('map', this);
-
+   
   this.get('overlay').bindTo(anchor, marker, 'position');
   this.set(anchor, marker);
 
