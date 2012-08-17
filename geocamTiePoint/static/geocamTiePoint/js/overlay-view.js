@@ -345,14 +345,14 @@ function handleMapMarkerRightClick(markerIndex, event) {
     mapMarkers[markerIndex] = null;
 }
 
-function warpButtonClicked() {
+function warpButtonClicked( key ) {
     if (warpButtonTimeout != null)
     clearTimeout(warpButtonTimeout);
     if (otherWarpButtonTimeout != null)
     clearTimeout(otherWarpButtonTimeout);
     $('#warp_button')[0].disabled = true;
     $('#warp_button')[0].value = 'warping...';
-    $.post('warp/')
+    $.post('/overlay/'+key+'/warp')
     .success(function(data, status, khr) {
         $('#warp_button')[0].disabled = false;
         $('#warp_button')[0].value = 'success!';

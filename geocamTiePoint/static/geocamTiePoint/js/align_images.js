@@ -10,7 +10,7 @@ function align_images(points)
     var U = getSimpleUMatrixFromPoints(points);
 
     // run linear regression
-    var result = linear_regression(V, U);
+    var result = geocamTiepoint.linear_regression(V, U);
     var m = result[0];
     var b = result[1];
 

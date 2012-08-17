@@ -3,7 +3,7 @@
 <title>Create New Overlay</title>
 {% endblock %}
 {% block contents %}
-<form enctype="multipart/form-data" action="." method="post">
+<form enctype="multipart/form-data" action="new.html" method="post">
   {% csrf_token %}
   {{ form.as_p }}
   <input type="submit" value="Submit" />

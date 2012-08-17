@@ -7,8 +7,8 @@
 if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
 
 /* optimize.js exports the following to the geocamTiepoint namespace:
- * geocamTiepoint.minimize(fun, x0) -- Find the local minimum of a function
- * near x0.
+ * geocamTiepoint.minimize(fun, x0)
+ * geocamTiepoint.linear_regression(V, U)
  */
 
 (function()
@@ -299,7 +299,7 @@ if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
         throw 'ERROR in powell.js: iteration maxed out';
     }
 
-    function linear_regression(V, U)
+    geocamTiepoint.linear_regression = function linear_regression(V, U)
     {
         // Let V and U be two d x n matrices whose columns are length-d
         // vectors v_i and u_i.  We want to fit a model v_i = m * u_i + b,

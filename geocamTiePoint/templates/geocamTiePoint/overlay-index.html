@@ -10,9 +10,9 @@
 <table>
   {% for overlay in overlays %}
   <tr>
-    <td><a href="{{ overlay.key }}">{{ overlay.name }}</a></td>
-    <td><a href="{{ overlay.key}}">edit</a></td>
-    <td><a href="{{ overlay.key}}/delete/">delete</a></td>
+    <td><a href="{% url geocamTiePoint_overlayId key=overlay.key %}">{{ overlay.name }}</a></td>
+    <td><a href="{% url geocamTiePoint_overlayId key=overlay.key %}">edit</a></td>
+    <td><a href="{% url geocamTiePoint_overlayDelete key=overlay.key %}">delete</a></td>
   </tr>
   {% endfor %}
 </table>
