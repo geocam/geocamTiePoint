@@ -1,10 +1,10 @@
 function latLonToMeters(latLon) {
     var mx = latLon.lng() * originShift / 180;
     var my = Math.log(Math.tan((90 + latLon.lat()) * Math.PI / 360)) /
-    (Math.PI / 180);
+        (Math.PI / 180);
     my = my * originShift / 180;
     return {x: mx,
-        y: my};
+            y: my};
 }
 
 function metersToLatLon(meters) {

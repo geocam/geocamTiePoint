@@ -80,10 +80,10 @@ function getNormalizedCoord(coord, zoom) {
     var tileRange = 1 << zoom;
 
     if (y < 0 || y >= tileRange)
-    return null;
+        return null;
 
     if (x < 0 || x >= tileRange)
-    x = (x % tileRange + tileRange) % tileRange;
+        x = (x % tileRange + tileRange) % tileRange;
 
     return {
     x: x,

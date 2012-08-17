@@ -11,8 +11,7 @@ if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
  * geocamTiepoint.linear_regression(V, U)
  */
 
-(function()
-{
+(function() {
 
     /* f1dim: Breaks down the multidimensional function to one-d function
      * for golden to handle. */

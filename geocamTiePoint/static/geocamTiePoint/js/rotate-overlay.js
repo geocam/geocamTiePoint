@@ -21,7 +21,7 @@ function rotateLeftButtonClicked() {
      .getElementById('rotate_image')
      .style['-webkit-transform'] = 'rotate(' + angle + 'deg)');
 
-   $('#angle_value').val(angle);
+    $('#angle_value').val(angle);
 }
 
 function rotateRightButtonClicked() {
@@ -29,5 +29,5 @@ function rotateRightButtonClicked() {
     (document
      .getElementById('rotate_image')
      .style['-webkit-transform'] = 'rotate(' + angle + 'deg)');
-   $('#angle_value').val(angle);
+    $('#angle_value').val(angle);
 }

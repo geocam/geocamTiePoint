@@ -41,7 +41,7 @@ function getImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
 
     if (!normalizedCoord)
-    return null;
+        return null;
 
     var bounds = Math.pow(2, zoom);
     return overlay.tilesUrl +
@@ -85,40 +85,40 @@ function initialize_search_bar() {
 
     var infoWindow = new google.maps.InfoWindow();
     var marker = new google.maps.Marker({
-    map: map
+        map: map
     });
 
     google.maps.event.addListener(autoComplete, 'place_changed', function() {
-    infoWindow.close();
-    var place = autoComplete.getPlace();
-    if (place.geometry.viewport) {
-        map.fitBounds(place.geometry.viewport);
-    } else {
-        map.setCenter(place.geometry.location);
-        map.setZoom(17);
-    }
+        infoWindow.close();
+        var place = autoComplete.getPlace();
+        if (place.geometry.viewport) {
+            map.fitBounds(place.geometry.viewport);
+        } else {
+            map.setCenter(place.geometry.location);
+            map.setZoom(17);
+        }
 
-    var address = '';
-    if (place.address_components) {
-        address = [(place.address_components[0] &&
-            place.address_components[0].short_name || ''),
-               (place.address_components[1] &&
-            place.address_components[1].short_name || ''),
-               (place.address_components[2] &&
-            place.address_components[2].short_name || '')
-              ].join(' ');
-    }
+        var address = '';
+        if (place.address_components) {
+            address = [(place.address_components[0] &&
+                        place.address_components[0].short_name || ''),
+                       (place.address_components[1] &&
+                        place.address_components[1].short_name || ''),
+                       (place.address_components[2] &&
+                        place.address_components[2].short_name || '')
+                      ].join(' ');
+        }
 
-    infoWindow.setContent('<div><strong>' + place.name + '</strong><br>' +
-                          address + '</div>');
-    infoWindow.open(map, marker);
+        infoWindow.setContent('<div><strong>' + place.name + '</strong><br>' +
+                              address + '</div>');
+        infoWindow.open(map, marker);
     });
 }
 
 function initialize_map() {
     var mapOptions = {
-    zoom: 6,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
+        zoom: 6,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
     };
 
     map = new google.maps.Map(document.getElementById('map_canvas'),
@@ -127,63 +127,64 @@ function initialize_map() {
     if (overlay.bounds) {
         fitNamedBounds(overlay.bounds);
     } else if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(function(position) {
-        var pos = new google.maps.LatLng(position.coords.latitude,
-                         position.coords.longitude);
-        map.setCenter(pos);
-    }, function() {
-        handleNoGeolocation(true);
-    });
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var pos = new google.maps.LatLng(position.coords.latitude,
+                                             position.coords.longitude);
+            map.setCenter(pos);
+        }, function() {
+            handleNoGeolocation(true);
+        });
     } else {
-    // browser doesn't support geolocation
-    handleNoGeolocation(false);
+        // browser doesn't support geolocation
+        handleNoGeolocation(false);
     }
 
     google.maps.event.addListener(map, 'click', handleMapClick);
 
     if (overlay.points) {
-    for (var point = 0; point < overlay.points.length; point++) {
-        var meters = {
-        x: overlay.points[point].slice(0, 2)[0],
-        y: overlay.points[point].slice(0, 2)[1]
-        };
-        var latLng = metersToLatLon(meters);
-        var coord = meters;
-        var index = mapMarkers.length;
-        var markerOpts = {
-        title: '' + (index + 1),
-        draggable: true,
-        position: latLng,
-        map: map,
-        icon: markerIcon,
-        labelContent: '' + (index + 1),
-        labelAnchor: new google.maps.Point(20, 30),
-        labelClass: 'labels'
-        };
-        var marker = new MarkerWithLabel(markerOpts);
-        google.maps.event.addListener(marker, 'dragstart', function(event) {
-        dragging = true;
-        });
-        google.maps.event.addListener(marker, 'dragend', function(event) {
-        handleMapMarkerDragEnd(index, event);
-        setTimeout(function() {dragging = false;}, 100);
-        });
-        google.maps.event.addListener(marker, 'rightclick', function(event) {
-        handleMapMarkerRightClick(index, event);
-        });
-        mapMarkers[index] = marker;
-        mapCoords[index] = coord;
-    }
+        for (var point = 0; point < overlay.points.length; point++) {
+            var meters = {
+                x: overlay.points[point].slice(0, 2)[0],
+                y: overlay.points[point].slice(0, 2)[1]
+            };
+            var latLng = metersToLatLon(meters);
+            var coord = meters;
+            var index = mapMarkers.length;
+            var markerOpts = {
+                title: '' + (index + 1),
+                draggable: true,
+                position: latLng,
+                map: map,
+                icon: markerIcon,
+                labelContent: '' + (index + 1),
+                labelAnchor: new google.maps.Point(20, 30),
+                labelClass: 'labels'
+            };
+            var marker = new MarkerWithLabel(markerOpts);
+            google.maps.event.addListener(marker, 'dragstart', function(event) {
+                dragging = true;
+            });
+            google.maps.event.addListener(marker, 'dragend', function(event) {
+                handleMapMarkerDragEnd(index, event);
+                setTimeout(function() {dragging = false;}, 100);
+            });
+            (google.maps.event.addListener
+             (marker, 'rightclick', function(event) {
+                  handleMapMarkerRightClick(index, event);
+              }));
+            mapMarkers[index] = marker;
+            mapCoords[index] = coord;
+        }
     }
 }
 
 function initialize_image() {
     var mapOptions = {
-    streetViewControl: false,
-    backgroundColor: 'rgb(0,0,0)',
-    mapTypeControlOptions: {
-        mapTypeId: ['image-map']
-    }
+        streetViewControl: false,
+        backgroundColor: 'rgb(0,0,0)',
+        mapTypeControlOptions: {
+            mapTypeId: ['image-map']
+        }
     };
 
     image_map = new google.maps.Map(document.getElementById('image_canvas'),
@@ -202,38 +203,39 @@ function initialize_image() {
     google.maps.event.addListener(image_map, 'click', handleImageClick);
 
     if (overlay.points) {
-    for (var point = 0; point < overlay.points.length; point++) {
-        var pixels = {
-        x: overlay.points[point].slice(2)[0],
-        y: overlay.points[point].slice(2)[1]
-        };
-        var latLng = pixelsToLatLon(pixels);
-        var coord = overlay.points[point].slice(2);
-        var index = imageMarkers.length;
-        var markerOpts = {
-        title: '' + (index + 1),
-        draggable: true,
-        position: latLng,
-        map: image_map,
-        icon: markerIcon,
-        labelContent: '' + (index + 1),
-        labelAnchor: new google.maps.Point(20, 30),
-        labelClass: 'labels'
-        };
-        var marker = new MarkerWithLabel(markerOpts);
-        google.maps.event.addListener(marker, 'dragstart', function(event) {
-        dragging = true;
-        });
-        google.maps.event.addListener(marker, 'dragend', function(event) {
-        handleImageMarkerDragEnd(index, event);
-        setTimeout(function() {dragging = false;}, 100);
-        });
-        google.maps.event.addListener(marker, 'rightclick', function(event) {
-        handleImageMarkerRightClick(index, event);
-        });
-        imageMarkers[index] = marker;
-        imageCoords[index] = pixels;
-    }
+        for (var point = 0; point < overlay.points.length; point++) {
+            var pixels = {
+                x: overlay.points[point].slice(2)[0],
+                y: overlay.points[point].slice(2)[1]
+            };
+            var latLng = pixelsToLatLon(pixels);
+            var coord = overlay.points[point].slice(2);
+            var index = imageMarkers.length;
+            var markerOpts = {
+                title: '' + (index + 1),
+                draggable: true,
+                position: latLng,
+                map: image_map,
+                icon: markerIcon,
+                labelContent: '' + (index + 1),
+                labelAnchor: new google.maps.Point(20, 30),
+                labelClass: 'labels'
+            };
+            var marker = new MarkerWithLabel(markerOpts);
+            google.maps.event.addListener(marker, 'dragstart', function(event) {
+                dragging = true;
+            });
+            google.maps.event.addListener(marker, 'dragend', function(event) {
+                handleImageMarkerDragEnd(index, event);
+                setTimeout(function() {dragging = false;}, 100);
+            });
+            (google.maps.event.addListener
+             (marker, 'rightclick', function(event) {
+                 handleImageMarkerRightClick(index, event);
+             });
+            imageMarkers[index] = marker;
+            imageCoords[index] = pixels;
+        }
     }
 }
 
@@ -248,14 +250,14 @@ function getNormalizedCoord(coord, zoom) {
     var tileRange = 1 << zoom;
 
     if (y < 0 || y >= tileRange)
-    return null;
+        return null;
 
     if (x < 0 || x >= tileRange)
-    x = (x % tileRange + tileRange) % tileRange;
+        x = (x % tileRange + tileRange) % tileRange;
 
     return {
-    x: x,
-    y: y
+        x: x,
+        y: y
     };
 }
 
@@ -266,25 +268,25 @@ function handleImageClick(event) {
     var coord = latLonToPixel(latLng);
     var index = imageMarkers.length;
     var markerOpts = {
-    title: '' + (index + 1),
-    draggable: true,
-    position: latLng,
-    map: image_map,
-    icon: markerIcon,
-    labelContent: '' + (index + 1),
-    labelAnchor: new google.maps.Point(20, 30),
-    labelClass: 'labels'
+        title: '' + (index + 1),
+        draggable: true,
+        position: latLng,
+        map: image_map,
+        icon: markerIcon,
+        labelContent: '' + (index + 1),
+        labelAnchor: new google.maps.Point(20, 30),
+        labelClass: 'labels'
     };
     var marker = new MarkerWithLabel(markerOpts);
     google.maps.event.addListener(marker, 'dragstart', function(event) {
-    dragging = true;
+        dragging = true;
     });
     google.maps.event.addListener(marker, 'dragend', function(event) {
-    handleImageMarkerDragEnd(index, event);
-    setTimeout(function() {dragging = false;}, 100);
+        handleImageMarkerDragEnd(index, event);
+        setTimeout(function() {dragging = false;}, 100);
     });
     google.maps.event.addListener(marker, 'rightclick', function(event) {
-    handleImageMarkerRightClick(index, event);
+        handleImageMarkerRightClick(index, event);
     });
     imageMarkers[index] = marker;
     imageCoords[index] = coord;
@@ -297,25 +299,25 @@ function handleMapClick(event) {
     var coord = latLonToMeters(latLng);
     var index = mapMarkers.length;
     var markerOpts = {
-    title: '' + (index + 1),
-    draggable: true,
-    position: latLng,
-    map: map,
-    icon: markerIcon,
-    labelContent: '' + (index + 1),
-    labelAnchor: new google.maps.Point(20, 30),
-    labelClass: 'labels'
+        title: '' + (index + 1),
+        draggable: true,
+        position: latLng,
+        map: map,
+        icon: markerIcon,
+        labelContent: '' + (index + 1),
+        labelAnchor: new google.maps.Point(20, 30),
+        labelClass: 'labels'
     };
     var marker = new MarkerWithLabel(markerOpts);
     google.maps.event.addListener(marker, 'dragstart', function(event) {
-    dragging = true;
+        dragging = true;
     });
     google.maps.event.addListener(marker, 'dragend', function(event) {
-    handleMapMarkerDragEnd(index, event);
-    setTimeout(function() {dragging = false;}, 100);
+        handleMapMarkerDragEnd(index, event);
+        setTimeout(function() {dragging = false;}, 100);
     });
     google.maps.event.addListener(marker, 'rightclick', function(event) {
-    handleMapMarkerRightClick(index, event);
+        handleMapMarkerRightClick(index, event);
     });
     mapMarkers[index] = marker;
     mapCoords[index] = coord;
@@ -347,106 +349,106 @@ function handleMapMarkerRightClick(markerIndex, event) {
 
 function warpButtonClicked( key ) {
     if (warpButtonTimeout != null)
-    clearTimeout(warpButtonTimeout);
+        clearTimeout(warpButtonTimeout);
     if (otherWarpButtonTimeout != null)
-    clearTimeout(otherWarpButtonTimeout);
+        clearTimeout(otherWarpButtonTimeout);
     $('#warp_button')[0].disabled = true;
     $('#warp_button')[0].value = 'warping...';
     $.post('/overlay/'+key+'/warp')
-    .success(function(data, status, khr) {
-        $('#warp_button')[0].disabled = false;
-        $('#warp_button')[0].value = 'success!';
-        warpButtonTimeout = setTimeout(function() {
-        $('#warp_button')[0].value = 'warp';
-        }, 3000);
-    })
-    .error(function(xhr, status, error) {
-        $('#warp_button')[0].disabled = false;
-        $('#warp_button')[0].value = 'warp';
-        alert('Error occurred during warping: ' + error);
-    });
+        .success(function(data, status, khr) {
+            $('#warp_button')[0].disabled = false;
+            $('#warp_button')[0].value = 'success!';
+            warpButtonTimeout = setTimeout(function() {
+                $('#warp_button')[0].value = 'warp';
+            }, 3000);
+        })
+        .error(function(xhr, status, error) {
+            $('#warp_button')[0].disabled = false;
+            $('#warp_button')[0].value = 'warp';
+            alert('Error occurred during warping: ' + error);
+        });
     otherWarpButtonTimeout = setTimeout(function() {
-    if ($('#warp_button')[0].disabled) {
-        $('#warp_button')[0].value = 'still warping...';
-        $('#warp_button')[0].disabled = false;
-    }
+        if ($('#warp_button')[0].disabled) {
+            $('#warp_button')[0].value = 'still warping...';
+            $('#warp_button')[0].disabled = false;
+        }
     }, 10000);
 }
 
 function save(jsonData) {
     if (imageCoords.length) {
-    var points = new Array();
-    for (var i = 0; i < imageCoords.length; i++) {
-        var coords = new Array();
-        coords[0] = mapCoords[i].x;
-        coords[1] = mapCoords[i].y;
-        coords[2] = imageCoords[i].x;
-        coords[3] = imageCoords[i].y;
-        points[points.length] = coords;
-    }
-    var data = jsonData.data;
-    data.points = points;
-    data.transform = calculateAlignmentModel(points);
-    var newJson = JSON.stringify(data);
+        var points = new Array();
+        for (var i = 0; i < imageCoords.length; i++) {
+            var coords = new Array();
+            coords[0] = mapCoords[i].x;
+            coords[1] = mapCoords[i].y;
+            coords[2] = imageCoords[i].x;
+            coords[3] = imageCoords[i].y;
+            points[points.length] = coords;
+        }
+        var data = jsonData.data;
+        data.points = points;
+        data.transform = calculateAlignmentModel(points);
+        var newJson = JSON.stringify(data);
     } else {
-    var data = jsonData.data;
-    data.points = new Array();
-    data.transform = {
-        'type': '',
-        'matrix': new Array()
-    };
-    var newJson = JSON.stringify(data);
+        var data = jsonData.data;
+        data.points = new Array();
+        data.transform = {
+            'type': '',
+            'matrix': new Array()
+        };
+        var newJson = JSON.stringify(data);
     }
 
     jsonData.data = newJson;
     jsonData.name = $('#title')[0].value;
 
     $.post(overlay.url, jsonData)
-    .success(function(data, status, xhr) {
-        $('#save_button')[0].value = 'success!';
-        $('#save_button')[0].disabled = false;
-        saveButtonTimeout = setTimeout(function() {
-        $('#save_button')[0].value = 'save';
-        }, 3000);
-    })
-    .error(function(xhr, status, error) {
-        $('#save_button')[0].value = 'save';
-        $('#save_button')[0].disabled = false;
-        alert('Error occurred while saving: ' + error);
-    });
+        .success(function(data, status, xhr) {
+            $('#save_button')[0].value = 'success!';
+            $('#save_button')[0].disabled = false;
+            saveButtonTimeout = setTimeout(function() {
+                $('#save_button')[0].value = 'save';
+            }, 3000);
+        })
+        .error(function(xhr, status, error) {
+            $('#save_button')[0].value = 'save';
+            $('#save_button')[0].disabled = false;
+            alert('Error occurred while saving: ' + error);
+        });
 }
 
 function saveButtonClicked() {
     if (saveButtonTimeout != null)
-    clearTimeout(saveButtonTimeout);
+        clearTimeout(saveButtonTimeout);
     if (otherSaveButtonTimeout != null)
-    clearTimeout(otherSaveButtonTimeout);
+        clearTimeout(otherSaveButtonTimeout);
     if (mapCoords.length != imageCoords.length) {
-    var diff = mapCoords.length - imageCoords.length;
-    if (diff > 0) // need to add points to image
-        $('#save_button')[0].value = 'Add ' + diff + ' to image';
-    else
-        $('#save_button')[0].value = 'Add ' + (-diff) + ' to map';
-    saveButtonTimeout = setTimeout(function() {
-        $('#save_button')[0].value = 'save';
-    }, 3000);
-    return;
+        var diff = mapCoords.length - imageCoords.length;
+        if (diff > 0) // need to add points to image
+            $('#save_button')[0].value = 'Add ' + diff + ' to image';
+        else
+            $('#save_button')[0].value = 'Add ' + (-diff) + ' to map';
+        saveButtonTimeout = setTimeout(function() {
+            $('#save_button')[0].value = 'save';
+        }, 3000);
+        return;
     }
 
     $('#save_button')[0].disabled = true;
     $('#save_button')[0].value = 'saving...';
     $.getJSON(overlay.url)
-    .success(save)
-    .error(function(xhr, status, error) {
-        $('#save_button')[0].value = 'save';
-        $('#save_button')[0].disabled = false;
-        alert('Error occurred while saving: ' + error);
-    });
+        .success(save)
+        .error(function(xhr, status, error) {
+            $('#save_button')[0].value = 'save';
+            $('#save_button')[0].disabled = false;
+            alert('Error occurred while saving: ' + error);
+        });
     otherSaveButtonTimeout = setTimeout(function() {
-    if ($('#save_button')[0].disabled) {
-        $('#save_button')[0].value = 'still saving...';
-        $('#save_button')[0].disabled = false;
-    }
+        if ($('#save_button')[0].disabled) {
+            $('#save_button')[0].value = 'still saving...';
+            $('#save_button')[0].disabled = false;
+        }
     }, 3000);
 }
 
@@ -457,12 +459,12 @@ function resetButtonClicked() {
 
 function reset() {
     for (var marker in imageMarkers) {
-    if (imageMarkers[marker].setMap)
-        imageMarkers[marker].setMap(null);
+        if (imageMarkers[marker].setMap)
+            imageMarkers[marker].setMap(null);
     }
     for (var marker in mapMarkers) {
-    if (mapMarkers[marker].setMap)
-        mapMarkers[marker].setMap(null);
+        if (mapMarkers[marker].setMap)
+            mapMarkers[marker].setMap(null);
     }
     imageMarkers = new Array();
     mapMarkers = new Array();
@@ -473,27 +475,28 @@ function reset() {
 function pushState(stack) {
     var data = overlay;
     if (imageCoords.length || mapCoords.length) {
-    var points = new Array();
-    for (var i = 0; i < Math.max(imageCoords.length, mapCoords.length); i++) {
-        var coords = new Array();
-        if (i < mapCoords.length) {
-        coords[0] = mapCoords[i].x;
-        coords[1] = mapCoords[i].y;
-        } else {
-        coords[0] = null;
-        coords[1] = null;
-        } if (i < imageCoords.length) {
-        coords[2] = imageCoords[i].x;
-        coords[3] = imageCoords[i].y;
-        } else {
-        coords[2] = null;
-        coords[3] = null;
+        var points = new Array();
+        var n = Math.max(imageCoords.length, mapCoords.length);
+        for (var i = 0; i < n; i++) {
+            var coords = new Array();
+            if (i < mapCoords.length) {
+                coords[0] = mapCoords[i].x;
+                coords[1] = mapCoords[i].y;
+            } else {
+                coords[0] = null;
+                coords[1] = null;
+            } if (i < imageCoords.length) {
+                coords[2] = imageCoords[i].x;
+                coords[3] = imageCoords[i].y;
+            } else {
+                coords[2] = null;
+                coords[3] = null;
+            }
+            points[points.length] = coords;
         }
-        points[points.length] = coords;
-    }
-    data.points = points;
+        data.points = points;
     } else {
-    data.points = new Array();
+        data.points = new Array();
     }
     var newJson = JSON.stringify(data);
     stack.push(newJson);
@@ -505,72 +508,78 @@ function popState(stack) {
     var data = JSON.parse(stack.pop());
 
     if (data.points) {
-    for (var point = 0; point < data.points.length; point++) {
-        var pixels = {
-        x: data.points[point].slice(2)[0],
-        y: data.points[point].slice(2)[1]
-        };
-        var meters = {
-        x: data.points[point].slice(0, 2)[0],
-        y: data.points[point].slice(0, 2)[1]
-        };
-        if (pixels.x != null && pixels.y != null) {
-        var latLng = pixelsToLatLon(pixels);
-        var coord = data.points[point].slice(2);
-        var index = imageMarkers.length;
-        var markerOpts = {
-            title: '' + (index + 1),
-            draggable: true,
-            position: latLng,
-            map: image_map,
-            icon: markerIcon,
-            labelContent: '' + (index + 1),
-            labelAnchor: new google.maps.Point(20, 30),
-            labelClass: 'labels'
-        };
-        var marker = new MarkerWithLabel(markerOpts);
-        google.maps.event.addListener(marker, 'dragstart', function(event) {
-            dragging = true;
-        });
-        google.maps.event.addListener(marker, 'dragend', function(event) {
-            handleImageMarkerDragEnd(index, event);
-            setTimeout(function() {dragging = false;}, 100);
-        });
-        google.maps.event.addListener(marker, 'rightclick', function(event) {
-            handleImageMarkerRightClick(index, event);
-        });
-        imageMarkers[index] = marker;
-        imageCoords[index] = pixels;
+        for (var point = 0; point < data.points.length; point++) {
+            var pixels = {
+                x: data.points[point].slice(2)[0],
+                y: data.points[point].slice(2)[1]
+            };
+            var meters = {
+                x: data.points[point].slice(0, 2)[0],
+                y: data.points[point].slice(0, 2)[1]
+            };
+            if (pixels.x != null && pixels.y != null) {
+                var latLng = pixelsToLatLon(pixels);
+                var coord = data.points[point].slice(2);
+                var index = imageMarkers.length;
+                var markerOpts = {
+                    title: '' + (index + 1),
+                    draggable: true,
+                    position: latLng,
+                    map: image_map,
+                    icon: markerIcon,
+                    labelContent: '' + (index + 1),
+                    labelAnchor: new google.maps.Point(20, 30),
+                    labelClass: 'labels'
+                };
+                var marker = new MarkerWithLabel(markerOpts);
+                (google.maps.event.addListener
+                 (marker, 'dragstart', function(event) {
+                     dragging = true;
+                 }));
+                (google.maps.event.addListener
+                 (marker, 'dragend', function(event) {
+                     handleImageMarkerDragEnd(index, event);
+                     setTimeout(function() {dragging = false;}, 100);
+                 }));
+                (google.maps.event.addListener
+                 (marker, 'rightclick', function(event) {
+                     handleImageMarkerRightClick(index, event);
+                 }));
+                imageMarkers[index] = marker;
+                imageCoords[index] = pixels;
+            }
+            if (meters.x != null && meters.y != null) {
+                var latLng = metersToLatLon(meters);
+                var coord = meters;
+                var index = mapMarkers.length;
+                var markerOpts = {
+                    title: '' + (index + 1),
+                    draggable: true,
+                    position: latLng,
+                    map: map,
+                    icon: markerIcon,
+                    labelContent: '' + (index + 1),
+                    labelAnchor: new google.maps.Point(20, 30),
+                    labelClass: 'labels'
+                };
+                var marker = new MarkerWithLabel(markerOpts);
+                (google.maps.event.addListener
+                 (marker, 'dragstart', function(event) {
+                     dragging = true;
+                 }));
+                (google.maps.event.addListener
+                 (marker, 'dragend', function(event) {
+                     handleMapMarkerDragEnd(index, event);
+                     setTimeout(function() {dragging = false;}, 100);
+                 }));
+                (google.maps.event.addListener
+                 (marker, 'rightclick', function(event) {
+                     handleMapMarkerRightClick(index, event);
+                 }));
+                mapMarkers[index] = marker;
+                mapCoords[index] = coord;
+            }
         }
-        if (meters.x != null && meters.y != null) {
-        var latLng = metersToLatLon(meters);
-        var coord = meters;
-        var index = mapMarkers.length;
-        var markerOpts = {
-            title: '' + (index + 1),
-            draggable: true,
-            position: latLng,
-            map: map,
-            icon: markerIcon,
-            labelContent: '' + (index + 1),
-            labelAnchor: new google.maps.Point(20, 30),
-            labelClass: 'labels'
-        };
-        var marker = new MarkerWithLabel(markerOpts);
-        google.maps.event.addListener(marker, 'dragstart', function(event) {
-            dragging = true;
-        });
-        google.maps.event.addListener(marker, 'dragend', function(event) {
-            handleMapMarkerDragEnd(index, event);
-            setTimeout(function() {dragging = false;}, 100);
-        });
-        google.maps.event.addListener(marker, 'rightclick', function(event) {
-            handleMapMarkerRightClick(index, event);
-        });
-        mapMarkers[index] = marker;
-        mapCoords[index] = coord;
-        }
-    }
     }
 
     return JSON.stringify(data);
@@ -655,14 +664,14 @@ function debugFit() {
         var latlng = metersToLatLon(meterCoords);
         console.log(latlng);
         var markerOpts = {
-        title: '' + (i + 1),
-        draggable: true,
-        position: latlng,
-        map: map,
-        icon: greenIcon,
-        labelContent: '' + (i + 1),
-        labelAnchor: new google.maps.Point(20, 30),
-        labelClass: 'labels'
+            title: '' + (i + 1),
+            draggable: true,
+            position: latlng,
+            map: map,
+            icon: greenIcon,
+            labelContent: '' + (i + 1),
+            labelAnchor: new google.maps.Point(20, 30),
+            labelClass: 'labels'
         };
         var marker = new MarkerWithLabel(markerOpts);
     }
