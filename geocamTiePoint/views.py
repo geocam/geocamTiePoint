@@ -4,6 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
+import os
 import json
 
 import PIL.Image
@@ -57,7 +58,8 @@ def overlayDelete(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         return render_to_response('geocamTiePoint/overlay-delete.html',
-                                  {'overlay': overlay},
+                                  {'overlay': overlay,
+                                   'overlayJson': dumps(overlay.jsonDict)},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
@@ -91,12 +93,8 @@ def overlayNew(request):
             overlay.name = imageRef.name
             overlay.imageData = imageData
             image = PIL.Image.open(imageData.image.file)
-            preData = {}
-            preData['points'] = []
-            preData['url'] = reverse('geocamTiePoint_overlayIdJson', args=[overlay.key])
-            preData['imageSize'] = image.size
-            preData['key'] = overlay.key
-            overlay.data = dumps(preData)
+            overlay.extras.points = []
+            overlay.extras.imageSize = image.size
             overlay.save()
 
             # generate initial quad tree
@@ -106,14 +104,19 @@ def overlayNew(request):
                                       {'status': 'success',
                                        'id': overlay.key},
                                       context_instance=RequestContext(request))
+        else:
+            return render_to_response('geocamTiePoint/new-overlay.html',
+                                      {'form': form},
+                                      context_instance=RequestContext(request))
+
     elif request.method == 'GET':
         form = forms.NewImageDataForm()
+        return render_to_response('geocamTiePoint/new-overlay.html',
+                                  {'form': form},
+                                  context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(('POST', 'GET'))
 
-    return render_to_response('geocamTiePoint/new-overlay.html',
-                              {'form': form},
-                              context_instance=RequestContext(request))
 
 
 def overlayId(request, key):
@@ -123,8 +126,8 @@ def overlayId(request, key):
         settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
         return render_to_response('geocamTiePoint/overlay-view.html',
                                   {'overlay': overlay,
-                                   'settings': dumps(settingsExportDict),
-                                   'DATA_URL': settings.DATA_URL},
+                                   'overlayJson': dumps(overlay.jsonDict),
+                                   'settings': dumps(settingsExportDict)},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -135,8 +138,11 @@ def overlayIdPreview(request, key):
         overlay = get_object_or_404(Overlay, key=key)
         settingsExportVars = ('STATIC_URL',)
         settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
+        import sys
+        print >> sys.stderr, 'overlay:', dumps(overlay.jsonDict)
         return render_to_response('geocamTiePoint/overlay-preview.html',
                                   {'overlay': overlay,
+                                   'overlayJson': dumps(overlay.jsonDict),
                                    'settings': dumps(settingsExportDict)},
                                   context_instance=RequestContext(request))
     else:
@@ -147,35 +153,17 @@ def overlayIdPreview(request, key):
 def overlayIdJson(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        data = {
-            "data": json.loads(overlay.data),
-            "name": overlay.name,
-            "contentType": overlay.imageData.contentType
-            }
-        return HttpResponse(dumps(data), content_type='application/json')
+        return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
-        if 'data' in request.POST:
-            overlay.data = request.POST['data']
-        if 'name' in request.POST:
-            overlay.name = request.POST['name']
-        if 'contentType' in request.POST:
-            overlay.imageData.contentType = request.POST['contentType']
-
-        data = json.loads(overlay.data)
-        transformDict = data.get('transform', None)
+        overlay.jsonDict = json.loads(request.raw_post_data)
+        transformDict = overlay.extras.get('transform', None)
         if transformDict:
-            data['bounds'] = quadTree.imageMapBounds(data['imageSize'],
-                                                     quadTree.makeTransform(transformDict))
-        overlay.data = dumps(data)
-
+            overlay.extras.bounds = (quadTree.imageMapBounds
+                                     (overlay.extras.imageSize,
+                                      quadTree.makeTransform(transformDict)))
         overlay.save()
-        data = {
-            "data": data,
-            "name": overlay.name,
-            "contentType": overlay.imageData.contentType
-            }
-        return HttpResponse(dumps(data), content_type='application/json')
+        return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET', 'POST'])
 
@@ -209,7 +197,7 @@ def getTile(request, quadTreeId, zoom, x, y):
     quadTreeId = int(quadTreeId)
     zoom = int(zoom)
     x = int(x)
-    y = int(y)
+    y = int(os.path.splitext(y)[0])
 
     qt = get_object_or_404(QuadTree, id=quadTreeId)
     gen = qt.getGenerator()

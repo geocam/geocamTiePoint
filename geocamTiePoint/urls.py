@@ -33,7 +33,7 @@ urlpatterns = patterns(
         'dummyView',
         {}, 'geocamTiePoint_tileRoot'),
 
-    url(r'^tile/(?P<quadTreeId>\d+)/(?P<zoom>\d+)/(?P<x>\d+)/(?P<y>\d+)\.(\w+)$',
+    url(r'^tile/(?P<quadTreeId>[^/]+)/(?P<zoom>[^/]+)/(?P<x>[^/]+)/(?P<y>[^/]+)$',
         'getTile',
         {}, 'geocamTiePoint_tile'),
 

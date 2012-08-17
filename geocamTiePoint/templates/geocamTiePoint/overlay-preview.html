@@ -13,7 +13,7 @@
 {% block scripts %}
 {{ block.super }}
 <script type="text/javascript">
-  var overlay = {{ overlay.data|safe }};
+  var overlay = {{ overlayJson|safe }};
   var settings = {{ settings|safe }};
 </script>    
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
@@ -22,6 +22,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}external/js/markerwithlabel.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}external/js/ExtDraggableObject.js"></script>
 
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/util.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/overlay-preview.js"></script>
 {% endblock scripts %}
 

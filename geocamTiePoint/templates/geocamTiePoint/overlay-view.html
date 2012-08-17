@@ -46,13 +46,13 @@
 
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/optimize.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/transform.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/util.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/overlay-view.js"></script>
 {% endblock scripts %}
 
 {% block jsInit %}
-  var overlay = {{ overlay.data|safe }};
+  var overlay = {{ overlayJson|safe }};
   var settings = {{ settings|safe }};
   $(initialize);
 {% endblock %}

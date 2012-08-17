@@ -10,7 +10,7 @@ function align_images(points)
     var U = getSimpleUMatrixFromPoints(points);
 
     // run linear regression
-    var result = geocamTiepoint.linear_regression(V, U);
+    var result = geocamTiePoint.linear_regression(V, U);
     var m = result[0];
     var b = result[1];
 
@@ -156,7 +156,7 @@ function calculateAlignmentModel(points)
 
     var minFunc = function(p) { return calculateAlignmentError(p, points); }
 
-    var minimizeResult = geocamTiepoint.minimize(minFunc, p);
+    var minimizeResult = geocamTiePoint.minimize(minFunc, p);
 
     return getTransform(minimizeResult.finalParams);
 }

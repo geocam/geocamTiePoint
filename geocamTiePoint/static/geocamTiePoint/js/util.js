@@ -21,3 +21,12 @@ function fitNamedBounds(b) {
                    new google.maps.LatLng(b.north, b.east)));
     map.fitBounds(bounds);
 }
+
+function fillTemplate(tmpl, fields) {
+    var result = tmpl;
+    $.each(fields, function (field, val) {
+        var pattern = '[' + field.toUpperCase() + ']';
+        result = result.replace(pattern, val);
+    });
+    return result;
+}

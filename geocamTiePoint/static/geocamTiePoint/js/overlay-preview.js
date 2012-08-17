@@ -10,45 +10,48 @@ var opac = 0.6;
 var OPACITY_MAX_PIXELS = 57;
 var imageOverlay;
 
-// find max zoom
-var maxZoom = 0; var offset = 3;
-if (overlay['imageSize'][0] > overlay['imageSize'][1]) {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][0] / tileSize, 2)) +
-        offset;
-} else {
-    maxZoom = Math.ceil(Math.log(overlay['imageSize'][1] / tileSize, 2)) +
-        offset;
-}
-
 function getTransformedImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
 
     if (!normalizedCoord)
         return null;
-    var bounds = Math.pow(2, zoom);
-    return overlay.alignedTilesUrl +
-        zoom +
-        '/' + normalizedCoord.x +
-        '/' + normalizedCoord.y +
-        '.png';
+
+    return fillTemplate(overlay.alignedTilesUrl,
+                        {zoom: zoom,
+                         x: normalizedCoord.x,
+                         y: normalizedCoord.y});
 }
 
-var transformedImageMapTypeOptions = {
-    getTileUrl: getTransformedImageTileUrl,
-    tileSize: new google.maps.Size(tileSize, tileSize),
-    maxZoom: maxZoom,
-    minZoom: offset,
-    radius: 1738000,
-    opacity: parseFloat(opac),
-    name: 'transformed-image-map'
-};
+var transformedImageMapTypeOptions = null;
 
-var transformedImageMapType = (new google.maps.ImageMapType
-                               (transformedImageMapTypeOptions));
+var transformedImageMapType = null;
 
 var map;
 
 function initialize() {
+    // find max zoom
+    var maxZoom = 0; var offset = 3;
+    if (overlay.imageSize[0] > overlay.imageSize[1]) {
+        maxZoom = Math.ceil(Math.log(overlay.imageSize[0] / tileSize, 2)) +
+            offset;
+    } else {
+        maxZoom = Math.ceil(Math.log(overlay.imageSize[1] / tileSize, 2)) +
+            offset;
+    }
+
+    transformedImageMapTypeOptions = {
+        getTileUrl: getTransformedImageTileUrl,
+        tileSize: new google.maps.Size(tileSize, tileSize),
+        maxZoom: maxZoom,
+        minZoom: offset,
+        radius: 1738000,
+        opacity: parseFloat(opac),
+        name: 'transformed-image-map'
+    };
+
+    transformedImageMapType = (new google.maps.ImageMapType
+                               (transformedImageMapTypeOptions));
+
     var mapOptions = {
         mapTypeId: google.maps.MapTypeId.ROADMAP
     };
@@ -143,7 +146,6 @@ function createOpacityControl(map, opacity) {
     setOpacity(initialValue);
 }
 
-
 function setOpacity(pixelX) {
     // pixelX in range 0 to OPACITY_MAX_PIXELS
     var opacityPercent = (100 / OPACITY_MAX_PIXELS) * pixelX;
@@ -155,25 +157,6 @@ function setOpacity(pixelX) {
     transformedImageMapType.setOpacity(opacityPercent / 100.0);
 }
 
-
-/*
-function setOpacity(pixelX) {
-    // Range = 0 to OPACITY_MAX_PIXELS
-    var value = (100 / OPACITY_MAX_PIXELS) * pixelX;
-    if (value < 0) value = 0;
-    if (value == 0) {
-        if (imageOverlay.visible == true) {
-            imageOverlay.hide();
-        }
-    }
-    else {
-        imageOverlay.setOpacity(value);
-        if (imageOverlay.visible == false) {
-            imageOverlay.show();
-        }
-    }
-}
-*/
 function findPosLeft(obj) {
     var curleft = 0;
     if (obj.offsetParent) {

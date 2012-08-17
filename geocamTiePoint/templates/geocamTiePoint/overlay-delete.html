@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% block head %}
-<title>Delete Overlay</title>
+<title>Delete Overlay {{ overlay.name }}</title>
 {% endblock %}
 {% block contents %}
-<h4>Are you sure you want to delete the overlay?</h4><br>
+<h4>Are you sure you want to delete overlay {{ overlay.name }}?</h4><br>
 <form action="" method="POST">
   {% csrf_token %}
   <input type="submit" value="OK">

@@ -43,12 +43,10 @@ function getImageTileUrl(coord, zoom) {
     if (!normalizedCoord)
         return null;
 
-    var bounds = Math.pow(2, zoom);
-    return overlay.tilesUrl +
-        zoom +
-        '/' + normalizedCoord.x +
-        '/' + normalizedCoord.y +
-        '.jpg';
+    return fillTemplate(overlay.unalignedTilesUrl,
+                        {zoom: zoom,
+                         x: normalizedCoord.x,
+                         y: normalizedCoord.y});
 }
 
 function initialize() {
@@ -232,7 +230,7 @@ function initialize_image() {
             (google.maps.event.addListener
              (marker, 'rightclick', function(event) {
                  handleImageMarkerRightClick(index, event);
-             });
+             }));
             imageMarkers[index] = marker;
             imageCoords[index] = pixels;
         }
@@ -354,7 +352,7 @@ function warpButtonClicked( key ) {
         clearTimeout(otherWarpButtonTimeout);
     $('#warp_button')[0].disabled = true;
     $('#warp_button')[0].value = 'warping...';
-    $.post('/overlay/'+key+'/warp')
+    $.post(overlay.url.replace('.json', '/warp'))
         .success(function(data, status, khr) {
             $('#warp_button')[0].disabled = false;
             $('#warp_button')[0].value = 'success!';
@@ -386,24 +384,19 @@ function save(jsonData) {
             coords[3] = imageCoords[i].y;
             points[points.length] = coords;
         }
-        var data = jsonData.data;
-        data.points = points;
-        data.transform = calculateAlignmentModel(points);
-        var newJson = JSON.stringify(data);
+        jsonData.points = points;
+        jsonData.transform = calculateAlignmentModel(points);
     } else {
-        var data = jsonData.data;
-        data.points = new Array();
-        data.transform = {
+        jsonData.points = new Array();
+        jsonData.transform = {
             'type': '',
             'matrix': new Array()
         };
-        var newJson = JSON.stringify(data);
     }
 
-    jsonData.data = newJson;
     jsonData.name = $('#title')[0].value;
 
-    $.post(overlay.url, jsonData)
+    $.post(overlay.url, JSON.stringify(jsonData))
         .success(function(data, status, xhr) {
             $('#save_button')[0].value = 'success!';
             $('#save_button')[0].disabled = false;

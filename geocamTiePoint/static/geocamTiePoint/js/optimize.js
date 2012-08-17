@@ -4,15 +4,18 @@
 // All Rights Reserved.
 // __END_LICENSE__
 
-if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
+if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
 
-/* optimize.js exports the following to the geocamTiepoint namespace:
- * geocamTiepoint.minimize(fun, x0)
- * geocamTiepoint.linear_regression(V, U)
+/* optimize.js exports the following functions to the geocamTiepoint
+ * namespace:
+ *
+ * x = geocamTiepoint.minimize(fun, x0)
+ *
+ * [m, b] = geocamTiePoint.linear_regression(V, U)
+ *
  */
 
 (function() {
-
     /* f1dim: Breaks down the multidimensional function to one-d function
      * for golden to handle. */
 
@@ -298,7 +301,13 @@ if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
         throw 'ERROR in powell.js: iteration maxed out';
     }
 
-    geocamTiepoint.linear_regression = function linear_regression(V, U)
+    /**
+     * [m, b] = geocamTiePoint.linear_regression(V, U) -- Return the
+     * scalar values m and b that minimize the least-squares error for
+     * the model V = m * U + b. V and U must be matrices with the same
+     * dimensions.
+     */
+    geocamTiePoint.linear_regression = function (V, U)
     {
         // Let V and U be two d x n matrices whose columns are length-d
         // vectors v_i and u_i.  We want to fit a model v_i = m * u_i + b,
@@ -330,13 +339,17 @@ if (! window.geocamTiepoint) { window.geocamTiepoint = {}; }
             console.log('b: ' + JSON.stringify(b));
         }
         return [m, b];
-    }
+    };
 
     var ncom;
     var pcom;
     var xicom;
 
-    geocamTiepoint.minimize = function minimize(fun, x0) {
+    /**
+     * x = geocamTiePoint.minimize(fun, x0): Find the local minimum
+     * of @fun near @x0.
+     */
+    geocamTiePoint.minimize = function (fun, x0) {
         ncom = 0;
         pcom = [];
         xicom = [];
