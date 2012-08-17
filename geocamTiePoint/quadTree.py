@@ -268,6 +268,8 @@ def getImageResponsePng(image):
 
 def getImageResponseJpg(image):
     out = StringIO()
+    if image.mode == 'P':
+        image = image.convert('RGB')
     image.save(out, format='jpeg')
     return HttpResponse(out.getvalue(), mimetype='image/jpeg')
 
