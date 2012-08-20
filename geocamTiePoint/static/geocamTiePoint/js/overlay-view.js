@@ -123,7 +123,7 @@ function initialize_map() {
                               mapOptions);
 
     if (overlay.bounds) {
-        fitNamedBounds(overlay.bounds);
+        fitNamedBounds(overlay.bounds, map);
     } else if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             var pos = new google.maps.LatLng(position.coords.latitude,
@@ -142,8 +142,8 @@ function initialize_map() {
     if (overlay.points) {
         for (var point = 0; point < overlay.points.length; point++) {
             var meters = {
-                x: overlay.points[point].slice(0, 2)[0],
-                y: overlay.points[point].slice(0, 2)[1]
+                x: overlay.points[point].slice(0,2)[0],
+                y: overlay.points[point].slice(0,2)[1]
             };
             var latLng = metersToLatLon(meters);
             var coord = meters;
@@ -162,14 +162,18 @@ function initialize_map() {
             google.maps.event.addListener(marker, 'dragstart', function(event) {
                 dragging = true;
             });
-            google.maps.event.addListener(marker, 'dragend', function(event) {
-                handleMapMarkerDragEnd(index, event);
-                setTimeout(function() {dragging = false;}, 100);
-            });
+            google.maps.event.addListener(marker, 'dragend', function(i){ 
+                return function(event) {
+                    handleMapMarkerDragEnd(i, event);
+                    setTimeout(function() {dragging = false;}, 100);
+                } 
+            }(index) );
             (google.maps.event.addListener
-             (marker, 'rightclick', function(event) {
-                  handleMapMarkerRightClick(index, event);
-              }));
+             (marker, 'rightclick', function(i) {
+                return function(event) {
+                  handleMapMarkerRightClick(i, event);
+                }
+              }(index) ));
             mapMarkers[index] = marker;
             mapCoords[index] = coord;
         }
@@ -223,14 +227,18 @@ function initialize_image() {
             google.maps.event.addListener(marker, 'dragstart', function(event) {
                 dragging = true;
             });
-            google.maps.event.addListener(marker, 'dragend', function(event) {
-                handleImageMarkerDragEnd(index, event);
-                setTimeout(function() {dragging = false;}, 100);
-            });
+            google.maps.event.addListener(marker, 'dragend', function(i) {
+                return function(event) {
+                    handleImageMarkerDragEnd(i, event);
+                    setTimeout(function() {dragging = false;}, 100);
+                }
+            }(index) );
             (google.maps.event.addListener
-             (marker, 'rightclick', function(event) {
-                 handleImageMarkerRightClick(index, event);
-             }));
+             (marker, 'rightclick', function(i) {
+                return function(event) {
+                 handleImageMarkerRightClick(i, event);
+                }
+             }(index) ));
             imageMarkers[index] = marker;
             imageCoords[index] = pixels;
         }
