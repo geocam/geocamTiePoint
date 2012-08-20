@@ -27,6 +27,15 @@ from geocamTiePoint import anypdf as pdf
 
 TRANSPARENT_PNG_BINARY = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x01sRGB\x00\xae\xce\x1c\xe9\x00\x00\x00\rIDAT\x08\xd7c````\x00\x00\x00\x05\x00\x01^\xf3*:\x00\x00\x00\x00IEND\xaeB`\x82'
 
+PDF_MIME_TYPES = ('application/pdf',
+                  'application/acrobat',
+                  'application/nappdf',
+                  'application/x-pdf',
+                  'application/vnd.pdf',
+                  'text/pdf',
+                  'text/x-pdf',
+                  )
+
 
 def transparentPngResponse():
     return HttpResponse(TRANSPARENT_PNG_BINARY, content_type='image/png')
@@ -80,7 +89,7 @@ def overlayNew(request):
             imageRef = form.cleaned_data['image']
             imageData = models.ImageData(contentType=imageRef.content_type,
                                          overlay=overlay)
-            if imageRef.content_type == 'application/pdf':
+            if imageRef.content_type in PDF_MIME_TYPES:
                 pngData = pdf.convertPdf(imageRef.file.read())
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
@@ -116,7 +125,6 @@ def overlayNew(request):
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(('POST', 'GET'))
-
 
 
 def overlayId(request, key):
