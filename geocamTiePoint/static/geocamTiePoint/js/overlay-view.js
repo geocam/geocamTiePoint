@@ -156,7 +156,8 @@ function initialize_map() {
                 icon: markerIcon,
                 labelContent: '' + (index + 1),
                 labelAnchor: new google.maps.Point(20, 30),
-                labelClass: 'labels'
+                labelClass: 'labels',
+                raiseOnDrag: false,
             };
             var marker = new MarkerWithLabel(markerOpts);
             google.maps.event.addListener(marker, 'dragstart', function(event) {
@@ -221,7 +222,8 @@ function initialize_image() {
                 icon: markerIcon,
                 labelContent: '' + (index + 1),
                 labelAnchor: new google.maps.Point(20, 30),
-                labelClass: 'labels'
+                labelClass: 'labels',
+                raiseOnDrag: false,
             };
             var marker = new MarkerWithLabel(markerOpts);
             google.maps.event.addListener(marker, 'dragstart', function(event) {
