@@ -13,7 +13,7 @@ App.router = Ember.Router.create({
         route: '/align/:overlay',
         connectOutlets: function(router, controller) {
 
-	    App.AlignTiePoints.setOverlay(controller.overlay);
+            App.AlignTiePoints.setOverlay(controller.overlay);
             (router
              .get('applicationController')
              .connectOutlet('alignTiePoints', controller));
@@ -27,7 +27,7 @@ App.router = Ember.Router.create({
             App.router.transitionTo('alignTiePoints',
                                     App.PlaceTiePoints.controller);
 
-	},
+        },
         connectOutlets: function(router, controller) {
             App.PlaceTiePoints.setOverlay(controller.overlay);
             App.PlaceTiePoints.setController(controller);

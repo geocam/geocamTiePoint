@@ -26,7 +26,7 @@ function fitNamedBounds(b, map) {
 
 function fillTemplate(tmpl, fields) {
     var result = tmpl;
-    $.each(fields, function (field, val) {
+    $.each(fields, function(field, val) {
         var pattern = '[' + field.toUpperCase() + ']';
         result = result.replace(pattern, val);
     });

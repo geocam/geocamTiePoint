@@ -307,7 +307,7 @@ if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
      * the model V = m * U + b. V and U must be matrices with the same
      * dimensions.
      */
-    geocamTiePoint.linear_regression = function (V, U)
+    geocamTiePoint.linear_regression = function(V, U)
     {
         // Let V and U be two d x n matrices whose columns are length-d
         // vectors v_i and u_i.  We want to fit a model v_i = m * u_i + b,
@@ -347,9 +347,9 @@ if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
 
     /**
      * x = geocamTiePoint.minimize(fun, x0): Find the local minimum
-     * of @fun near @x0.
+     * of fun near x0.
      */
-    geocamTiePoint.minimize = function (fun, x0) {
+    geocamTiePoint.minimize = function(fun, x0) {
         ncom = 0;
         pcom = [];
         xicom = [];

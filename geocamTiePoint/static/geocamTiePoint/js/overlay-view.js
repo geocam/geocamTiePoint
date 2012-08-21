@@ -355,7 +355,7 @@ function handleMapMarkerRightClick(markerIndex, event) {
     mapMarkers[markerIndex] = null;
 }
 
-function warpButtonClicked( key ) {
+function warpButtonClicked(key) {
     if (warpButtonTimeout != null)
         clearTimeout(warpButtonTimeout);
     if (otherWarpButtonTimeout != null)
