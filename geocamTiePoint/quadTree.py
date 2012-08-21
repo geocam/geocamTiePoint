@@ -22,10 +22,7 @@ from PIL import Image
 import numpy
 import numpy.linalg
 
-try:
-    from scipy.optimize import leastsq
-except ImportError:
-    pass  # only needed for quadratic model with many tie points
+import geocamTiePoint.optimize
 
 TILE_SIZE = 256.
 PATCH_SIZE = 32
@@ -234,12 +231,7 @@ class QuadraticTransform(object):
         u0 = self.proj.reverse(vlist)
 
         # run levenberg-marquardt to get an exact inverse.
-        try:
-            leastsq
-        except NameError:
-            raise ImportError('scipy.optimize.leastsq')
-        umin, _error = leastsq(lambda u: self._residuals(v, u),
-                               u0)
+        umin, _status = geocamTiePoint.optimize.lm(v, self.forward, u0)
 
         return umin.tolist()
 
