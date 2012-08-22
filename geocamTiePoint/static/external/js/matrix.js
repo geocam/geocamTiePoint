@@ -198,6 +198,24 @@ Matrix.prototype.print = function () {
   return this;
 };
 
+Matrix.prototype.toString = function () {
+  var out = '[';
+  for (var y = 0; y < this.h; ++y) {
+    for (var x = 0; x < this.w; ++x) {
+      out += Math.round(this.values[y][x] * 100.0) / 100.0;
+      if (x != this.w - 1) {
+          out += ' ';
+      }
+    }
+    if (y != this.h - 1) {
+        out += '\n';
+    }
+  }
+  out += ']\n';
+
+  return out;
+};
+
 // sum of squares of the matrix elements
 Matrix.prototype.squareSum = function () {
     var sum = 0;
@@ -263,4 +281,27 @@ Matrix.prototype.meanColumn = function () {
         result.values[y][0] = sum / this.w;
     }
     return result;
+}
+
+// returns the mean of the columns of the matrix
+Matrix.prototype.meanRow = function () {
+    var result = new Matrix(this.w, 1);
+    for (var x=0; x < this.w; ++x) {
+        var sum = 0;
+        for (var y=0; y < this.h; ++y) {
+            sum += this.values[y][x];
+        }
+        result.values[0][x] = sum / this.h;
+    }
+    return result;
+}
+
+Matrix.prototype.transpose = function () {
+    var values = Matrix.allocate(this.h, this.w);
+    for (var y = 0; y < this.h; ++y) {
+        for (var x = 0; x < this.w; ++x) {
+            values[x][y] = this.values[y][x];
+        }
+    }
+    return new Matrix(this.h, this.w, values);
 }
