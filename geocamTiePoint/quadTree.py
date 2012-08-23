@@ -426,7 +426,6 @@ class WarpedQuadTreeGenerator(object):
         totalTiles = 0
         startTime = time.time()
         for zoom in xrange(int(self.maxZoom), -1, -1):
-            bounds = self.tileBounds[zoom]
             xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
             maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
             totalTiles += maxNumTiles
