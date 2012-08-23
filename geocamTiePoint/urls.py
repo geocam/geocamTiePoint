@@ -42,7 +42,7 @@ urlpatterns = patterns(
         {}, 'geocamTiePoint_overlayIdImageFileName'),
 
     ## New Client ##
-    url(r'^ember/$', 'ember',
+    url(r'^ember/', 'ember',
         {}, 'geocamTiePoint_ember'),
 
     ## JSON API ##
@@ -52,4 +52,7 @@ urlpatterns = patterns(
     ## testing ui demo ##
     url(r'^uiDemo/(?P<key>\d+)/$', 'uiDemo',
         {}, 'geocamTiePoint_uiDemo'),
+     url(r'^overlays.json$', 'overlayListJson',
+        {}, 'geocamTiePoint_overlayListJson'),
+
 )

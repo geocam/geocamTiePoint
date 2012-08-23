@@ -1,8 +1,20 @@
 {% extends "base.html" %}
+{% load templatetag_handlebars %}
 
 {% block head %}
 {{ block.super }}
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+{% block handlebars %}
+    {% comment %} 
+    Handlebar templates go here. e.g.:
+    {% tplhandlebars "tpl-infos" %}
+        {{total}} {% trans "result(s)." %}
+        <p>{% trans "Min" %}: {{min}}</p>
+        <p>{% trans "Max" %}: {{max}}</p>
+    {% endtplhandlebars %}
+    {% endcomment %}
+    {% include "geocamTiepoint/handlebars.html" %}
+{% endblock handlebars %}
 {% endblock %}
 
 {% block scripts %}
@@ -25,9 +37,24 @@
 <script type="text/javascript" src="/static/geocamTiePoint/js/views/NewMapOverlay.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/views/PlaceTiePoints.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/views/ViewPage.js"></script>
-{% endblock %}
+{% endblock scripts %}
+
+{% block header %}
+    {{ block.super }}
+{% endblock header %}
+
+{% block contents %}
+{% tplhandlebars "application" %}
+    <h1>This is the Application Template</h1>
+    {{outlet}}
+{% endtplhandlebars %}
+{% endblock contents %}
 
 {% block jsInit %}
 {{ block.super }}
-App.initialize(App.router);
-{% endblock %}
+$( 
+    function() { 
+        App.initialize(App.Router.create()); 
+    } 
+);
+{% endblock jsInit %}
