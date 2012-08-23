@@ -75,8 +75,12 @@ def lm(y, f, x0,
     error = diff(y, yhat)
     normStart = norm(error)
 
+    done = False
+
     # Solution may already be good enough
-    done = (normStart < absTolerance)
+    if normStart < absTolerance:
+        status = LM_CONVERGED_ABS_TOLERANCE
+        done = True
 
     outerIterations = 0
     while not done:
