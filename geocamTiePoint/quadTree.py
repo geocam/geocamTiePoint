@@ -397,7 +397,7 @@ class WarpedQuadTreeGenerator(object):
         self.mercatorCorners = [self.transform.forward(corner)
                                 for corner in corners]
 
-        if 1:
+        if 0:
             # debug getProjectiveInverse
             print >> sys.stderr, 'mercatorCorners:', self.mercatorCorners
             corners2 = [self.transform.reverse(corner)

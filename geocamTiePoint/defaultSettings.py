@@ -20,3 +20,6 @@ GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT = {
     "east": -59,
     "north": 52,
 }
+
+# set to 'INFO' or 'DEBUG' to get more debug information from L-M optimizer
+GEOCAM_TIE_POINT_OPTIMIZE_LOG_LEVEL = 'WARNING'

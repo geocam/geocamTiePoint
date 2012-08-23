@@ -11,6 +11,8 @@ the C++ L-M implementation from the NASA Vision Workbench.
 
 import logging
 
+from geocamTiePoint import settings
+
 import numpy
 from numpy.linalg import norm
 
@@ -64,6 +66,7 @@ def lm(y, f, x0,
     analytical jacobian for f.
     """
     logger = logging.getLogger('LM')
+    logger.setLevel(getattr(logging, settings.GEOCAM_TIE_POINT_OPTIMIZE_LOG_LEVEL))
 
     Rinv = 10
     lamb = 0.1
@@ -142,19 +145,19 @@ def lm(y, f, x0,
         # Percentage change convergence criterion
         if ((normStart - normTry) / normStart) < relTolerance:
             status = LM_CONVERGED_REL_TOLERANCE
-            logger.debug('CONVERGED TO RELATIVE TOLERANCE')
+            logger.info('converged to relative tolerance')
             done = True
 
         # Absolute error convergence criterion
         if normTry < absTolerance:
             status = LM_CONVERGED_ABS_TOLERANCE
-            logger.debug('CONVERGED TO ABSOLUTE TOLERANCE')
+            logger.info('converged to absolute tolerance')
             done = True
 
         # Max iterations convergence criterion
         if outerIterations >= maxIterations:
             status = LM_DID_NOT_CONVERGE
-            logger.debug('REACHED MAX ITERATIONS!')
+            logger.info('reached max iterations!')
             done = True
 
         # Take trial parameters as new parameters
@@ -171,7 +174,7 @@ def lm(y, f, x0,
         logger.debug('lambda = %s', lamb)
         logger.debug('end of outer iteration %s with error %s', outerIterations, normTry)
 
-    logger.debug('finished after iteration %s', outerIterations)
+    logger.info('finished after iteration %s error=%s', outerIterations, normTry)
     return x, status
 
 
