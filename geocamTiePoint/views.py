@@ -47,7 +47,7 @@ def dumps(obj):
 
 def ember(request):
     if request.method == 'GET':
-        return render_to_response('geocamTiePoint/ember-base.html', {},
+        return render_to_response('geocamTiePoint/ember.html', {},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
@@ -175,6 +175,10 @@ def overlayIdJson(request, key):
     else:
         return HttpResponseNotAllowed(['GET', 'POST'])
 
+@csrf_exempt
+def overlayListJson(request):
+    overlays = Overlay.objects.all()
+    return HttpResponse(dumps( list(o.jsonDict for o in overlays) ), content_type='application/json')
 
 @csrf_exempt
 def overlayIdWarp(request, key):

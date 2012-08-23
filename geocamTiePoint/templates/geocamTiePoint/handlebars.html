@@ -1,0 +1,23 @@
+{% load templatetag_handlebars %}
+
+{% comment %} 
+Handlebar templates go here. e.g.:
+{% tplhandlebars "tpl-infos" %}
+    {{total}} {% trans "result(s)." %}
+    <p>{% trans "Min" %}: {{min}}</p>
+    <p>{% trans "Max" %}: {{max}}</p>
+{% endtplhandlebars %}
+{% endcomment %}
+
+{% tplhandlebars "_application" %}
+    <h1>This is the Application Template</h1>
+{% endtplhandlebars %}
+
+{% tplhandlebars "overlay_list" %}
+    <h1>This is OverlayList</h1>
+    <ul id="overlay_list">
+    {{#each overlay in controller}}
+      <li><a {{action showOverlay overlay href=true}}>{{overlay.name}}</a></li>
+    {{/each}}
+    </ul>
+{% endtplhandlebars %}
