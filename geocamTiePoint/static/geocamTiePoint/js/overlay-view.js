@@ -142,8 +142,8 @@ function initialize_map() {
     if (overlay.points) {
         for (var point = 0; point < overlay.points.length; point++) {
             var meters = {
-                x: overlay.points[point].slice(0,2)[0],
-                y: overlay.points[point].slice(0,2)[1]
+                x: overlay.points[point].slice(0, 2)[0],
+                y: overlay.points[point].slice(0, 2)[1]
             };
             var latLng = metersToLatLon(meters);
             var coord = meters;
@@ -157,24 +157,24 @@ function initialize_map() {
                 labelContent: '' + (index + 1),
                 labelAnchor: new google.maps.Point(20, 30),
                 labelClass: 'labels',
-                raiseOnDrag: false,
+                raiseOnDrag: false
             };
             var marker = new MarkerWithLabel(markerOpts);
             google.maps.event.addListener(marker, 'dragstart', function(event) {
                 dragging = true;
             });
-            google.maps.event.addListener(marker, 'dragend', function(i){ 
+            google.maps.event.addListener(marker, 'dragend', function(i) {
                 return function(event) {
                     handleMapMarkerDragEnd(i, event);
                     setTimeout(function() {dragging = false;}, 100);
-                } 
-            }(index) );
+                }
+            }(index));
             (google.maps.event.addListener
              (marker, 'rightclick', function(i) {
                 return function(event) {
                   handleMapMarkerRightClick(i, event);
                 }
-              }(index) ));
+              }(index)));
             mapMarkers[index] = marker;
             mapCoords[index] = coord;
         }
@@ -223,7 +223,7 @@ function initialize_image() {
                 labelContent: '' + (index + 1),
                 labelAnchor: new google.maps.Point(20, 30),
                 labelClass: 'labels',
-                raiseOnDrag: false,
+                raiseOnDrag: false
             };
             var marker = new MarkerWithLabel(markerOpts);
             google.maps.event.addListener(marker, 'dragstart', function(event) {
@@ -234,13 +234,13 @@ function initialize_image() {
                     handleImageMarkerDragEnd(i, event);
                     setTimeout(function() {dragging = false;}, 100);
                 }
-            }(index) );
+            }(index));
             (google.maps.event.addListener
              (marker, 'rightclick', function(i) {
                 return function(event) {
                  handleImageMarkerRightClick(i, event);
                 }
-             }(index) ));
+             }(index)));
             imageMarkers[index] = marker;
             imageCoords[index] = pixels;
         }
