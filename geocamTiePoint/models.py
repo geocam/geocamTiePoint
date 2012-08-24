@@ -9,6 +9,11 @@
 
 import os
 import datetime
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
+from django.core.files.base import ContentFile
 
 import PIL.Image
 
