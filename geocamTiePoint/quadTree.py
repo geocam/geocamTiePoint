@@ -342,9 +342,6 @@ class SimpleQuadTreeGenerator(object):
 
         self.zoomedImage = {}
         self.zoomedImage[self.maxZoom0] = image
-        self.zoomedImage[self.maxZoom] = image.resize((image.size[0] * 2 ** k,
-                                                       image.size[1] * 2 ** k),
-                                                      Image.BICUBIC)
 
     def getZoomedImage(self, zoom):
         result = self.zoomedImage.get(zoom, None)
@@ -393,12 +390,28 @@ class SimpleQuadTreeGenerator(object):
                       TILE_SIZE * (x + 1),
                       TILE_SIZE * (y + 1)]
         tileBounds = [int(round(c)) for c in tileBounds]
-        image = self.getZoomedImage(zoom)
-        if allPointsOutsideCorners(cornerPoints(tileBounds), getImageCorners(image)):
-            raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
-                              % (zoom0, x, y))
 
-        return image.crop(tileBounds)
+        if zoom > self.maxZoom0:
+            # this tile is at greater resolution than the original
+            # image. use transform() to upsample.
+            image = self.getZoomedImage(self.maxZoom0)
+            k = zoom - self.maxZoom0
+            sourceTileBounds = [v * 2 ** k for v in tileBounds]
+            if allPointsOutsideCorners(cornerPoints(sourceTileBounds), getImageCorners(image)):
+                raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
+                                  % (zoom0, x, y))
+            return image.transform(tileBounds, Image.EXTENT,
+                                   sourceTileBounds,
+                                   Image.BICUBIC)
+        else:
+            # this tile is at lower resolution than the original
+            # image. use crop() to extract it from one of the cached
+            # downsampled versions of the image.
+            image = self.getZoomedImage(zoom)
+            if allPointsOutsideCorners(cornerPoints(tileBounds), getImageCorners(image)):
+                raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
+                                  % (zoom0, x, y))
+            return image.crop(tileBounds)
 
 
 class WarpedQuadTreeGenerator(object):
