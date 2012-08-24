@@ -23,6 +23,7 @@ import numpy
 import numpy.linalg
 
 import geocamTiePoint.optimize
+from geocamTiePoint import settings
 
 TILE_SIZE = 256.
 PATCH_SIZE = 32
@@ -126,7 +127,7 @@ def calculateMaxZoom(bounds, image):
     assert metersPerPixel > 0
     decimalZoom = math.log((INITIAL_RESOLUTION / metersPerPixel), 2)
     zoom = int(math.ceil(decimalZoom))
-    return zoom
+    return zoom + settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION
 
 
 def tileIndex(zoom, mercatorCoords):
@@ -333,12 +334,17 @@ class SimpleQuadTreeGenerator(object):
                        (w, h))
 
         if self.imageSize[0] > self.imageSize[1]:
-            self.maxZoom = int(math.ceil(math.log(self.imageSize[0] / TILE_SIZE, 2)))
+            self.maxZoom0 = int(math.ceil(math.log(self.imageSize[0] / TILE_SIZE, 2)))
         else:
-            self.maxZoom = int(math.ceil(math.log(self.imageSize[1] / TILE_SIZE, 2)))
+            self.maxZoom0 = int(math.ceil(math.log(self.imageSize[1] / TILE_SIZE, 2)))
+        k = settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION
+        self.maxZoom = self.maxZoom0 + k
 
         self.zoomedImage = {}
-        self.zoomedImage[self.maxZoom] = image
+        self.zoomedImage[self.maxZoom0] = image
+        self.zoomedImage[self.maxZoom] = image.resize((image.size[0] * 2 ** k,
+                                                       image.size[1] * 2 ** k),
+                                                      Image.BICUBIC)
 
     def getZoomedImage(self, zoom):
         result = self.zoomedImage.get(zoom, None)

@@ -23,3 +23,11 @@ GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT = {
 
 # set to 'INFO' or 'DEBUG' to get more debug information from L-M optimizer
 GEOCAM_TIE_POINT_OPTIMIZE_LOG_LEVEL = 'WARNING'
+
+# once the map zoom level exceeds the resolution of the original overlay
+# image, zooming further doesn't provide more information. use this
+# setting to specify how many additional levels of zoom we should
+# provide past that point. (after the setting is exceeded, the dynamic
+# tile generator will return transparent tiles, requiring less
+# computation).
+GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION = 2

@@ -11,6 +11,7 @@ var originShift = 2 * Math.PI * 6378137 / 2.0;
 // find max zoom
 var offset = 3;
 var maxDimension = null;
+var maxZoom0 = null;
 var maxZoom = null;
 var imageMapTypeOptions = null;
 
@@ -51,8 +52,9 @@ function getImageTileUrl(coord, zoom) {
 
 function initialize() {
     maxDimension = Math.max(overlay.imageSize[0], overlay.imageSize[1]);
-    maxZoom = Math.ceil(Math.log(maxDimension / tileSize) / Math.log(2)) +
+    maxZoom0 = Math.ceil(Math.log(maxDimension / tileSize) / Math.log(2)) +
         offset;
+    maxZoom = maxZoom0 + settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION;
     if (0) {
         console.log(Math.max(overlay.imageSize[0], overlay.imageSize[1]));
         console.log(overlay.imageSize);
@@ -609,14 +611,14 @@ function actionPerformed() {
 }
 
 function metersToPixels(meters) {
-    var res = resolution(maxZoom);
+    var res = resolution(maxZoom0);
     var px = (meters.x + originShift) / res;
     var py = (-meters.y + originShift) / res;
     return {x: px, y: py};
 }
 
 function pixelsToMeters(pixels) {
-    var res = resolution(maxZoom);
+    var res = resolution(maxZoom0);
     var mx = (pixels.x * res) - originShift;
     var my = -(pixels.y * res) + originShift;
     return {x: mx, y: my};

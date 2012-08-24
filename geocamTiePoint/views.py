@@ -148,7 +148,8 @@ def overlayNew(request):
 def overlayId(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        settingsExportVars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',)
+        settingsExportVars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
+                              'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',)
         settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
         return render_to_response('geocamTiePoint/overlay-view.html',
                                   {'overlay': overlay,
