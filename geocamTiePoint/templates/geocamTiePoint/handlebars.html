@@ -10,14 +10,19 @@ Handlebar templates go here. e.g.:
 {% endcomment %}
 
 {% tplhandlebars "_application" %}
-    <h1>This is the Application Template</h1>
+    <span class="debug">This is the Application Template</span>
 {% endtplhandlebars %}
 
 {% tplhandlebars "overlay_list" %}
-    <h1>This is OverlayList</h1>
+    <span class="debug">This is OverlayList</span>
     <ul id="overlay_list">
     {{#each overlay in controller}}
-      <li><a {{action showOverlay overlay href=true}}>{{overlay.name}}</a></li>
+      <li><a {{action alignOverlayAction overlay target="App.router" href=true}}>{{overlay.name}}</a></li>
     {{/each}}
     </ul>
+{% endtplhandlebars %}
+
+{% tplhandlebars "overlay_align" %}
+    <span class="debug">This is overlay_align</span>
+    <div class="map" id="map_canvas"></div>
 {% endtplhandlebars %}

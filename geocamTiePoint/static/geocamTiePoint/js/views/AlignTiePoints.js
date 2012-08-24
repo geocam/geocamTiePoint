@@ -1,8 +1,9 @@
 App.AlignTiePointsHandlebars = '<div>Mountain View Topo: Align Tie Points</div>\
                                 <div class="page-title">Overlay number: {{App.AlignTiePoints.overlay.data.key}}</div>\
-                                <div><div style="float: left"><button {{action help target="App.alignTiePointsController"}}>Help</button>\					     <input value="Place Search"></input><button>Go</button>\
-				<button id="start_aligning">Start Aligning Overlay Here</button></div>\
-				<div id="opacity" style="float: left;"></div></div><br><br>\
+                                <div><div style="float: left"><button {{action help target="App.alignTiePointsController"}}>Help</button>\
+                                <input value="Place Search"></input><button>Go</button>\
+				                <button id="start_aligning">Start Aligning Overlay Here</button></div>\
+				                <div id="opacity" style="float: left;"></div></div><br><br>\
                                 <div id="align_map_preview" style="height:400px; width:600px;"></div>\
                                 ';
 
@@ -13,7 +14,7 @@ App.AlignTiePoints = Ember.Object.create({
           console.log(data);  
             App.AlignTiePoints.set('overlay',  data);
             console.log(App.AlignTiePoints.get('overlay').data);
-            fitNamedBounds(data.data.bounds, App.alignTiePointsController.get('map'));
+            fitNamedBounds(data.bounds, App.alignTiePointsController.get('map'));
            // App.alignTiePointsController.imageSetup(App.alignTiePointsController.map);
 	});
     }
@@ -42,9 +43,9 @@ App.alignTiePointsController = Em.ObjectController.create({
 	    var latlng = new google.maps.LatLng(37.388163, -122.082138);
 	    // Creating an object literal containing the properties we want to pass to the map
 	    var options = {
-		zoom: 6,
-		center: latlng,
-	 	mapTypeId: google.maps.MapTypeId.ROADMAP
+            zoom: 6,
+            center: latlng,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
 	    }; 
 	    // Calling the constructor, thereby initializing the map
 	    var map = new google.maps.Map(document.getElementById("align_map_preview"), options);
