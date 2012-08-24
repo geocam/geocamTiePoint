@@ -87,6 +87,18 @@ class QuadTree(models.Model):
 
     def getGenerator(self):
         image = PIL.Image.open(self.imageData.image.file)
+
+        # with the latest code we convert to RGBA on image import. this
+        # special case helps migrate any remaining images that didn't get
+        # that conversion.
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+            out = StringIO()
+            image.save(out, format='png')
+            self.imageData.image.save('dummy.png', ContentFile(out.getvalue()), save=False)
+            self.imageData.contentType = 'image/png'
+            self.imageData.save()
+
         if self.transform:
             return quadTree.WarpedQuadTreeGenerator(image, json.loads(self.transform))
         else:
