@@ -6,6 +6,10 @@
 
 import os
 import json
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from StringIO import StringIO
 
 import PIL.Image
 
@@ -86,22 +90,36 @@ def overlayNew(request):
             overlay.save()
 
             # save imageData
+            image = None
             imageRef = form.cleaned_data['image']
             imageData = models.ImageData(contentType=imageRef.content_type,
                                          overlay=overlay)
             if imageRef.content_type in PDF_MIME_TYPES:
+                # convert PDF to raster image
                 pngData = pdf.convertPdf(imageRef.file.read())
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
-                imageData.image = imageRef
-                imageData.contentType = imageRef.content_type
+                image = PIL.Image.open(imageRef.file)
+                if image.mode != 'RGBA':
+                    # add alpha channel to image for better
+                    # transparency handling later
+                    image = image.convert('RGBA')
+                    out = StringIO()
+                    image.save(out, format='png')
+                    imageData.image.save('dummy.png', ContentFile(out.getvalue()), save=False)
+                    imageData.contentType = 'image/png'
+                else:
+                    imageData.image = imageRef
+                    imageData.contentType = imageRef.content_type
             imageData.save()
+
+            if image is None:
+                image = PIL.Image.open(imageData.image.file)
 
             # fill in overlay info
             overlay.name = imageRef.name
             overlay.imageData = imageData
-            image = PIL.Image.open(imageData.image.file)
             overlay.extras.points = []
             overlay.extras.imageSize = image.size
             overlay.save()

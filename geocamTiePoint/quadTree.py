@@ -32,7 +32,7 @@ INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
 BENCHMARK_WARP_STEPS = False
-
+BLACK = (0, 0, 0)
 
 class ZoomTooBig(Exception):
     pass
@@ -261,10 +261,18 @@ def getImageResponsePng(image):
     return HttpResponse(out.getvalue(), mimetype='image/png')
 
 
+def setBackgroundColor(image, backgroundColor):
+    if image.mode != 'RGBA':
+        image = image.convert('RGBA')
+    background = Image.new('RGB', image.size, backgroundColor)
+    alpha = image.split()[3]
+    background.paste(image, mask=alpha)
+    return background
+
+
 def getImageResponseJpg(image):
     out = StringIO()
-    if image.mode == 'P':
-        image = image.convert('RGB')
+    image = setBackgroundColor(image, BLACK)
     image.save(out, format='jpeg')
     return HttpResponse(out.getvalue(), mimetype='image/jpeg')
 
@@ -391,7 +399,6 @@ class WarpedQuadTreeGenerator(object):
     def __init__(self, image, transformDict):
         self.image = image
         self.transform = makeTransform(transformDict)
-        self.baseMask = Image.new('L', self.image.size, 255)
 
         corners = getImageCorners(self.image)
         self.mercatorCorners = [self.transform.forward(corner)
@@ -484,14 +491,7 @@ class WarpedQuadTreeGenerator(object):
             print 'warpDataTime:', time.time() - warpDataStart
 
         if BENCHMARK_WARP_STEPS:
-            warpMaskStart = time.time()
-        tileMask = self.baseMask.transform(*transformArgs)
-        if BENCHMARK_WARP_STEPS:
-            print 'warpMaskTime:', time.time() - warpMaskStart
-
-        if BENCHMARK_WARP_STEPS:
             resizeStart = time.time()
-        tileData.putalpha(tileMask)
         tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
         if BENCHMARK_WARP_STEPS:
             print 'resizeTime:', time.time() - resizeStart
