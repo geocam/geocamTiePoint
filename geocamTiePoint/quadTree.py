@@ -396,11 +396,12 @@ class SimpleQuadTreeGenerator(object):
             # image. use transform() to upsample.
             image = self.getZoomedImage(self.maxZoom0)
             k = zoom - self.maxZoom0
-            sourceTileBounds = [v * 2 ** k for v in tileBounds]
+            sourceTileBounds = [v / 2 ** k for v in tileBounds]
             if allPointsOutsideCorners(cornerPoints(sourceTileBounds), getImageCorners(image)):
                 raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
                                   % (zoom0, x, y))
-            return image.transform(tileBounds, Image.EXTENT,
+            return image.transform((int(TILE_SIZE), int(TILE_SIZE)),
+                                   Image.EXTENT,
                                    sourceTileBounds,
                                    Image.BICUBIC)
         else:
