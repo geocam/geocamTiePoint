@@ -18,6 +18,12 @@ except ImportError:
 
 from django.http import HttpResponse
 
+try:
+    from scipy.optimize import leastsq
+    HAVE_SCIPY_LEASTSQ = True
+except ImportError:
+    HAVE_SCIPY_LEASTSQ = False
+
 from PIL import Image
 import numpy
 import numpy.linalg
@@ -34,6 +40,7 @@ ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
 BENCHMARK_WARP_STEPS = False
 BLACK = (0, 0, 0)
+
 
 class ZoomTooBig(Exception):
     pass
@@ -232,12 +239,18 @@ class QuadraticTransform(object):
         u0 = self.proj.reverse(vlist)
 
         # run levenberg-marquardt to get an exact inverse.
-        umin, _status = (geocamTiePoint.optimize.lm
-                         (v,
-                          lambda u: numpy.array(self.forward(u)),
-                          numpy.array(u0)))
+        if HAVE_SCIPY_LEASTSQ:
+            # scipy version is about 10 times faster
+            umin, _error = leastsq(lambda u: self._residuals(v, u),
+                                   u0)
+        else:
+            uminVec, _status = (geocamTiePoint.optimize.lm
+                                (v,
+                                 lambda u: numpy.array(self.forward(u)),
+                                 numpy.array(u0)))
+            umin = uminVec.tolist()
 
-        return umin.tolist()
+        return umin
 
 
 def makeTransform(transformDict):
