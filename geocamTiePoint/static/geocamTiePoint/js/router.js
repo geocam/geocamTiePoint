@@ -20,8 +20,8 @@ App.Router = Ember.Router.extend({
                      * but I haven't gotten it to work properly.  
                      * Luckily, there are overrides. --EBS
                     */ 
-                    controller: App.OverlayController.create(),
-                    viewClass: App.OverlaylistView,
+                    controller: App.get('OverlayListController').create(),
+                    viewClass: App.get('OverlayListView'),
                 } );
             },
         }),
@@ -29,10 +29,10 @@ App.Router = Ember.Router.extend({
         alignOverlay: Ember.Route.extend({
             route: '/overlay/:overlay_key/align',
             serialize: function(router, context) {
-                return {overlay_key: context.key}
+                return {overlay_key: context.get('id')}
             },
             deserialize: function(router, params) {
-                return router.get('overlayController').getByKey(params.overlay_key);
+                return App.store.find(App.Overlay, params.overlay_key);
             },
             connectOutlets: function(router, overlay) {
                 console.log("context for overlayAlignController");
