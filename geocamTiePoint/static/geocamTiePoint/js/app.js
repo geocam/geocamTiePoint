@@ -35,9 +35,15 @@ App.ApplicationView = Ember.View.extend({
 });
 
 
-App.OverlaylistView = Ember.View.extend({
+App.OverlayListView = Ember.View.extend({
     templateName: 'overlay_list',
     overlaysBinding: 'App.OverlayController.content',
+});
+
+App.OverlayListController = Em.ArrayController.extend({
+    init: function() {
+        this.set('content', App.store.findAll(App.Overlay));
+    },
 });
 
 App.OverlayAlignView = Ember.View.extend({
@@ -63,39 +69,6 @@ App.ApplicationController = Em.Controller.extend();
 
 App.OverlayController = Em.ArrayController.extend({
     content: [],
-    initialized: false,
-    initializing: false,
-    init: function() {
-        var me = this;
-        this.initializing = true;
-        this.loadOverlays(function(){ 
-            me.initialized = true; 
-            console.log('overlayController initialized.');
-        });
-    },
-
-    loadOverlays: function(callback) {
-	var me = this;
-        $.getJSON('/overlays.json', function(data) {
-            if ( me.content ) { me.set('content', []); }
-            $.each(data, function(idx, item) {
-		console.log(item);
-                var overlay = App.Overlay.createRecord( item );
-                me.pushObject(overlay);
-            });
-            if (callback) { callback(); }
-        });
-    },
-    getByKey: function(key) {
-        if (! this.initialized) {
-            if (! this.initializing ) { this.init() };
-        }
-        // Return the overlay from this collection matching the given key
-        $.each( this.content, function(idx, overlay) {
-            if (overlay.key === key) {
-                return overlay;
-            }
-        });
-    },
 });
+
 
