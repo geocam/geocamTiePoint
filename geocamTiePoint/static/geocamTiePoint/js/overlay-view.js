@@ -54,7 +54,8 @@ function initialize() {
     maxDimension = Math.max(overlay.imageSize[0], overlay.imageSize[1]);
     maxZoom0 = Math.ceil(Math.log(maxDimension / tileSize) / Math.log(2)) +
         offset;
-    maxZoom = maxZoom0 + settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION;
+    maxZoom = (maxZoom0 +
+               settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION);
     if (0) {
         console.log(Math.max(overlay.imageSize[0], overlay.imageSize[1]));
         console.log(overlay.imageSize);

@@ -81,7 +81,7 @@ App.alignTiePointsController = Em.ObjectController.create({
 	    for (var point = 0; point < overlay.points.length;point++) {
 	    var meters = {
 		x: overlay.points[point].slice(0,2)[0],
-		y: overlay.points[point].slice(0,2)[1],
+		y: overlay.points[point].slice(0,2)[1]
 	    };
 	    var latLng = metersToLatLon(meters);
 	    var coord = meters;
@@ -94,7 +94,7 @@ App.alignTiePointsController = Em.ObjectController.create({
 		map: map,
 		labelContent: "" + (index + 1),
 		labelAnchor: new google.maps.Point(20,30),
-		labelClass: "labels",
+		labelClass: "labels"
 	    };
 		markers[index] = google.maps.Marker(markerOpts);
 	    }
@@ -103,7 +103,7 @@ App.alignTiePointsController = Em.ObjectController.create({
     stopEvent: function(e) {
 	e.stopPropagation();
 	e.preventDefault();
-    },
+    }
 	
 });
 
@@ -349,7 +349,7 @@ OverlayEditor.prototype = new google.maps.MVCObject;
 OverlayEditor.prototype.addGCPControl_ = function(anchor) {
   var marker = new google.maps.Marker({
     optimized: false,
-    draggable: true,
+    draggable: true
 		
   });
   marker.bindTo('map', this);
@@ -486,7 +486,7 @@ OverlayEditor.prototype.handleTranslate_ = function() {
  */
 window.requestAnimFrame = window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
-    window.mozRequestAnimationFrame
+    window.mozRequestAnimationFrame;
 
 
 //add
