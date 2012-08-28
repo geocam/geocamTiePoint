@@ -11,6 +11,7 @@ window.App = Ember.Application.create({
 * Models
 **************************/
 
+/*
 App.Overlay = Ember.Object.extend({
     "bounds": null, 
     "imageSize": null,
@@ -23,6 +24,7 @@ App.Overlay = Ember.Object.extend({
     "unalignedTilesZoomOffset": 3, 
     "url": null
 });
+/*
 
 /**************************
 * Views
@@ -74,6 +76,7 @@ App.OverlayController = Em.ArrayController.extend({
 
     loadOverlays: function(callback) {
         $.getJSON('/overlays.json', function(data) {
+            var me = this;
             if ( me.content ) { me.set('content', []); }
             $.each(data, function(idx, item) {
                 overlay = App.Overlay.create( item );
