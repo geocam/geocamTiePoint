@@ -211,9 +211,8 @@ def overlayIdWarp(request, key):
 def overlayIdImageFileName(request, key, fileName):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        fobject = overlay.imageData.image
-        fobject.open()
-        response = HttpResponse(fobject.read(), content_type=overlay.contentType)
+        fobject = overlay.imageData.image.file
+        response = HttpResponse(fobject.read(), content_type=overlay.imageData.contentType)
         return response
     else:
         return HttpResponseNotAllowed(['GET'])
