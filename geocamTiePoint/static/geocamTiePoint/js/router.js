@@ -20,7 +20,7 @@ App.Router = Ember.Router.extend({
                      * but I haven't gotten it to work properly.  
                      * Luckily, there are overrides. --EBS
                     */ 
-                    controller: App.OverlayListController.create(),
+                    controller: App.OverlayController.create(),
                     viewClass: App.OverlaylistView,
                 } );
             },

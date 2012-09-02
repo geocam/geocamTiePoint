@@ -9,20 +9,32 @@ Handlebar templates go here. e.g.:
 {% endtplhandlebars %}
 {% endcomment %}
 
-{% tplhandlebars "_application" %}
+{% comment %}{% tplhandlebars "_application" %}{% endcomment %}
+{% verbatim %}
+<script type="text/x-handlebars" data-template-name="_application">
     <span class="debug">This is the Application Template</span>
-{% endtplhandlebars %}
+</script>
+{% endverbatim %}
+{% comment %}{% endtplhandlebars %}{% endcomment %}
 
-{% tplhandlebars "overlay_list" %}
+{% comment %}{% tplhandlebars "overlay_list" %}{% endcomment %}
+{% verbatim %}
+<script type="text/x-handlebars" data-template-name="overlay_list">
     <span class="debug">This is OverlayList</span>
     <ul id="overlay_list">
     {{#each overlay in controller}}
       <li><a {{action alignOverlayAction overlay target="App.router" href=true}}>{{overlay.name}}</a></li>
     {{/each}}
     </ul>
-{% endtplhandlebars %}
+</script>
+{% endverbatim %}
+{% comment %}{% endtplhandlebars %}{% endcomment %}
 
-{% tplhandlebars "overlay_align" %}
+{% comment %}{% tplhandlebars "overlay_align" %}{% endcomment %}
+{% verbatim %}
+<script type="text/x-handlebars" data-template-name="overlay_align">
     <span class="debug">This is overlay_align</span>
     <div class="map" id="map_canvas"></div>
-{% endtplhandlebars %}
+</script>
+{% endverbatim %}
+{% comment %}{% endtplhandlebars %}{% endcomment %}
