@@ -107,4 +107,5 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'geocamTiePoint',
+    'templatetag_handlebars'
 )

@@ -5,6 +5,7 @@
 /example/dev.db
 /example/settings.py
 /example/data
+/example/sourceme.sh
 /docs/_build/
 /pip-log.txt
 /static/js/*.r*.js

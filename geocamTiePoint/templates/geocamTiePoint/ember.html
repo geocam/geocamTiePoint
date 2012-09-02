@@ -13,7 +13,7 @@
         <p>{% trans "Max" %}: {{max}}</p>
     {% endtplhandlebars %}
     {% endcomment %}
-    {% include "geocamTiepoint/handlebars.html" %}
+    {% include "geocamTiePoint/handlebars.html" %}
 {% endblock handlebars %}
 {% endblock %}
 
@@ -45,10 +45,18 @@
 {% endblock header %}
 
 {% block contents %}
+<script type="text/x-handlebars" data-template-name="application">
+<h1>This is the Application Template</h1>
+{% verbatim %}
+{{outlet}}
+{% endverbatim %}
+</script>
+{% comment %}
 {% tplhandlebars "application" %}
     <h1>This is the Application Template</h1>
     {{outlet}}
 {% endtplhandlebars %}
+{% endcomment %}
 {% endblock contents %}
 
 {% block jsInit %}
