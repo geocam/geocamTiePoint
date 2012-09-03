@@ -75,11 +75,12 @@ App.OverlayController = Em.ArrayController.extend({
     },
 
     loadOverlays: function(callback) {
+	var me = this;
         $.getJSON('/overlays.json', function(data) {
-            var me = this;
             if ( me.content ) { me.set('content', []); }
             $.each(data, function(idx, item) {
-                overlay = App.Overlay.create( item );
+		console.log(item);
+                var overlay = App.Overlay.createRecord( item );
                 me.pushObject(overlay);
             });
             if (callback) { callback(); }

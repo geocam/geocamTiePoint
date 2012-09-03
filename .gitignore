@@ -11,3 +11,4 @@
 /static/js/*.r*.js
 /static/css/*.r*.css
 /geocamTiePoint/build
+/geocamTiePoint/static/geocamTiePoint/overlay_images/
