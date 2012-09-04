@@ -23,7 +23,7 @@ Handlebar templates go here. e.g.:
     <span class="debug">This is OverlayList</span>
     <ul id="overlay_list">
     {{#each overlay in controller}}
-      <li><a {{action alignOverlayAction overlay target="App.router" href=true}}>{{overlay.name}}</a></li>
+      <li><a {{action showOverlayAction overlay target="App.router" href=true}}>{{overlay.name}}</a></li>
     {{/each}}
     </ul>
 </script>

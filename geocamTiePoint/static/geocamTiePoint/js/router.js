@@ -10,7 +10,7 @@ App.Router = Ember.Router.extend({
 
         listOverlays: Ember.Route.extend({
             route: '/overlays/',
-            alignOverlayAction: Em.Route.transitionTo('alignOverlay'),
+            showOverlayAction: Em.Route.transitionTo('showOverlay'),
             
             connectOutlets: function(router, controller) {
                 router.get('applicationController').connectOutlet( {
@@ -22,27 +22,46 @@ App.Router = Ember.Router.extend({
                     */ 
                     controller: App.get('OverlayListController').create(),
                     viewClass: App.get('OverlayListView'),
+                    context: App.store.find(App.Overlay),
                 } );
             },
         }),
 
-        alignOverlay: Ember.Route.extend({
-            route: '/overlay/:overlay_key/align',
+        showOverlay: Ember.Route.extend({
+            route: '/overlay/:overlay_key',
             serialize: function(router, context) {
-                return {overlay_key: context.get('id')}
+                var hash = {overlay_key: context.get('_id')}
+                Em.assert("serialize() was passed a context with no ID", !!hash.overlay_key);
+                if (hash.overlay_key == null) {debugger;}
+                return hash;
             },
             deserialize: function(router, params) {
-                return App.store.find(App.Overlay, params.overlay_key);
+                var overlay = App.store.find(App.Overlay, params.overlay_key);
+                //router.get('overlayAlignController').set('currentOverlay', overlay);
+                App.set('currentOverlay', overlay);
+                return overlay;
             },
-            connectOutlets: function(router, overlay) {
-                console.log("context for overlayAlignController");
-                console.log(overlay);
-                router.get('applicationController').connectOutlet({
-                    controller: router.get('overlayController'),
-                    viewClass: App.OverlayAlignView,
-                });
+            connectOutlets: function(router, controller) {
+                router.get('applicationController').connectOutlet('overlay');
             },
-        }),
+            initialState: 'align',
+            align: Ember.Route.extend({
+                route: '/align',
+                connectOutlets: function(router, context) {
+                    if (! context) {
+                        context = router.get('overlayController.currentOverlay');
+                    }
+                    console.log("context for overlayAlignController");
+                    console.log(context);
+                    router.get('applicationController').connectOutlet({
+                        controller: router.get('overlayAlignController'),
+                        viewClass: App.get('OverlayAlignView'),
+                        context: context,
+                    });
+                },
+            }),
+
+        }), // end showOverlay
 
         alignTiePoints: Ember.Route.extend({
             route: '/align/:overlay',

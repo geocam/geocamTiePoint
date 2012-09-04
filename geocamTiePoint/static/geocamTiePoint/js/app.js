@@ -46,20 +46,44 @@ App.OverlayListController = Em.ArrayController.extend({
     },
 });
 
+App.OverlayController = Em.ObjectController.extend();
+App.OverlayView = Ember.View.extend({
+    template:
+        '<h1>This is an OverlayView ({{id}})</h1>'+
+        '{{outlet}}',
+});
+
+App.OverlayAlignController = Em.ObjectController.extend({
+    init: function() {
+        this._super();
+        this.currentOverlay = null;
+    },
+})
 App.OverlayAlignView = Ember.View.extend({
     templateName: 'overlay_align',
     map_container_id: 'map_canvas',
     didInsertElement: function() {
-        var map_container = $('#'+this.map_container_id);
-        var overlay = this.content;
+        var overlay = App.get('currentOverlay');
+        if (overlay.isLoaded ) {
+            this._drawMap();
+        } else {
+            overlay.set('didLoad', this._drawMap);
+        }
+    },
+    _drawMap: function() {
+        var map_container = $('#map_canvas');
+        var overlay = App.get('currentOverlay');
         var mapOptions = {
             mapTypeId: google.maps.MapTypeId.ROADMAP,
         };
         map = new google.maps.Map(map_container[0], mapOptions);
-        fitNamedBounds(overlay.bounds);
+        fitNamedBounds(overlay.get('bounds'));
+        return this;
     },
 
 });
+
+//App.OverlayAlignController = Em.ObjectController.extend({});
 
 
 /**************************
@@ -67,8 +91,5 @@ App.OverlayAlignView = Ember.View.extend({
 **************************/
 App.ApplicationController = Em.Controller.extend();
 
-App.OverlayController = Em.ArrayController.extend({
-    content: [],
-});
 
 

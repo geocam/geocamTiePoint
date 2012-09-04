@@ -68,6 +68,7 @@ App.Overlay = DS.Model.extend({
     "unalignedTilesUrl": DS.attr('string'), 
     "unalignedTilesZoomOffset": DS.attr('number'), 
     "url": DS.attr('string'),
+    'primaryKey': 'key',
 });
 
 App.Overlay.reopenClass({
