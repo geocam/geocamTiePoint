@@ -325,30 +325,26 @@ function warpButtonClicked(key) {
     }, 10000);
 }
 
-function save(jsonData) {
+function save(serverState) {
+    // set the global 'overlay' variable to the latest sever state
+    overlay = serverState;
+
+    // getState() overwrites overlay.points and returns overlay. this has the effect
+    // of merging the server state with the client-side points
+    var state = getState();
+
+    // solve for the transform
     if (imageCoordsG.length) {
-        var points = [];
-        for (var i = 0; i < imageCoordsG.length; i++) {
-            var coords = [mapCoordsG[i].x,
-                          mapCoordsG[i].y,
-                          imageCoordsG[i].x,
-                          imageCoordsG[i].y];
-            points.push(coords);
-        }
-        jsonData.points = points;
-        jsonData.transform = calculateAlignmentModel(points);
+        state.transform = calculateAlignmentModel(state.points);
     } else {
-        jsonData.points = [];
-        jsonData.transform = {
+        state.transform = {
             'type': '',
             'matrix': []
         };
     }
 
-    jsonData.name = $('#title')[0].value;
-
     var saveButton = $('#save_button')[0];
-    $.post(overlay.url, JSON.stringify(jsonData))
+    $.post(overlay.url, JSON.stringify(state))
         .success(function(data, status, xhr) {
             saveButton.value = 'success!';
             saveButton.disabled = false;
@@ -424,30 +420,31 @@ function reset() {
 
 function getState() {
     var state = overlay;
-    if (imageCoordsG.length || mapCoordsG.length) {
-        var points = [];
-        var n = Math.max(imageCoordsG.length, mapCoordsG.length);
-        for (var i = 0; i < n; i++) {
-            var coords = [];
-            if (i < mapCoordsG.length) {
-                coords[0] = mapCoordsG[i].x;
-                coords[1] = mapCoordsG[i].y;
-            } else {
-                coords[0] = null;
-                coords[1] = null;
-            } if (i < imageCoordsG.length) {
-                coords[2] = imageCoordsG[i].x;
-                coords[3] = imageCoordsG[i].y;
-            } else {
-                coords[2] = null;
-                coords[3] = null;
-            }
-            points[points.length] = coords;
+
+    // state.name = $('#title')[0].value;
+
+    var points = [];
+    var n = Math.max(imageCoordsG.length, mapCoordsG.length);
+    for (var i = 0; i < n; i++) {
+        var coords = [];
+        if (i < mapCoordsG.length) {
+            coords[0] = mapCoordsG[i].x;
+            coords[1] = mapCoordsG[i].y;
+        } else {
+            coords[0] = null;
+            coords[1] = null;
         }
-        state.points = points;
-    } else {
-        state.points = [];
+
+        if (i < imageCoordsG.length) {
+            coords[2] = imageCoordsG[i].x;
+            coords[3] = imageCoordsG[i].y;
+        } else {
+            coords[2] = null;
+            coords[3] = null;
+        }
+        points.push(coords);
     }
+    state.points = points;
 
     return state;
 }
