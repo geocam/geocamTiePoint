@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load templatetag_handlebars %}
+
+{% block head %}
+{{ block.super }}
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+{% block handlebars %}
+    {% include "geocamTiePoint/handlebars.html" %}
+{% endblock handlebars %}
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="text/javascript" src="/static/external/js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="/static/external/js/handlebars-1.0.0.beta.6.js"></script>
+<script type="text/javascript" src="/static/external/js/underscore-min.js"></script>
+<script type="text/javascript" src="/static/external/js/backbone.js"></script>
+<script type="text/javascript" src="/static/geocamTiePoint/js/backbone/models.js"></script>
+<script type="text/javascript" src="/static/geocamTiePoint/js/backbone/views.js"></script>
+<script type="text/javascript" src="/static/geocamTiePoint/js/backbone/router.js"></script>
+
+<script type="text/javascript" src="/static/geocamTiePoint/js/util.js"></script>
+
+{% if initial_overlays_json %}
+    <script type="text/javascript">
+        $(function($){
+            // Seed app.overlays with initally loaded data
+            var overlay_bootstrap = {{ initial_overlays_json|safe }};
+            app.overlays = app.overlays || new app.models.OverlayCollection;
+            app.overlays.reset(overlay_bootstrap);
+        });
+    </script>
+{% endif %}
+
+{% endblock scripts %}
+
+{% block header %}
+    {{ block.super }}
+{% endblock header %}
+
+{% block contents %}
+<div id='backbone_app_container'>
+</div>
+{% endblock contents %}
+
+{% block jsInit %}
+{{ block.super }}
+$( 
+);
+{% endblock jsInit %}

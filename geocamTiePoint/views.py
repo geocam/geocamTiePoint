@@ -57,8 +57,10 @@ def ember(request):
         return HttpResponseNotAllowed(['GET'])
 
 def backbone(request):
+    initial_overlays = Overlay.objects.order_by('pk');
     if request.method == 'GET':
-        return render_to_response('geocamTiePoint/backbone.html', {},
+        return render_to_response('geocamTiePoint/backbone.html', 
+                                  {'initial_overlays_json': dumps( list(o.jsonDict for o in initial_overlays) ) if initial_overlays else [],},
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
