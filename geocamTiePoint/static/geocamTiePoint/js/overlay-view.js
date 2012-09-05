@@ -4,14 +4,6 @@
 // All Rights Reserved.
 // __END_LICENSE__
 
-var TILE_SIZE = 256;
-var INITIAL_RESOLUTION = 2 * Math.PI * 6378137 / TILE_SIZE;
-var ORIGIN_SHIFT = 2 * Math.PI * 6378137 / 2.0;
-var MIN_ZOOM_OFFSET = 3;
-
-var maxDimensionG = null;
-var maxZoom0G = null;
-
 var mapG;
 var imageMapG;
 
@@ -32,9 +24,6 @@ var markerIconG = (
 
 var draggingG = false;
 
-var undoStackG = [];
-var redoStackG = [];
-
 function getImageTileUrl(coord, zoom) {
     var normalizedCoord = getNormalizedCoord(coord, zoom);
 
@@ -48,34 +37,12 @@ function getImageTileUrl(coord, zoom) {
 }
 
 function initialize() {
-    maxDimensionG = Math.max(overlay.imageSize[0], overlay.imageSize[1]);
-    maxZoom0G = Math.ceil(Math.log(maxDimensionG / TILE_SIZE) / Math.log(2)) +
-        MIN_ZOOM_OFFSET;
-    var maxZoom = (maxZoom0G +
-               settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION);
-    if (0) {
-        console.log(Math.max(overlay.imageSize[0], overlay.imageSize[1]));
-        console.log(overlay.imageSize);
-        console.log(maxZoom);
-    }
-
-    var imageMapTypeOptions = {
-        getTileUrl: getImageTileUrl,
-        tileSize: new google.maps.Size(TILE_SIZE, TILE_SIZE),
-        maxZoom: maxZoom,
-        minZoom: MIN_ZOOM_OFFSET,
-        radius: 1738000,
-        name: 'image-map'
-    };
-
-    imageMapType = new google.maps.ImageMapType(imageMapTypeOptions);
-
+    initializeCoords();
     initializeMap();
     initializeImage();
+    initializeSearchBar();
 
     setState(overlay);
-
-    initializeSearchBar();
 }
 
 function initializeSearchBar() {
@@ -211,6 +178,18 @@ function initializeImage() {
     var sw = pixelsToLatLon({x: 0, y: h});
     var ne = pixelsToLatLon({x: w, y: 0});
     imageMapG.fitBounds(new google.maps.LatLngBounds(sw, ne));
+
+    var maxZoom = (maxZoom0G +
+               settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION);
+    var imageMapTypeOptions = {
+        getTileUrl: getImageTileUrl,
+        tileSize: new google.maps.Size(TILE_SIZE, TILE_SIZE),
+        maxZoom: maxZoom,
+        minZoom: MIN_ZOOM_OFFSET,
+        radius: 1738000,
+        name: 'image-map'
+    };
+    var imageMapType = new google.maps.ImageMapType(imageMapTypeOptions);
 
     imageMapG.mapTypes.set('image-map', imageMapType);
     imageMapG.setMapTypeId('image-map');
@@ -449,10 +428,6 @@ function getState() {
     return state;
 }
 
-function getStateJson() {
-    return JSON.stringify(getState());
-}
-
 function setState(state) {
     reset(); // clear state
 
@@ -485,69 +460,6 @@ function setState(state) {
             }
         }
     }
-}
-
-function setStateJson(stateJson) {
-    setState(JSON.parse(stateJson));
-}
-
-function pushState(stack) {
-    stack.push(getStateJson());
-}
-
-function popState(stack) {
-    setStateJson(stack.pop());
-}
-
-function undo() {
-    if (undoStackG.length < 1) return;
-    pushState(redoStackG);
-    popState(undoStackG);
-}
-
-function redo() {
-    if (redoStackG.length < 1) return;
-    pushState(undoStackG);
-    popState(redoStackG);
-}
-
-function actionPerformed() {
-    if (redoStackG.length > 0) {
-        for (var i = 0; i < redoStackG.length; i++) {
-            undoStackG.push(redoStackG.pop());
-        }
-    }
-    pushState(undoStackG);
-}
-
-function metersToPixels(meters) {
-    var res = resolution(maxZoom0G);
-    var px = (meters.x + ORIGIN_SHIFT) / res;
-    var py = (-meters.y + ORIGIN_SHIFT) / res;
-    return {x: px, y: py};
-}
-
-function pixelsToMeters(pixels) {
-    var res = resolution(maxZoom0G);
-    var mx = (pixels.x * res) - ORIGIN_SHIFT;
-    var my = -(pixels.y * res) + ORIGIN_SHIFT;
-    return {x: mx, y: my};
-}
-
-function resolution(zoom) {
-    return INITIAL_RESOLUTION / (Math.pow(2, zoom));
-}
-
-function latLonToPixel(latLon) {
-    var meters = latLonToMeters(latLon);
-    var pixels = metersToPixels(meters);
-    return pixels;
-}
-
-function pixelsToLatLon(pixels) {
-    var meters = pixelsToMeters(pixels);
-    var latLon = metersToLatLon(meters);
-    return latLon;
 }
 
 function debugFit() {
