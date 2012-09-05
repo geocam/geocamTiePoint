@@ -56,6 +56,13 @@ def ember(request):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+def backbone(request):
+    if request.method == 'GET':
+        return render_to_response('geocamTiePoint/backbone.html', {},
+                                  context_instance=RequestContext(request))
+    else:
+        return HttpResponseNotAllowed(['GET'])
+
 
 def overlayIndex(request):
     if request.method == 'GET':

@@ -45,6 +45,9 @@ urlpatterns = patterns(
     url(r'^ember/', 'ember',
         {}, 'geocamTiePoint_ember'),
 
+    url(r'^backbone/', 'backbone',
+        {}, 'geocamTiePoint_backbone'),
+
     ## JSON API ##
     url(r'^overlay/(?P<key>\d+).json$', 'overlayIdJson',
         {}, 'geocamTiePoint_overlayIdJson'),
