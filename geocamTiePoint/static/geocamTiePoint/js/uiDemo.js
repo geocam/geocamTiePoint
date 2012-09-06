@@ -340,21 +340,12 @@ function save(serverState) {
     // set the global 'overlay' variable to the latest sever state
     overlay = serverState;
 
+    updateAlignment();
+
     // getState() overwrites overlay.points and returns overlay. this
     // has the effect of merging the server state with the client-side
     // points
     var state = getState();
-
-    /*
-    // solve for the transform
-    if (imageCoordsG.length) {
-        state.transform = calculateAlignmentModel(state.points);
-    } else {
-        state.transform = {
-            'type': '',
-            'matrix': []
-        };
-    }*/
 
     var saveButton = $('#save_button')[0];
     $.post(overlay.url, JSON.stringify(state))
