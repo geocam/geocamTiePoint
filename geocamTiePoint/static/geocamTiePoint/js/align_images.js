@@ -125,7 +125,7 @@ function calculateAlignmentModel(points)
 
     // see func.js for implementation of these transforms
     console.log('numTiePts: ' + numTiePts);
-    if (numTiePts >= 4) {
+    if (numTiePts >= 3) {
         // set up affine part
         var a = [Math.cos(theta) * xscale, -Math.sin(theta) * yscale, tx,
                  Math.sin(theta) * xscale, Math.cos(theta) * yscale, ty];
@@ -144,10 +144,13 @@ function calculateAlignmentModel(points)
             p = a;
         }
 
-    } else if (numTiePts >= 3) {
+    }
+    /*
+    else if (numTiePts >= 3) {
         // 5-parameter: scale, translation, rotation
         p = [xscale, yscale, theta, tx, ty];
-    } else if (numTiePts >= 2) {
+    }*/
+    else if (numTiePts >= 2) {
         // 4-parameter: scale, translation
         p = [xscale, yscale, tx, ty];
     } else {
