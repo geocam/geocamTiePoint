@@ -261,16 +261,18 @@ function handleMapClick(event) {
 
 function handleImageMarkerDragEnd(markerIndex, event) {
     actionPerformed();
-    updateAlignment();
     var coords = latLonToPixel(event.latLng);
     imageCoordsG[markerIndex] = coords;
+
+    updateAlignment();
 }
 
 function handleMapMarkerDragEnd(markerIndex, event) {
     actionPerformed();
-    updateAlignment();
     var coords = latLonToMeters(event.latLng);
     mapCoordsG[markerIndex] = coords;
+
+    updateAlignment();
 }
 
 function handleImageMarkerRightClick(markerIndex, event) {
@@ -320,8 +322,7 @@ function warpButtonClicked(key) {
 
 function updateAlignment() {
     if (imageCoordsG.length >= 2) {
-        // update overlay.points
-        getState();
+        overlay = getState();
 
         overlay.transform = calculateAlignmentModel(overlay.points);
         previewOverlayG.alignTransform = new Matrix(3, 3, overlay.transform.matrix);
