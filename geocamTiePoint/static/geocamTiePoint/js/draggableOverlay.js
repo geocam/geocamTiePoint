@@ -81,6 +81,7 @@ if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
         el.src = imageUrl;
         el.style.position = 'absolute';
         el.style.webkitTransformOrigin = '0 0';
+        el.style.opacity = '0.5';
 
         this.alignTransform = alignTransform;
         this.opts = opts;
@@ -141,6 +142,10 @@ if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
         google.maps.event.trigger(this, 'change');
         this.draw();
     };
+
+    /**********************************************************************
+     * EXPORTS
+     **********************************************************************/
 
     geocamTiePoint.DraggableOverlay = DraggableOverlay;
 

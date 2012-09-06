@@ -438,6 +438,7 @@ function getState() {
     var n = Math.max(imageCoordsG.length, mapCoordsG.length);
     for (var i = 0; i < n; i++) {
         var coords = [];
+
         if (i < mapCoordsG.length) {
             coords[0] = mapCoordsG[i].x;
             coords[1] = mapCoordsG[i].y;
@@ -453,6 +454,7 @@ function getState() {
             coords[2] = null;
             coords[3] = null;
         }
+
         points.push(coords);
     }
     state.points = points;
@@ -464,8 +466,12 @@ function setState(state) {
     reset(); // clear state
 
     if (state.points) {
+        mapMarkersG = [];
+        mapCoordsG = [];
+
         imageMarkersG = [];
         imageCoordsG = [];
+
         for (var index = 0; index < state.points.length; index++) {
             var point = state.points[index];
 
@@ -496,23 +502,15 @@ function setState(state) {
 
 function debugFit() {
     var U = getProjectiveUMatrixFromPoints(overlay.points);
-    var T = new Matrix(overlay.transform.matrix);
+    var T = new Matrix(3, 3, overlay.transform.matrix);
     var V = getVMatrixFromPoints(overlay.points);
     var Vapprox = applyTransform(overlay.transform, overlay.points);
     var Verror = Vapprox.subtract(V);
-    var b = $('body');
-    b.append('U:');
-    U.print();
-    b.append('T:');
-    T.print();
-    b.append('V:');
-    V.print();
-    b.append('Vapprox:');
-    Vapprox.print();
-    b.append('Verror:');
-    Verror.print();
-    $('.matrix').css('padding', '5px');
-    $('.matrix td').css('padding-left', '10px');
+    console.log('U:\n' + U.toString());
+    console.log('T:\n' + T.toString());
+    console.log('V:\n' + V.toString());
+    console.log('Vapprox:\n' + Vapprox.toString());
+    console.log('Verror:\n' + Verror.toString());
 
     var greenIcon = (new google.maps.MarkerImage
                      ('http://maps.google.com/mapfiles/ms/icons/green.png'));
