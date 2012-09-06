@@ -321,26 +321,21 @@ function warpButtonClicked(key) {
 }
 
 function updateAlignment() {
-    if (imageCoordsG.length >= 2) {
-        overlay = getState();
+    getState();
+    redrawPreviewOverlay();
+}
 
-        overlay.transform = calculateAlignmentModel(overlay.points);
+function redrawPreviewOverlay() {
+    if (imageCoordsG.length >= 2) {
         previewOverlayG.alignTransform =
             new Matrix(3, 3, overlay.transform.matrix);
         previewOverlayG.draw();
-    } else {
-        overlay.transform = {
-            'type': '',
-            'matrix': []
-        };
     }
 }
 
 function save(serverState) {
     // set the global 'overlay' variable to the latest sever state
     overlay = serverState;
-
-    updateAlignment();
 
     // getState() overwrites overlay.points and returns overlay. this
     // has the effect of merging the server state with the client-side
@@ -452,45 +447,60 @@ function getState() {
     }
     state.points = points;
 
+    if (state.points.length >= 2) {
+        state.transform = calculateAlignmentModel(state.points);
+    } else {
+        state.transform = {
+            'type': '',
+            'matrix': []
+        };
+    }
+
     return state;
 }
 
 function setState(state) {
     reset(); // clear state
 
-    if (state.points) {
-        mapMarkersG = [];
-        mapCoordsG = [];
+    if (!state.points) {
+        state.points = [];
+    }
 
-        imageMarkersG = [];
-        imageCoordsG = [];
+    mapMarkersG = [];
+    mapCoordsG = [];
 
-        for (var index = 0; index < state.points.length; index++) {
-            var point = state.points[index];
+    imageMarkersG = [];
+    imageCoordsG = [];
 
-            var meters = {
-                x: point[0],
-                y: point[1]
-            };
-            if (meters.x != null && meters.y != null) {
-                var latLng = metersToLatLon(meters);
-                var marker = getLabeledMapMarker(latLng, index);
-                mapMarkersG.push(marker);
-                mapCoordsG.push(meters);
-            }
+    for (var index = 0; index < state.points.length; index++) {
+        var point = state.points[index];
 
-            var pixels = {
-                x: point[2],
-                y: point[3]
-            };
-            if (pixels.x != null && pixels.y != null) {
-                var latLng = pixelsToLatLon(pixels);
-                var marker = getLabeledImageMarker(latLng, index);
-                imageMarkersG.push(marker);
-                imageCoordsG.push(pixels);
-            }
+        var meters = {
+            x: point[0],
+            y: point[1]
+        };
+        if (meters.x != null && meters.y != null) {
+            var latLng = metersToLatLon(meters);
+            var marker = getLabeledMapMarker(latLng, index);
+            mapMarkersG.push(marker);
+            mapCoordsG.push(meters);
+        }
+
+        var pixels = {
+            x: point[2],
+            y: point[3]
+        };
+        if (pixels.x != null && pixels.y != null) {
+            var latLng = pixelsToLatLon(pixels);
+            var marker = getLabeledImageMarker(latLng, index);
+            imageMarkersG.push(marker);
+            imageCoordsG.push(pixels);
         }
     }
+
+    overlay = state;
+
+    redrawPreviewOverlay();
 }
 
 function debugFit() {
