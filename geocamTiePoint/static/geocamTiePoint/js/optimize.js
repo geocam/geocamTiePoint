@@ -6,10 +6,10 @@
 
 if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
 
-/* optimize.js exports the following functions to the geocamTiepoint
+/* optimize.js exports the following functions to the geocamTiePoint
  * namespace:
  *
- * x = geocamTiepoint.minimize(fun, x0)
+ * x = geocamTiePoint.minimize(fun, x0)
  *
  * [m, b] = geocamTiePoint.linear_regression(V, U)
  *

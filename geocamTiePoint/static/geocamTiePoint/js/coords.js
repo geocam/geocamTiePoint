@@ -19,6 +19,23 @@ function initializeCoords() {
         MIN_ZOOM_OFFSET;
 }
 
+function latLonToMeters(latLon) {
+    var mx = latLon.lng() * ORIGIN_SHIFT / 180;
+    var my = Math.log(Math.tan((90 + latLon.lat()) * Math.PI / 360)) /
+        (Math.PI / 180);
+    my = my * ORIGIN_SHIFT / 180;
+    return {x: mx,
+            y: my};
+}
+
+function metersToLatLon(meters) {
+    var lng = meters.x * 180 / ORIGIN_SHIFT;
+    var lat = meters.y * 180 / ORIGIN_SHIFT;
+    lat = ((Math.atan(Math.exp((lat * (Math.PI / 180)))) * 360) / Math.PI) - 90;
+    var latLng = new google.maps.LatLng(lat, lng);
+    return latLng;
+}
+
 function metersToPixels(meters) {
     var res = resolution(maxZoom0G);
     var px = (meters.x + ORIGIN_SHIFT) / res;
