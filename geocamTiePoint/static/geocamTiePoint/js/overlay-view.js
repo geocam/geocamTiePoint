@@ -308,8 +308,9 @@ function save(serverState) {
     // set the global 'overlay' variable to the latest sever state
     overlay = serverState;
 
-    // getState() overwrites overlay.points and returns overlay. this has the effect
-    // of merging the server state with the client-side points
+    // getState() overwrites overlay.points and returns overlay. this
+    // has the effect of merging the server state with the client-side
+    // points
     var state = getState();
 
     // solve for the transform
@@ -380,7 +381,7 @@ function resetButtonClicked() {
 }
 
 function reset() {
-    $.each(imageMarkersG, function (i, marker) {
+    $.each(imageMarkersG, function(i, marker) {
         if (marker.setMap) {
             marker.setMap(null);
         }
@@ -388,7 +389,7 @@ function reset() {
     imageMarkersG = [];
     imageCoordsG = [];
 
-    $.each(mapMarkersG, function (i, marker) {
+    $.each(mapMarkersG, function(i, marker) {
         if (marker.setMap) {
             marker.setMap(null);
         }

@@ -238,6 +238,7 @@ def getTile(request, quadTreeId, zoom, x, y):
 def dummyView(*args, **kwargs):
     return HttpResponseNotFound()
 
+
 def uiDemo(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)

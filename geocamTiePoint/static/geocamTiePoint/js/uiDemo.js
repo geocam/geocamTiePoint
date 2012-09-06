@@ -325,7 +325,8 @@ function updateAlignment() {
         overlay = getState();
 
         overlay.transform = calculateAlignmentModel(overlay.points);
-        previewOverlayG.alignTransform = new Matrix(3, 3, overlay.transform.matrix);
+        previewOverlayG.alignTransform =
+            new Matrix(3, 3, overlay.transform.matrix);
         previewOverlayG.draw();
     } else {
         overlay.transform = {
@@ -339,8 +340,9 @@ function save(serverState) {
     // set the global 'overlay' variable to the latest sever state
     overlay = serverState;
 
-    // getState() overwrites overlay.points and returns overlay. this has the effect
-    // of merging the server state with the client-side points
+    // getState() overwrites overlay.points and returns overlay. this
+    // has the effect of merging the server state with the client-side
+    // points
     var state = getState();
 
     /*
@@ -412,7 +414,7 @@ function resetButtonClicked() {
 }
 
 function reset() {
-    $.each(imageMarkersG, function (i, marker) {
+    $.each(imageMarkersG, function(i, marker) {
         if (marker.setMap) {
             marker.setMap(null);
         }
@@ -420,7 +422,7 @@ function reset() {
     imageMarkersG = [];
     imageCoordsG = [];
 
-    $.each(mapMarkersG, function (i, marker) {
+    $.each(mapMarkersG, function(i, marker) {
         if (marker.setMap) {
             marker.setMap(null);
         }
