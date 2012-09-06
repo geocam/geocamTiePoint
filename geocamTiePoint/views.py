@@ -237,3 +237,16 @@ def getTile(request, quadTreeId, zoom, x, y):
 
 def dummyView(*args, **kwargs):
     return HttpResponseNotFound()
+
+def uiDemo(request, key):
+    if request.method == 'GET':
+        overlay = get_object_or_404(Overlay, key=key)
+        settingsExportVars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
+                              'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',)
+        settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
+        return render_to_response('geocamTiePoint/uiDemo.html',
+                                  {'overlayJson': dumps(overlay.jsonDict),
+                                   'settings': dumps(settingsExportDict)},
+                                  context_instance=RequestContext(request))
+    else:
+        return HttpResponseNotAllowed(['GET'])

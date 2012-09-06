@@ -49,4 +49,7 @@ urlpatterns = patterns(
     url(r'^overlay/(?P<key>\d+).json$', 'overlayIdJson',
         {}, 'geocamTiePoint_overlayIdJson'),
 
+    ## testing ui demo ##
+    url(r'^uiDemo/(?P<key>\d+)/$', 'uiDemo',
+        {}, 'geocamTiePoint_uiDemo'),
 )

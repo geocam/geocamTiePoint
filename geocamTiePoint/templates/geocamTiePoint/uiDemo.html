@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>{{ overlay.name }}</title>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+{% endblock head %}
+
+{% block style %}
+{{ block.super }}
+<link href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/themes/base/jquery-ui.css" rel="stylesheet" type="text/css"/>
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/css/overlay-view.css"></link>
+{% endblock style %}
+
+{% block contents %}
+<div class="top">
+  <input type="text" id="title" class="title" value="{{ overlay.name }}" /><br>
+  <div class="action_section" style="float:left;">
+    <input type="text" id="searchTextField" class="searchTextField">
+    <span style="padding-right: 100px;"></span>
+    <input type="button" id="save_button" value="save" onClick="saveButtonClicked()">
+    <input type="button" id="warp_button" value="warp" onClick="warpButtonClicked({{ overlay.key }})" />
+    <input type="button" value="preview" onClick="window.location='/overlay/{{overlay.key}}/preview.html'" />
+    <input type="button" value="reset" onClick="resetButtonClicked()" />
+    <input type="button" value="undo" onClick="undo()" />
+    <input type="button" value="redo" onClick="redo()" />
+  </div>
+</div>
+<table class="map_area">
+  <tr>
+    <td><div class="map" id="map_canvas"></div></td>
+    <td><div class="map" id="image_canvas"></div></td>
+  </tr>
+</table>
+<div class="bottom">
+
+</div>
+{% endblock contents %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8/jquery-ui.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/markerwithlabel.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/matrix.js"></script>
+
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/optimize.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/transform.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/util.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/align_images.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/coords.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/undo.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/draggableOverlay.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/uiDemo.js"></script>
+{% endblock scripts %}
+
+{% block jsInit %}
+  var overlay = {{ overlayJson|safe }};
+  var settings = {{ settings|safe }};
+  $(initialize);
+{% endblock %}
