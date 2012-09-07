@@ -46,9 +46,3 @@ $( function($) {
 
     app.overlays = new app.OverlayCollection();
 });
-
-/*
-    maxDimensionG = Math.max(overlay.imageSize[0], overlay.imageSize[1]);
-    maxZoom0G = Math.ceil(Math.log(maxDimensionG / TILE_SIZE) / Math.log(2)) +
-        MIN_ZOOM_OFFSET;
-*/
