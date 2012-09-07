@@ -4,21 +4,8 @@ app.map = app.map || {}; //namespace for map helper stuff
 
 $( function( $ ) {
 
-Handlebars.registerHelper("debug", function(optionalValue) { 
-    // helper for debugging handlebars templates.
-    console.log("Current Context"); 
-    console.log("====================");
-    console.log(this);   
-    if (optionalValue) {
-        console.log("Value"); 
-        console.log("===================="); 
-        console.log(optionalValue); 
-    } 
-});
-    
-    
     app.View = Backbone.View.extend({
-        el: null,
+        el: '#backbone_app_container', // views will render here another element is specified on instantiation.
         template: null,
         context: null,
         beforeRender: function() {}, // optional hook
@@ -36,15 +23,11 @@ Handlebars.registerHelper("debug", function(optionalValue) {
     });
 
     app.views.AppView = app.View.extend({
-        // Select a div to contain the entire backboney part of the app
-        el: '#backbone_app_container',
-
         template:   '<div id="navbar"></div>' +
-                    '<div id="whatever"></div>',
+                    '<div id="mapfasten-splitpane"></div>',
     });
 
     app.views.ListOverlaysView = app.View.extend({
-        el:' #backbone_app_container',
         template:   '<h1>Choose an overlay:</h1>'+
                     '{{debug}}'+
                     '<ul>'+
@@ -60,7 +43,6 @@ Handlebars.registerHelper("debug", function(optionalValue) {
     });
 
     app.views.ShowImageView = app.View.extend({
-        el: '#backbone_app_container',
         template:   '<h1>{{name}}</h1>'+
                     '<div id="image_canvas"></div>',
 

@@ -30,6 +30,9 @@
     <script type="text/javascript">
         $(function($){
 
+            //Temporarily suppress the navbar links until we have time to viewify them
+            $('#navBar span').remove();
+
             window.settings = {{settings|safe}};
 
             // Seed app.overlays with initally loaded data

@@ -20,7 +20,7 @@ $(function ($) {
         
         showOverlay: function(overlay_id) {
             console.log('Routed to showOverlay for ' + overlay_id);
-            var view = new app.views.ShowImageView({id: overlay_id});
+            var view = new app.views.ShowImageView( {id: overlay_id} );
             view.render();
         },
 
