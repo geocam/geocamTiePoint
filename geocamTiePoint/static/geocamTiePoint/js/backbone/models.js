@@ -15,7 +15,6 @@ $( function($) {
         initialize: function(){
             var model = this;
             this.getImageTileUrl = function(coord, zoom) {
-                coord.y %= 1 << zoom;
                 var normalizedCoord = getNormalizedCoord(coord, zoom);
                 if (!normalizedCoord) { return null; }
                 var url = fillTemplate(model.get('unalignedTilesUrl'), {
