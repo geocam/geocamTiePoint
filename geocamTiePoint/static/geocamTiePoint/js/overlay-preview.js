@@ -76,24 +76,6 @@ function fitNamedBounds(b) {
     map.fitBounds(bounds);
 }
 
-function getNormalizedCoord(coord, zoom) {
-    var y = coord.y;
-    var x = coord.x;
-
-    var tileRange = 1 << zoom;
-
-    if (y < 0 || y >= tileRange)
-        return null;
-
-    if (x < 0 || x >= tileRange)
-        x = (x % tileRange + tileRange) % tileRange;
-
-    return {
-    x: x,
-    y: y
-    };
-}
-
 //set up a transparency slider
 function createOpacityControl(map, opacity) {
     var sliderImageUrl = settings.STATIC_URL +

@@ -65,3 +65,19 @@ function pixelsToLatLon(pixels) {
     var latLon = metersToLatLon(meters);
     return latLon;
 }
+
+function getNormalizedCoord(coord, zoom) {
+    var y = coord.y;
+    var x = coord.x;
+    var tileRange = 1 << zoom;
+
+    if (y < 0 || y >= tileRange) {
+        return null;
+    }
+
+    if (x < 0 || x >= tileRange) {
+        x = (x % tileRange + tileRange) % tileRange;
+    }
+
+    return {x: x, y: y};
+}

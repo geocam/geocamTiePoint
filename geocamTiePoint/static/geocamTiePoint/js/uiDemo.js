@@ -213,26 +213,6 @@ function handleNoGeolocation(errorFlag) {
     fitNamedBounds(settings.GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT);
 }
 
-function getNormalizedCoord(coord, zoom) {
-    var y = coord.y;
-    var x = coord.x;
-
-    var tileRange = 1 << zoom;
-
-    if (y < 0 || y >= tileRange) {
-        return null;
-    }
-
-    if (x < 0 || x >= tileRange) {
-        x = (x % tileRange + tileRange) % tileRange;
-    }
-
-    return {
-        x: x,
-        y: y
-    };
-}
-
 function handleImageClick(event) {
     if (draggingG) return;
     actionPerformed();
