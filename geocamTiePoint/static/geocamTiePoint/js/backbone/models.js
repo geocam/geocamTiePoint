@@ -2,10 +2,10 @@ var app = app || {};
 app.models = app.models || {};
 
 // All these globals should be loaded from elsewhere.
-assert(typeof getNormalizedCoord !== 'undefined', "Missing global: getNormalizedCoord");
-assert(typeof getNormalizedCoord !== 'undefined', "Missing global: fillTemplate");
-assert(typeof TILE_SIZE !== 'undefined', "Missing global: TILE_SIZE");
-assert(typeof MIN_ZOOM_OFFSET !== 'undefined', "Missing global: MIN_ZOOM_OFFSET");
+assert( ! _.isUndefined(getNormalizedCoord), "Missing global: getNormalizedCoord");
+assert( ! _.isUndefined(getNormalizedCoord), "Missing global: fillTemplate");
+assert( ! _.isUndefined(TILE_SIZE), "Missing global: TILE_SIZE");
+assert( ! _.isUndefined(MIN_ZOOM_OFFSET), "Missing global: MIN_ZOOM_OFFSET");
 
 $( function($) {
     app.models.Overlay = Backbone.Model.extend({
