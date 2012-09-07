@@ -1,33 +1,42 @@
 {% extends "base.html" %}
-{% load templatetag_handlebars %}
 
 {% block head %}
 {{ block.super }}
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-{% block handlebars %}
-    {% include "geocamTiePoint/handlebars.html" %}
-{% endblock handlebars %}
+<link rel="stylesheet" type="text/css" href="/static/mapFasten/css/base.css"></link>
 {% endblock %}
+
+{% block style %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/css/backbone.css"></link>
+{% endblock style %}
 
 {% block scripts %}
 {{ block.super }}
 <script type="text/javascript" src="/static/external/js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
 <script type="text/javascript" src="/static/external/js/handlebars-1.0.0.beta.6.js"></script>
 <script type="text/javascript" src="/static/external/js/underscore-min.js"></script>
+
+<script type="text/javascript" src="/static/geocamTiePoint/js/coords.js"></script>
+<script type="text/javascript" src="/static/geocamTiePoint/js/util.js"></script>
+
 <script type="text/javascript" src="/static/external/js/backbone.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/backbone/models.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/backbone/views.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/backbone/router.js"></script>
 
-<script type="text/javascript" src="/static/geocamTiePoint/js/util.js"></script>
-
 {% if initial_overlays_json %}
     <script type="text/javascript">
         $(function($){
+
+            window.settings = {{settings|safe}};
+
             // Seed app.overlays with initally loaded data
             var overlay_bootstrap = {{ initial_overlays_json|safe }};
             app.overlays = app.overlays || new app.models.OverlayCollection;
             app.overlays.reset(overlay_bootstrap);
+            app.router.start(); // initializes the app view based on url fragment.
         });
     </script>
 {% endif %}

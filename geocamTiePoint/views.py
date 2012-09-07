@@ -48,6 +48,15 @@ def transparentPngResponse():
 def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
 
+def export_settings(export_vars=None):
+    if export_vars == None:
+        export_vars = (
+            'GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
+            'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',
+        )
+    return dumps( dict([(k, getattr(settings, k)) for k in export_vars]) )
+    
+
 
 def ember(request):
     if request.method == 'GET':
@@ -60,8 +69,11 @@ def backbone(request):
     initial_overlays = Overlay.objects.order_by('pk');
     if request.method == 'GET':
         return render_to_response('geocamTiePoint/backbone.html', 
-                                  {'initial_overlays_json': dumps( list(o.jsonDict for o in initial_overlays) ) if initial_overlays else [],},
-                                  context_instance=RequestContext(request))
+            {
+                'initial_overlays_json': dumps( list(o.jsonDict for o in initial_overlays) ) if initial_overlays else [],
+                'settings': export_settings(),
+            },
+            context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
 
