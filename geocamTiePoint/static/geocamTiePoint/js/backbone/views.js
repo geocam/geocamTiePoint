@@ -15,7 +15,8 @@ $( function( $ ) {
             if (! this._renderedTemplate ) {
                 this._renderedTemplate = Handlebars.compile(this.template);
             }
-            var output = this._renderedTemplate(this.context);
+            assert( this.context || this.model.toJson(), "Could note find a a context for the template.");
+            var output = this._renderedTemplate( this.context || this.model.toJson() );
             this.$el.html(output);
             this.afterRender();
             return this;
