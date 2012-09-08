@@ -72,30 +72,26 @@ $( function( $ ) {
             var ne = pixelsToLatLon({x: w, y: 0}, maxZoom);
             gmap.fitBounds(new google.maps.LatLngBounds(sw, ne));
 
-            gmap.mapTypes.set('image-map', app.map.ImageMapType(this.model));
+            gmap.mapTypes.set('image-map', maputils.ImageMapType(this.model));
             gmap.setMapTypeId('image-map');
-        
+            this.gmap = gmap;
+            this.drawMarkers();
+        },
+
+        drawMarkers: function() {
+            var model = this.model;
+            var gmap = this.gmap;
+            _.each( this.model.get('points'), function(point, index){
+                var pixelCoords = { x: point[2], y: point[3] };
+                if ( ! _.any(_.values(pixelCoords), _.isNull ) ) {
+                    var latLon = pixelsToLatLon( pixelCoords, model.maxZoom() );
+                    //var marker = getLabeledImageMarker(latLon, index);
+                    var marker = maputils.createLabeledMarker(latLon, ''+(index+1), gmap );
+                }
+            });
         },
     });
 
 
-    /*
-     * Map helper stuff... cleaned up versions of code formally found in overlay-view.js
-     * Probably this stuff should find a new home.
-     * Depends upon constants defined in in coords.js.
-    */
-    app.map.ImageMapType = function(overlayModel) { 
-        assert(typeof TILE_SIZE !== 'undefined', "Missing global: TILE_SIZE");
-        assert(typeof MIN_ZOOM_OFFSET !== 'undefined', "Missing global: MIN_ZOOM_OFFSET");
-        assert(typeof settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION !== 'undefined', "Missing setting: settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION");
-        return new google.maps.ImageMapType({
-            getTileUrl: overlayModel.getImageTileUrl,
-            tileSize: new google.maps.Size(TILE_SIZE, TILE_SIZE),
-            maxZoom: overlayModel.maxZoom() + settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION,
-            minZoom: MIN_ZOOM_OFFSET,
-            //radius: 1738000, // This is the radius of the moon.  Probably not relevant.
-            name: 'image-map'
-        });
-    };
 
 });
