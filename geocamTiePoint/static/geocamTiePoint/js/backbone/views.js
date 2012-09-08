@@ -76,6 +76,7 @@ $( function( $ ) {
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
             this.drawMarkers();
+            this.initEnhancePixels();
         },
 
         drawMarkers: function() {
@@ -87,6 +88,46 @@ $( function( $ ) {
                     var latLon = pixelsToLatLon( pixelCoords, model.maxZoom() );
                     //var marker = getLabeledImageMarker(latLon, index);
                     var marker = maputils.createLabeledMarker(latLon, ''+(index+1), gmap );
+                }
+            });
+        },
+
+        initEnhancePixels: function() {
+            var zoomFactor = 3;
+            var originalZoom = null;
+            var view = this;
+            var zoomed = false;
+            var mousePosition = null;
+
+            function enhance() {
+                console.log('ENHANCE.');
+                originalZoom = view.gmap.getZoom();
+                var targetZoom = Math.min(originalZoom + zoomFactor, view.model.maxZoom() );
+                view.gmap.setZoom(targetZoom);
+                view.gmap.panTo(mousePosition);
+            }
+
+            function unenhance() {
+                view.gmap.setZoom(originalZoom);
+            }
+
+            google.maps.event.addListener(view.gmap, 'mousemove', function(e) {
+                mousePosition = e.latLng;
+            });
+
+            $(window).keydown( function(e) {
+                //console.log(e.which);   
+                if (e.which === 90 && ! zoomed) { // z key
+                    zoomed = true;
+                    enhance();
+                }
+            });
+
+            $(window).keyup( function(e) {
+                //console.log(e.which);   
+                if (e.which === 90) { // z key
+                    unenhance();
+                    zoomed = false;
                 }
             });
         },
