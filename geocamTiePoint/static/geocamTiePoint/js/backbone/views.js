@@ -43,7 +43,8 @@ $( function( $ ) {
 
     });
 
-    app.views.ShowImageView = app.View.extend({
+
+    app.views.ImageQtreeView = app.View.extend({
         template:   '<h1>{{name}}</h1>'+
                     '<div id="image_canvas"></div>',
 
@@ -134,5 +135,26 @@ $( function( $ ) {
     });
 
 
+    app.views.MapView = app.View.Extend({
+        template: '<div id="map_canvas"></div>',
+
+        initialize: function() {},
+
+        afterRender: function() {},
+    });
+
+    app.views.SplitOverlayView = app.View.extend({
+    
+        template:   '<div id="split_maps_container">' +
+                    '<div id="split_left"></div>' +
+                    '<div id="split_right"></div>' +
+                    '</div>',
+
+        after_render: function() {
+            var mapView = new app.views.MapView( {el: '#split_left', } ).render();
+            var imageView = new app.views.ImageQtreeView( {el: '#split_right', } ).render();
+        },
+    
+    });
 
 });
