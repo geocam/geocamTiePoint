@@ -15,6 +15,7 @@ try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
+import zipfile
 
 from django.http import HttpResponse
 
@@ -337,6 +338,65 @@ def imageMapBounds(imageSize, transform):
             'north': bounds.ymax}
 
 
+class ZipWriter(object):
+    """
+    A writer class where writeX() methods add file entries to an
+    in-memory zip file.  The paths of all entries in the zip file are
+    prefixed with dirName. Once all entries have been added, the raw zip
+    contents can be extracted using the getData() method and written to
+    a file or blob storage.
+    """
+
+    def __init__(self, dirName):
+        self.dirName = dirName
+        self.out = StringIO()
+        self.zip = zipfile.ZipFile(self.out, 'w')
+        self.closed = False
+
+    def writeImage(self, path, pilImage, format):
+        assert not self.closed
+        imgOut = StringIO()
+        pilImage.save(imgOut, format=format)
+        self.zip.writestr(os.path.join(self.dirName, path),
+                          imgOut.getvalue())
+
+    def writeData(self, path, data):
+        assert not self.closed
+        self.zip.writestr(os.path.join(self.dirName, path),
+                          data)
+
+    def getData(self):
+        if not self.closed:
+            self.zip.close()
+            self.closed = True
+        return self.out.getvalue()
+
+
+class FileWriter(object):
+    """
+    A writer class where writeX() methods write files to disk under the specified
+    basePath.
+    """
+
+    def __init__(self, basePath):
+        self.basePath = basePath
+
+    def makeParentDirIfNeeded(self, fullPath):
+        d = os.path.dirname(fullPath)
+        if not os.path.exists(d):
+            os.makedirs(d)
+
+    def writeImage(self, path, pilImage, format):
+        fullPath = os.path.join(self.basePath, path)
+        self.makeParentDirIfNeeded(fullPath)
+        pilImage.save(fullPath, format=format)
+
+    def writeData(self, path, data):
+        fullPath = os.path.join(self.basePath, path)
+        self.makeParentDirIfNeeded(fullPath)
+        open(fullPath, 'w').write(data)
+
+
 class SimpleQuadTreeGenerator(object):
     def __init__(self, image):
         self.imageSize = image.size
@@ -366,7 +426,7 @@ class SimpleQuadTreeGenerator(object):
             self.zoomedImage[zoom] = result
         return result
 
-    def writeQuadTree(self, basePath):
+    def writeQuadTree(self, writer):
         for zoom in xrange(self.maxZoom, -1, -1):
             nx = int(math.ceil(self.imageSize[0] / TILE_SIZE))
             ny = int(math.ceil(self.imageSize[1] / TILE_SIZE))
@@ -374,19 +434,16 @@ class SimpleQuadTreeGenerator(object):
                 for y in xrange(ny):
                     zoom0 = zoom + ZOOM_OFFSET
                     try:
-                        self.writeTile(basePath, zoom0, x, y)
+                        self.writeTile(writer, zoom0, x, y)
                     except OutOfBounds:
                         # no surprise if some tiles are empty around the edges
                         pass
 
-    def writeTile(self, basePath, zoom0, x, y):
-        tileData = self.generateTile(zoom0, x, y)
-
-        tilePath = basePath + '/%s/%s/%s.jpg' % (zoom0, x, y)
-        tileDir = os.path.dirname(tilePath)
-        if not os.path.exists(tileDir):
-            os.makedirs(tileDir)
-        tileData.save(tilePath)
+    def writeTile(self, writer, zoom0, x, y):
+        tileImage = self.generateTile(zoom0, x, y)
+        writer.writeImage('%s/%s/%s.jpg' % (zoom0, x, y),
+                          tileImage,
+                          format='jpeg')
 
     def getTileResponse(self, zoom0, x, y):
         return getImageResponseJpg(self.generateTile(zoom0, x, y))
@@ -461,38 +518,45 @@ class WarpedQuadTreeGenerator(object):
                 tbounds.extend(tileCoords)
             self.tileBounds[zoom] = tbounds
 
-    def writeQuadTree(self, basePath):
+    def writeQuadTree(self, writer):
         print >> sys.stderr, 'warping...'
         totalTiles = 0
         startTime = time.time()
+
+        totalTiles = 0
+        for zoom in xrange(int(self.maxZoom), -1, -1):
+            xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
+            numTilesAtZoom = (xmax - xmin + 1) * (ymax - ymin + 1)
+            totalTiles += numTilesAtZoom
+        sys.stderr.write('%d total tiles\n' % totalTiles)
+
+        tilesSoFar = 0
         for zoom in xrange(int(self.maxZoom), -1, -1):
             xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
             maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
-            totalTiles += maxNumTiles
-            sys.stderr.write('zoom %d: generating %d tiles' % (zoom, maxNumTiles))
+            sys.stderr.write('zoom %d (%d tiles)' % (zoom, maxNumTiles))
             for x in xrange(int(xmin), int(xmax) + 1):
                 for y in xrange(int(ymin), int(ymax) + 1):
                     try:
-                        self.writeTile(basePath, zoom, x, y)
+                        self.writeTile(writer, zoom, x, y)
                     except OutOfBounds:
                         # no surprise if some tiles are empty around the edges
                         pass
-            sys.stderr.write('\n')
+                    tilesSoFar += 1
+            sys.stderr.write('[completed tiles: %d / %d]\n' % (tilesSoFar, totalTiles))
 
         elapsedTime = time.time() - startTime
         print >> sys.stderr, ('warping complete: %d tiles, elapsed time %.1f seconds = %d ms/tile'
                               % (totalTiles, elapsedTime, int(1000 * elapsedTime / totalTiles)))
 
-    def writeTile(self, basePath, zoom, x, y):
-        tileData = self.generateTile(zoom, x, y)
+    def writeTile(self, writer, zoom, x, y):
+        tileImage = self.generateTile(zoom, x, y)
 
         if BENCHMARK_WARP_STEPS:
             saveStart = time.time()
-        tilePath = basePath + '/%s/%s/%s.png' % (zoom, x, y)
-        tileDir = os.path.dirname(tilePath)
-        if not os.path.exists(tileDir):
-            os.makedirs(tileDir)
-        tileData.save(tilePath)
+        writer.writeImage('%s/%s/%s.png' % (zoom, x, y),
+                          tileImage,
+                          format='png')
         if BENCHMARK_WARP_STEPS:
             print 'saveTime:', time.time() - saveStart
 

@@ -22,6 +22,15 @@ urlpatterns = patterns(
     url(r'^overlay/(?P<key>\d+)/warp$', 'overlayIdWarp',
         {}, 'geocamTiePoint_overlayIdWarp'),
 
+    url(r'^overlay/(?P<key>\d+)/generateZip$', 'overlayGenerateZip',
+        {}, 'geocamTiePoint_overlayGenerateZip'),
+
+    url(r'^overlay/(?P<key>\d+)/exportZip.html$', 'overlayExportZipInterface',
+        {}, 'geocamTiePoint_overlayExportZipInterface'),
+
+    url(r'^overlay/(?P<key>\d+)/exportZip/(?P<fname>[^/]*)$', 'overlayExportZip',
+        {}, 'geocamTiePoint_overlayExportZip'),
+
     url(r'^overlay/(?P<key>\d+)/delete.html$', 'overlayDelete',
         {}, 'geocamTiePoint_overlayDelete'),
 
@@ -55,7 +64,8 @@ urlpatterns = patterns(
     ## testing ui demo ##
     url(r'^uiDemo/(?P<key>\d+)/$', 'uiDemo',
         {}, 'geocamTiePoint_uiDemo'),
-     url(r'^overlays.json$', 'overlayListJson',
+
+    url(r'^overlays.json$', 'overlayListJson',
         {}, 'geocamTiePoint_overlayListJson'),
 
 )

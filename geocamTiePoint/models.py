@@ -9,17 +9,18 @@
 
 import os
 import datetime
+import re
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
-from django.core.files.base import ContentFile
 
 import PIL.Image
 
 from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
 
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
@@ -29,6 +30,10 @@ from geocamTiePoint import quadTree, settings
 
 def getNewImageFileName(instance, filename):
     return 'geocamTiePoint/overlay_images/' + filename
+
+
+def getNewZipFileName(instance, filename):
+    return 'geocamTiePoint/exportZip/' + filename
 
 
 def dumps(obj):
@@ -75,13 +80,19 @@ class QuadTree(models.Model):
     # transform is either an empty string (simple quadTree) or a JSON-formatted
     # definition of the warping transform (warped quadTree)
     transform = models.TextField(blank=True)
+    exportZipName = models.CharField(max_length=255,
+                                     null=True, blank=True)
+    exportZip = models.FileField(upload_to=getNewZipFileName,
+                                 max_length=255,
+                                 null=True, blank=True)
     # we set unusedTime when a QuadTree is no longer referenced by an Overlay.
     # it will eventually be deleted.
     unusedTime = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
-        return ('QuadTree imageData_id=%s transform=%s %s'
-                % (self.imageData.id, self.transform, self.lastModifiedTime))
+        return ('QuadTree id=%s imageData_id=%s transform=%s %s'
+                % (self.id, self.imageData.id, self.transform,
+                   self.lastModifiedTime))
 
     def save(self, *args, **kwargs):
         self.lastModifiedTime = datetime.datetime.utcnow()
@@ -90,12 +101,12 @@ class QuadTree(models.Model):
     def getBasePath(self):
         return settings.DATA_ROOT + 'geocamTiePoint/tiles/%d' % self.id
 
-    def getGenerator(self):
-        image = PIL.Image.open(self.imageData.image.file)
-
-        # with the latest code we convert to RGBA on image import. this
-        # special case helps migrate any remaining images that didn't get
-        # that conversion.
+    def convertImageToRgbaIfNeeded(self, image):
+        """
+        With the latest code we convert to RGBA on image import. This
+        special case helps migrate any remaining images that didn't get
+        that conversion.
+        """
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
             out = StringIO()
@@ -104,10 +115,25 @@ class QuadTree(models.Model):
             self.imageData.contentType = 'image/png'
             self.imageData.save()
 
+    def getGenerator(self):
+        image = PIL.Image.open(self.imageData.image.file)
+        self.convertImageToRgbaIfNeeded(image)
+
         if self.transform:
-            return quadTree.WarpedQuadTreeGenerator(image, json.loads(self.transform))
+            return (quadTree.WarpedQuadTreeGenerator
+                    (image,
+                     json.loads(self.transform)))
         else:
             return quadTree.SimpleQuadTreeGenerator(image)
+
+    def generateExportZip(self, exportName, metaJson):
+        gen = self.getGenerator()
+        writer = quadTree.ZipWriter(exportName)
+        gen.writeQuadTree(writer)
+        writer.writeData('meta.json', dumps(metaJson))
+        self.exportZipName = '%s.zip' % exportName
+        self.exportZip.save(self.exportZipName,
+                            ContentFile(writer.getData()))
 
 
 class Overlay(models.Model):
@@ -169,6 +195,12 @@ class Overlay(models.Model):
                                                       '[ZOOM]',
                                                       '[X]',
                                                       '[Y].png'])
+            # note: when exportZip has not been set, its value is not
+            # None but <FieldFile: None>, which is False in bool() context
+            if self.alignedQuadTree.exportZip:
+                result['exportZipUrl'] = reverse('geocamTiePoint_overlayExportZip',
+                                                 args=[self.key,
+                                                       str(self.alignedQuadTree.exportZipName)])
 
         return result
 
@@ -193,20 +225,24 @@ class Overlay(models.Model):
         ordering = ['-key']
 
     def __unicode__(self):
-        return ('Overlay name=%s author=%s %s'
-                % (self.name, self.author.username, self.lastModifiedTime))
+        return ('Overlay key=%s name=%s author=%s %s'
+                % (self.key, self.name, self.author.username,
+                   self.lastModifiedTime))
 
     def save(self, *args, **kwargs):
         self.lastModifiedTime = datetime.datetime.utcnow()
         super(Overlay, self).save(*args, **kwargs)
 
+    def getExportName(self):
+        shortName = re.sub('[^\w]', '_', os.path.splitext(self.name)[0])
+        now = datetime.datetime.utcnow()
+        return ('mapfasten-%s-%s'
+                % (shortName,
+                   now.strftime('%Y-%m-%d-%H%M%S-UTC')))
+
     def generateUnalignedQuadTree(self):
         qt = QuadTree(imageData=self.imageData)
         qt.save()
-
-        if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
-            gen = qt.getGenerator()
-            gen.writeQuadTree(qt.getBasePath())
 
         self.unalignedQuadTree = qt
         self.save()
@@ -218,25 +254,13 @@ class Overlay(models.Model):
                       transform=dumps(self.extras.transform))
         qt.save()
 
-        if settings.GEOCAM_TIE_POINT_PRE_GENERATE_TILES:
-            gen = qt.getGenerator()
-            gen.writeQuadTree(qt.getBasePath())
-
         self.alignedQuadTree = qt
         self.save()
 
-        if 0:
-            import tarfile
-            # figure tar file stuff out again later
-            tarFilePath = settings.DATA_ROOT + 'geocamTiePoint/tileArchives/'
-            if not os.path.exists(tarFilePath):
-                os.makedirs(tarFilePath)
-            oldPath = os.getcwd()
-            os.chdir(qt.getBasePath())
-            tarFile = tarfile.open(tarFilePath + '/' + str(self.key) + '.tar.gz', 'w:gz')
-            for name in os.listdir(os.getcwd()):
-                tarFile.add(name)
-            os.chdir(oldPath)
-            tarFile.close()
-
         return qt
+
+    def generateExportZip(self):
+        (self.alignedQuadTree.generateExportZip
+         (self.getExportName(),
+          self.getJsonDict()))
+        return self.alignedQuadTree.exportZip

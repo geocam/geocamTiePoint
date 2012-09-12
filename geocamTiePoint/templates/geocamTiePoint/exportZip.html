@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>{{ overlay.name }} - Export Zip</title>
+
+<style type="text/css">
+  #exportError {
+    padding-top: 10px;
+    color: red;
+    font-weight: bold;
+  }
+
+  #exportMain {
+    margin-top: 10px;
+  }
+
+</style>
+{% endblock head %}
+
+{% block contents %}
+<div id="exportError"></div>
+<div id="exportMain"></div>
+{% endblock contents %}
+
+{% block scripts %}
+{{ block.super }}
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/exportZip.js"></script>
+{% endblock scripts %}
+
+{% block jsInit %}
+  var overlay = {{ overlayJson|safe }};
+  var STATIC_URL = "{{ STATIC_URL }}";
+  $(initialize);
+{% endblock %}

@@ -276,3 +276,36 @@ def uiDemo(request, key):
                                   context_instance=RequestContext(request))
     else:
         return HttpResponseNotAllowed(['GET'])
+
+
+@csrf_exempt
+def overlayGenerateZip(request, key):
+    if request.method == 'POST':
+        overlay = get_object_or_404(Overlay, key=key)
+        overlay.generateExportZip()
+        return HttpResponse('{"result": "ok"}',
+                            content_type='application/json')
+    else:
+        return HttpResponseNotAllowed(['POST'])
+
+
+def overlayExportZipInterface(request, key):
+    if request.method == 'GET':
+        overlay = get_object_or_404(Overlay, key=key)
+        return render_to_response('geocamTiePoint/exportZip.html',
+                                  {'overlay': overlay,
+                                   'overlayJson': dumps(overlay.jsonDict)},
+                                  context_instance=RequestContext(request))
+    else:
+        return HttpResponseNotAllowed(['GET'])
+
+
+def overlayExportZip(request, key, fname):
+    if request.method == 'GET':
+        overlay = get_object_or_404(Overlay, key=key)
+        if not (overlay.alignedQuadTree and overlay.alignedQuadTree.exportZip):
+            raise Http404('no exportZip generated for requested overlay yet')
+        return HttpResponse(overlay.alignedQuadTree.exportZip.file.read(),
+                            content_type='application/zip')
+    else:
+        return HttpResponseNotAllowed(['GET'])
