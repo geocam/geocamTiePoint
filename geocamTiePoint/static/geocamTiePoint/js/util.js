@@ -31,15 +31,17 @@ function assert(exp, message) {
   }
 }
 
-// helper for debugging handlebars templates.
-Handlebars.registerHelper("debug", function(optionalValue) { 
-    console.log("Current Context"); 
-    console.log("====================");
-    console.log(this);   
-    if (optionalValue) {
-        console.log("Value"); 
-        console.log("===================="); 
-        console.log(optionalValue); 
-    } 
-});
+if (window.Handlebars != undefined) {
+    // helper for debugging handlebars templates.
+    Handlebars.registerHelper("debug", function(optionalValue) {
+        console.log("Current Context");
+        console.log("====================");
+        console.log(this);
+        if (optionalValue) {
+            console.log("Value");
+            console.log("====================");
+            console.log(optionalValue);
+        }
+    });
+}
 
