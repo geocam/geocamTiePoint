@@ -29,6 +29,10 @@ from geocamTiePoint.models import Overlay, QuadTree
 from geocamTiePoint import quadTree
 from geocamTiePoint import anypdf as pdf
 
+if settings.USING_APP_ENGINE:
+    from google.appengine.api import backends
+    from google.appengine.api import taskqueue
+
 TRANSPARENT_PNG_BINARY = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x01sRGB\x00\xae\xce\x1c\xe9\x00\x00\x00\rIDAT\x08\xd7c````\x00\x00\x00\x05\x00\x01^\xf3*:\x00\x00\x00\x00IEND\xaeB`\x82'
 
 PDF_MIME_TYPES = ('application/pdf',
@@ -186,8 +190,6 @@ def overlayIdPreview(request, key):
         overlay = get_object_or_404(Overlay, key=key)
         settingsExportVars = ('STATIC_URL',)
         settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
-        import sys
-        print >> sys.stderr, 'overlay:', dumps(overlay.jsonDict)
         return render_to_response('geocamTiePoint/overlay-preview.html',
                                   {'overlay': overlay,
                                    'overlayJson': dumps(overlay.jsonDict),
@@ -281,6 +283,15 @@ def uiDemo(request, key):
 @csrf_exempt
 def overlayGenerateZip(request, key):
     if request.method == 'POST':
+        if settings.USING_APP_ENGINE:
+            onFrontEndInstance = (backends.get_backend() == None)
+            if onFrontEndInstance:
+                # on app engine, quadTree generation may take too long
+                # for a frontend instance, so we pass it to a backend
+                taskqueue.add(url='/backend' + request.path,
+                              target='processing')
+                return HttpResponse('{"result": "ok"}',
+                                    content_type='application/json')
         overlay = get_object_or_404(Overlay, key=key)
         overlay.generateExportZip()
         return HttpResponse('{"result": "ok"}',

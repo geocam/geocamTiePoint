@@ -25,6 +25,11 @@ urlpatterns = patterns(
     url(r'^overlay/(?P<key>\d+)/generateZip$', 'overlayGenerateZip',
         {}, 'geocamTiePoint_overlayGenerateZip'),
 
+    # duplicate url that starts with 'backend' so we can set 'login: admin'
+    # on the backend version of the view.
+    url(r'^backend/overlay/(?P<key>\d+)/generateZip$', 'overlayGenerateZip',
+        {}, 'geocamTiePoint_overlayGenerateZipBackend'),
+
     url(r'^overlay/(?P<key>\d+)/exportZip.html$', 'overlayExportZipInterface',
         {}, 'geocamTiePoint_overlayExportZipInterface'),
 

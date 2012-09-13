@@ -4,9 +4,8 @@
 // All Rights Reserved.
 // __END_LICENSE__
 
-var POLL_TIMEOUT_MS = 5000;
-
 var exportCompleteTimerG = null;
+var exportCompleteTimeoutG = null;
 
 function clearErrors() {
     $('#exportError').html('');
@@ -49,17 +48,20 @@ function checkForExportComplete() {
         overlay = response;
         if (overlay.exportZipUrl) {
             renderDownloadLink();
+            cancelPollForExportComplete();
         }
     });
 }
 
 function pollForExportComplete0() {
     checkForExportComplete();
-    exportCompleteTimerG = setTimeout(pollForExportComplete0, POLL_TIMEOUT_MS);
+    exportCompleteTimeoutG *= 1.5;
+    exportCompleteTimerG = setTimeout(pollForExportComplete0, exportCompleteTimeoutG);
 }
 
 function pollForExportComplete() {
-    exportCompleteTimerG = setTimeout(pollForExportComplete0, POLL_TIMEOUT_MS);
+    exportCompleteTimeoutG = 1000;
+    exportCompleteTimerG = setTimeout(pollForExportComplete0, exportCompleteTimeoutG);
 }
 
 function cancelPollForExportComplete() {
