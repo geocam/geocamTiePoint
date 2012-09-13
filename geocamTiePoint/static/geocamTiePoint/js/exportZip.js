@@ -93,10 +93,20 @@ function renderDownloadLink() {
       '">Download aligned overlay in zip file format</a>'));
 }
 
+function renderSorry() {
+    ($('#exportMain').html
+     ('Sorry, this overlay has not been aligned yet. (Set at least' +
+      ' 2 pairs of tie points, save, and warp first.'));
+}
+
 function initialize() {
     if (overlay.exportZipUrl) {
         renderDownloadLink();
     } else {
-        renderExportButton();
+        if (overlay.alignedTilesUrl) {
+            renderExportButton();
+        } else {
+            renderSorry();
+        }
     }
 }
