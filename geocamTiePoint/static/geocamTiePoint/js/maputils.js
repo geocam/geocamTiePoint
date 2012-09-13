@@ -29,12 +29,14 @@ $(function($) {
 
 
     maputils.createLabeledMarker = function(latLng, label, map, options) {
+        var unselectedIcon = 'http://maps.gstatic.com/mapfiles/markers2/marker_blank.png';
+        var selectedIcon = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue.png';
         var markerOpts = {
             title: label,
             draggable: true,
             position: latLng,
             map: map,
-            icon: new google.maps.MarkerImage('http://maps.gstatic.com/mapfiles/markers2/marker_blank.png'),
+            icon: new google.maps.MarkerImage(unselectedIcon),
             labelContent: label,
             labelAnchor: new google.maps.Point(20, 30),
             labelClass: 'labels',
@@ -42,6 +44,9 @@ $(function($) {
         };
         markerOpts = _.extend(markerOpts, options);
         var marker = new MarkerWithLabel(markerOpts); 
+        google.maps.event.addListener(marker, 'selected_changed', function(){
+            marker.setIcon(marker.get('selected') ? selectedIcon : unselectedIcon);
+        })
         return marker;
     }
 });

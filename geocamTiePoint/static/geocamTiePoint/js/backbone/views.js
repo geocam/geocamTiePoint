@@ -59,6 +59,54 @@ $( function( $ ) {
             this.context = this.model.toJSON();
             this.markers = []
         },
+
+        initZoomHotkey: function() {
+            var zoomFactor = 4;
+            var originalZoom = null;
+            var view = this;
+            var zoomed = false;
+            var mousePosition = null;
+            var mouseDown = null;
+
+            function enhance() {
+                console.log('ENHANCE.');
+                originalZoom = view.gmap.getZoom();
+                var targetZoom = Math.max(originalZoom + zoomFactor, view.model.maxZoom() );
+                //var targetZoom = view.model.maxZoom();
+                view.gmap.setZoom(targetZoom);
+                view.gmap.panTo(mousePosition);
+            }
+
+            function unenhance() {
+                view.gmap.setZoom(originalZoom);
+            }
+
+            google.maps.event.addListener(view.gmap, 'mousemove', function(e) {
+                mousePosition = e.latLng;
+            });
+
+            google.maps.event.addListener(view.gmap, 'mouseout', function(e) {
+                mousePosition = null;
+            });
+            google.maps.event.addListener(view.gmap, 'mousedown', function(e) { mouseDown = true; });
+            google.maps.event.addListener(view.gmap, 'mouseup', function(e) { mouseDown = false; });
+
+            $(window).keydown( function(e) {
+                //console.log(e.which);   
+                if ( mousePosition && ! mouseDown && e.which === 90 && ! zoomed) { // z key
+                    zoomed = true;
+                    enhance();
+                }
+            });
+
+            $(window).keyup( function(e) {
+                //console.log(e.which);   
+                if (zoomed && e.which === 90) { // z key
+                    unenhance();
+                    zoomed = false;
+                }
+            });
+        },
     });
 
     app.views.ImageQtreeView = app.views.OverlayView.extend({
@@ -86,7 +134,7 @@ $( function( $ ) {
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
             this.drawMarkers();
-            this.initEnhancePixels();
+            this.initZoomHotkey();
         },
 
         drawMarkers: function() {
@@ -100,47 +148,6 @@ $( function( $ ) {
                     //var marker = getLabeledImageMarker(latLon, index);
                     var marker = maputils.createLabeledMarker(latLon, ''+(index+1), gmap );
                     markers[index] = marker;
-                }
-            });
-        },
-
-        initEnhancePixels: function() {
-            var zoomFactor = 3;
-            var originalZoom = null;
-            var view = this;
-            var zoomed = false;
-            var mousePosition = null;
-
-            function enhance() {
-                console.log('ENHANCE.');
-                originalZoom = view.gmap.getZoom();
-                //var targetZoom = Math.min(originalZoom + zoomFactor, view.model.maxZoom() );
-                var targetZoom = view.model.maxZoom();
-                view.gmap.setZoom(targetZoom);
-                view.gmap.panTo(mousePosition);
-            }
-
-            function unenhance() {
-                view.gmap.setZoom(originalZoom);
-            }
-
-            google.maps.event.addListener(view.gmap, 'mousemove', function(e) {
-                mousePosition = e.latLng;
-            });
-
-            $(window).keydown( function(e) {
-                //console.log(e.which);   
-                if (e.which === 90 && ! zoomed) { // z key
-                    zoomed = true;
-                    enhance();
-                }
-            });
-
-            $(window).keyup( function(e) {
-                //console.log(e.which);   
-                if (e.which === 90) { // z key
-                    unenhance();
-                    zoomed = false;
                 }
             });
         },
@@ -188,6 +195,7 @@ $( function( $ ) {
             //google.maps.event.addListener(gmap, 'click', handleMapClick);
             this.gmap = gmap;
             this.drawMarkers();
+            this.initZoomHotkey();
         },
 
         drawMarkers: function() {
@@ -224,16 +232,24 @@ $( function( $ ) {
                 //dock: 'leftDock',
             });
             this.initZoomButtons();
+            this.initMarkerMouseHandlers();
         },
 
         zoomMaximum: function() {
-            var offset = 6;
+            var offset = 8;
             //var tileSize = 256;
             var imageZoom = this.imageView.model.maxZoom();
             //var mapZoom = Math.ceil(Math.log( Math.max.apply({}, this.model.get('imageSize') ) / TILE_SIZE, 2)) + offset;
             var mapZoom = imageZoom + offset;
             this.imageView.gmap.setZoom(imageZoom);
             this.mapView.gmap.setZoom(mapZoom);
+            if ( _.any(this.mapView.markers, function(marker) {return marker.get('selected');} ) ) 
+            {
+                var selected = _.find( this.mapView.markers, function(m) { return m.get('selected') });
+                var idx = _.indexOf( this.mapView.markers, selected );
+                this.mapView.gmap.panTo(this.mapView.markers[idx].position);
+                this.imageView.gmap.panTo( this.imageView.markers[idx].position );
+            }
         },
 
         zoomFit: function() {
@@ -245,6 +261,22 @@ $( function( $ ) {
             var view = this;
             this.$('button#zoom_100').click( function(){ view.zoomMaximum(); } );
             this.$('button#zoom_fit').click( function(){ view.zoomFit(); } );
+        },
+
+        initMarkerMouseHandlers: function() {
+            var views = [this.imageView, this.mapView];
+            /* Select one pair of markers at a time */
+            _.each(views, function(view) {
+                _.each(view.markers, function(marker, index) {
+                    google.maps.event.addListener(marker, 'mousedown', function(){
+                       _.each(views, function(_view){
+                           _.each(_view.markers, function(_marker, _index) {
+                               _marker.set('selected', _index === index );
+                            });
+                        });
+                    });
+                });
+            });
         },
     
     });
