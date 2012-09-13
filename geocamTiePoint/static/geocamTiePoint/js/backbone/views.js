@@ -134,7 +134,7 @@ $( function( $ ) {
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
             this.drawMarkers();
-            this.initZoomHotkey();
+            //this.initZoomHotkey();
         },
 
         drawMarkers: function() {
@@ -195,7 +195,7 @@ $( function( $ ) {
             //google.maps.event.addListener(gmap, 'click', handleMapClick);
             this.gmap = gmap;
             this.drawMarkers();
-            this.initZoomHotkey();
+            //this.initZoomHotkey();
         },
 
         drawMarkers: function() {
@@ -259,8 +259,20 @@ $( function( $ ) {
 
         initZoomButtons: function() {
             var view = this;
-            this.$('button#zoom_100').click( function(){ view.zoomMaximum(); } );
-            this.$('button#zoom_fit').click( function(){ view.zoomFit(); } );
+            var zoomed = null;
+            this.$('button#zoom_100').click( function(){ zoomed = true; view.zoomMaximum(); } );
+            this.$('button#zoom_fit').click( function(){ zoomed = false; view.zoomFit(); } );
+            $(document).keyup(function(e){
+                console.log('key detect: '+e.which);
+                if (e.which === 122 || e.which === 90) { // match z or Z
+                    zoomed = !zoomed;
+                    if ( zoomed ) {
+                        view.zoomMaximum();
+                    } else {
+                        view.zoomFit();
+                    }
+                }
+            });
         },
 
         initMarkerMouseHandlers: function() {
