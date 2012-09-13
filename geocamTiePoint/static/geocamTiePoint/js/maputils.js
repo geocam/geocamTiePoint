@@ -5,7 +5,14 @@ $(function($) {
      * Map helper stuff... cleaned up versions of code formally found in overlay-view.js
      * Probably this stuff should find a new home.
      * Depends upon constants defined in in coords.js.
+     * and fitNamedBounds, defined in utils.js
     */
+
+    maputils.handleNoGeolocation = function(gmap, errorFlag) {
+        assert( ! _.isUndefined( fitNamedBounds ), "Missing global: fitNamedBounds" );
+        fitNamedBounds(settings.GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT, gmap);
+    }
+
     maputils.ImageMapType = function(overlayModel) { 
         assert(typeof TILE_SIZE !== 'undefined', "Missing global: TILE_SIZE");
         assert(typeof MIN_ZOOM_OFFSET !== 'undefined', "Missing global: MIN_ZOOM_OFFSET");

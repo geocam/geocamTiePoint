@@ -7,3 +7,26 @@
     height: 100%;
     width: 100%;
 }
+
+/* Map marker labels */
+.labels {
+    text-align: center;
+    width: 40px;
+    font-size: 10px;
+}
+
+
+.vsplitbar{
+    width: 6px;
+    background: #aaa;
+}
+
+#split_container {
+    width: 100%;
+    height: 100%;
+    border: 4px solid #aaa;
+}
+
+#split_left, #split_right, #map_canvas, #image_canvas {
+    height: 100%;
+}

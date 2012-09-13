@@ -34,7 +34,24 @@ $( function($) {
         },
 
         maxZoom: function() {
-            return Math.ceil( Math.log(this.maxDimension() / TILE_SIZE) / Math.log(2) ) + MIN_ZOOM_OFFSET
+            var mz = Math.ceil( Math.log(this.maxDimension() / TILE_SIZE) / Math.log(2) ) + MIN_ZOOM_OFFSET;
+            return mz;
+        },
+
+        imageBounds: function() {
+            var imageSize = this.get('imageSize');
+            var sw = pixelsToLatLon({x:0, y: imageSize[1]}, this.maxZoom());
+            var ne = pixelsToLatLon({x:imageSize[0], y: 0}, this.maxZoom());
+            var bounds = new google.maps.LatLngBounds(sw, ne);
+            return bounds;
+        },
+
+        mapBounds: function() {
+            var bounds = this.get('bounds');
+            return new google.maps.LatLngBounds(
+                new google.maps.LatLng( bounds.south, bounds.west ),
+                new google.maps.LatLng( bounds.north, bounds.east )
+            );
         },
 
     });

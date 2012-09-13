@@ -4,8 +4,10 @@ app.map = app.map || {}; //namespace for map helper stuff
 
 $( function( $ ) {
 
-    app.View = Backbone.View.extend({
-        el: '#backbone_app_container', // views will render here another element is specified on instantiation.
+    app.container_id = '#backbone_app_container';
+
+    app.views.View = Backbone.View.extend({
+        el: app.container_id, // views will render here another element is specified on instantiation.
         template: null,
         context: null,
         beforeRender: function() {}, // optional hook
@@ -19,16 +21,17 @@ $( function( $ ) {
             var output = this._renderedTemplate( this.context || this.model.toJson() );
             this.$el.html(output);
             this.afterRender();
+            if ( this.el === $(app.container_id)[0] ) { app.currentView = this; }
             return this;
         },
     });
 
-    app.views.AppView = app.View.extend({
+    app.views.AppView = app.views.View.extend({
         template:   '<div id="navbar"></div>' +
                     '<div id="mapfasten-splitpane"></div>',
     });
 
-    app.views.ListOverlaysView = app.View.extend({
+    app.views.ListOverlaysView = app.views.View.extend({
         template:   '<h1>Choose an overlay:</h1>'+
                     '{{debug}}'+
                     '<ul>'+
@@ -36,28 +39,34 @@ $( function( $ ) {
                     '<li><a href="#overlay/{{key}}">{{name}}</a></li>'+
                     '{{/each}}'+
                     '</ul>',
+
         initialize: function() {
-           app.View.prototype.initialize.apply(this, arguments);
+           app.views.View.prototype.initialize.apply(this, arguments);
            this.context = { overlays: app.overlays.toJSON() }
         },
 
     });
 
 
-    app.views.ImageQtreeView = app.View.extend({
-        template:   '<h1>{{name}}</h1>'+
-                    '<div id="image_canvas"></div>',
-
+    /*
+    * OverlayView: id-accepting base class for views that deal with a single Overlay.
+    */
+    app.views.OverlayView = app.views.View.extend({
         initialize: function(options) {
-            app.View.prototype.initialize.apply(this, arguments);
+            app.views.View.prototype.initialize.apply(this, arguments);
             if ( this.id && !this.model) { this.model = app.overlays.get(this.id) };
-            if (!this.model) { throw "Requires a model!" }
+            assert( this.model, "Requires a model!");
             this.context = this.model.toJSON();
+            this.markers = []
         },
+    });
+
+    app.views.ImageQtreeView = app.views.OverlayView.extend({
+        template:   '<div id="image_canvas"></div>',
 
         afterRender: function() {
-            //var gmap = gmaps.draw_image_gmap(this.$el.find('#image_canvas')[0], this.model);
-            var gmap = app.gmap = new google.maps.Map(this.$el.find('#image_canvas')[0], {
+            var gmap = app.gmap = new google.maps.Map(this.$('#image_canvas')[0], {
+            //var gmap = app.gmap = new google.maps.Map(this.el, {
                     zoom: MIN_ZOOM_OFFSET,
                     streetViewControl: false,
                     backgroundColor: 'rgb(0,0,0)',
@@ -83,12 +92,14 @@ $( function( $ ) {
         drawMarkers: function() {
             var model = this.model;
             var gmap = this.gmap;
+            var markers = this.markers = [];
             _.each( this.model.get('points'), function(point, index){
                 var pixelCoords = { x: point[2], y: point[3] };
                 if ( ! _.any(_.values(pixelCoords), _.isNull ) ) {
                     var latLon = pixelsToLatLon( pixelCoords, model.maxZoom() );
                     //var marker = getLabeledImageMarker(latLon, index);
                     var marker = maputils.createLabeledMarker(latLon, ''+(index+1), gmap );
+                    markers[index] = marker;
                 }
             });
         },
@@ -103,7 +114,8 @@ $( function( $ ) {
             function enhance() {
                 console.log('ENHANCE.');
                 originalZoom = view.gmap.getZoom();
-                var targetZoom = Math.min(originalZoom + zoomFactor, view.model.maxZoom() );
+                //var targetZoom = Math.min(originalZoom + zoomFactor, view.model.maxZoom() );
+                var targetZoom = view.model.maxZoom();
                 view.gmap.setZoom(targetZoom);
                 view.gmap.panTo(mousePosition);
             }
@@ -135,24 +147,104 @@ $( function( $ ) {
     });
 
 
-    app.views.MapView = app.View.Extend({
+    app.views.MapView = app.views.OverlayView.extend({
         template: '<div id="map_canvas"></div>',
 
-        initialize: function() {},
+        initialize: function() {
+            app.views.View.prototype.initialize.apply(this, arguments);
+            if ( this.id && !this.model) { this.model = app.overlays.get(this.id) };
+            assert(this.model, "Requires a model!" );
+            this.context = this.model.toJSON();
+        },
 
-        afterRender: function() {},
+        afterRender: function() {
+            assert(! _.isUndefined(fitNamedBounds), "Missing global function: fitNamedBounds");
+            assert(! _.isUndefined(maputils.handleNoGeolocation), "Missing global function: handleNoGeolocation");
+
+            var mapOptions = {
+                zoom: 6,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            var gmap = new google.maps.Map(this.$('#map_canvas')[0], mapOptions);
+            //var gmap = new google.maps.Map(this.el, mapOptions);
+
+            var overlay = this.model.toJSON();
+
+            if (overlay.bounds) {
+                fitNamedBounds(overlay.bounds, gmap);
+            } else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var pos = new google.maps.LatLng(position.coords.latitude,
+                                                     position.coords.longitude);
+                    gmap.setCenter(pos);
+                }, function() {
+                    maputils.handleNoGeolocation(gmap, true);
+                });
+            } else {
+                // browser doesn't support geolocation
+                maputils.handleNoGeolocation(gmap, false);
+            }
+            //google.maps.event.addListener(gmap, 'click', handleMapClick);
+            this.gmap = gmap;
+            this.drawMarkers();
+        },
+
+        drawMarkers: function() {
+            var model = this.model;
+            var gmap = this.gmap;
+            var markers = this.markers = [];
+            _.each( this.model.get('points'), function(point, index){
+                var meterCoords = { x: point[0], y: point[1] };
+                var latLon = metersToLatLon(meterCoords);
+                if ( ! _.any(_.values(latLon), _.isNull ) ) {
+                    var marker = maputils.createLabeledMarker(latLon, ''+(index+1), gmap );
+                    markers[index] = marker;
+                }
+            });
+        },
     });
 
-    app.views.SplitOverlayView = app.View.extend({
+    app.views.SplitOverlayView = app.views.OverlayView.extend({
     
-        template:   '<div id="split_maps_container">' +
-                    '<div id="split_left"></div>' +
-                    '<div id="split_right"></div>' +
+        template:   '<div id="zoom_controls">'+
+                        '<button id="zoom_100">100%</button>'+
+                        '<button id="zoom_fit">Fit Overlay</button>'+
+                    '</div>'+
+                    '<div id="split_container">'+
+                        '<div id="split_left"></div>'+
+                        '<div id="split_right"></div>'+
                     '</div>',
 
-        after_render: function() {
-            var mapView = new app.views.MapView( {el: '#split_left', } ).render();
-            var imageView = new app.views.ImageQtreeView( {el: '#split_right', } ).render();
+        afterRender: function() {
+            this.imageView = new app.views.ImageQtreeView( {el: '#split_left', model: this.model} ).render();
+            this.mapView = new app.views.MapView( {el: '#split_right', model: this.model} ).render();
+            this.$('#split_container').splitter({
+                //resizeToWidth: true,
+                //dock: 'leftDock',
+            });
+            this.initZoomButtons();
+        },
+
+        zoomMaximum: function() {
+            var offset = 6;
+            //var tileSize = 256;
+            var imageZoom = this.imageView.model.maxZoom();
+            //var mapZoom = Math.ceil(Math.log( Math.max.apply({}, this.model.get('imageSize') ) / TILE_SIZE, 2)) + offset;
+            var mapZoom = imageZoom + offset;
+            this.imageView.gmap.setZoom(imageZoom);
+            this.mapView.gmap.setZoom(mapZoom);
+        },
+
+        zoomFit: function() {
+            this.imageView.gmap.fitBounds( this.model.imageBounds() );
+            this.mapView.gmap.fitBounds( this.model.mapBounds() );
+        },
+
+        initZoomButtons: function() {
+            var view = this;
+            this.$('button#zoom_100').click( function(){ view.zoomMaximum(); } );
+            this.$('button#zoom_fit').click( function(){ view.zoomFit(); } );
         },
     
     });
