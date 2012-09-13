@@ -32,5 +32,10 @@ initialize();
 {% endblock jsInit %}
 
 {% block contents %}
+<div class="top">
+  <div class="action_section" style="float:left;">
+    <input type="button" value="export" onClick="window.location='{% url geocamTiePoint_overlayExportZipInterface overlay.key %}'" />
+  </div>
+</div>
 <div id="map_canvas" style="width:100%; height:100%;"></div> 
 {% endblock contents %}
