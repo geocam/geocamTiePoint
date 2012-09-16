@@ -225,10 +225,10 @@ $( function( $ ) {
                     '</div>',
 
         afterRender: function() {
-            this.imageView = new app.views.ImageQtreeView( {el: '#split_left', model: this.model} ).render();
-            this.mapView = new app.views.MapView( {el: '#split_right', model: this.model} ).render();
+            this.imageView = new app.views.ImageQtreeView( {el: '#split_right', model: this.model} ).render();
+            this.mapView = new app.views.MapView( {el: '#split_left', model: this.model} ).render();
             this.$('#split_container').splitter({
-                //resizeToWidth: true,
+                resizeToWidth: true,
                 //dock: 'leftDock',
             });
             this.initZoomButtons();

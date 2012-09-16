@@ -77,8 +77,9 @@
 			B.css(opts.origin, newPos+bar._DA)
 				.css(opts.split, splitter._DA-bar._DA-newPos).css(opts.fixed,  splitter._DF);
 			// IE fires resize for us; all others pay cash
-			if ( !$.browser.msie )
+			if ( !$.browser.msie ) {
 				panes.trigger("resize");
+            }
 		}
 		function dimSum(jq, dims) {
 			// Opera returns -1 for missing min/max width, turn into 0
@@ -197,6 +198,7 @@
 		// Resize event handler; triggered immediately to set initial position
 		splitter.bind("resize", function(e, size){
 			// Custom events bubble in jQuery 1.3; don't get into a Yo Dawg
+            e.stopPropagation();
 			if ( e.target != this ) return;
 			// Determine new width/height of splitter container
 			splitter._DF = splitter[0][opts.pxFixed] - splitter._PBF;
