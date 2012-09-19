@@ -4,17 +4,22 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-"""
-Levenberg-Marquardt optimization algorithm. This is a Python adaptation of
-the C++ L-M implementation from the NASA Vision Workbench.
-"""
-
 import logging
 
 from geocamTiePoint import settings
 
 import numpy
 from numpy.linalg import norm
+
+try:
+    from scipy.optimize import leastsq
+    HAVE_SCIPY_LEASTSQ = True
+except ImportError:
+    HAVE_SCIPY_LEASTSQ = False
+
+if HAVE_SCIPY_LEASTSQ:
+    import threading
+    scipyLeastSqLockG = threading.Lock()
 
 # default arguments
 LM_DEFAULT_ABS_TOLERANCE = 1e-16
@@ -64,6 +69,9 @@ def lm(y, f, x0,
     in the neighborhood of x0. The default diff function is simple
     subtraction.  You can improve numerical stability by providing an
     analytical jacobian for f.
+
+    This is a Python adaptation of the C++ L-M implementation from the
+    NASA Vision Workbench.
     """
     logger = logging.getLogger('LM')
     logger.setLevel(getattr(logging, settings.GEOCAM_TIE_POINT_OPTIMIZE_LOG_LEVEL))
@@ -176,6 +184,18 @@ def lm(y, f, x0,
 
     logger.info('finished after iteration %s error=%s', outerIterations, normTry)
     return x, status
+
+
+def optimize(y, f, x0):
+    if HAVE_SCIPY_LEASTSQ:
+        # ack! scipy.optimize.leastsq is not thread-safe
+        scipyLeastSqLockG.acquire()
+        x, _cov = leastsq(lambda x: y - f(x), x0)
+        scipyLeastSqLockG.release()
+        return x
+    else:
+        x, _status = lm(y, f, x0)
+        return x
 
 
 def test():
