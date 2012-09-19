@@ -25,7 +25,7 @@ from django.core.files.base import ContentFile
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 
-from geocamTiePoint import quadTree, settings
+from geocamTiePoint import quadTree, transform, settings
 
 
 def getNewImageFileName(instance, filename):
@@ -264,3 +264,8 @@ class Overlay(models.Model):
          (self.getExportName(),
           self.getJsonDict()))
         return self.alignedQuadTree.exportZip
+
+    def updateAlignment(self):
+        toPts, fromPts = transform.splitPoints(self.extras.points)
+        tform = transform.getTransform(toPts, fromPts)
+        self.extras.transform = tform.getJsonDict()
