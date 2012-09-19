@@ -19,18 +19,11 @@ import zipfile
 
 from django.http import HttpResponse
 
-try:
-    from scipy.optimize import leastsq
-    HAVE_SCIPY_LEASTSQ = True
-except ImportError:
-    HAVE_SCIPY_LEASTSQ = False
-
 from PIL import Image
 import numpy
 import numpy.linalg
 
-import geocamTiePoint.optimize
-from geocamTiePoint import settings
+from geocamTiePoint import transform, settings
 
 TILE_SIZE = 256.
 PATCH_SIZE = 32
@@ -158,32 +151,6 @@ def tileIndexToPixels(x, y):
     return x * TILE_SIZE, y * TILE_SIZE
 
 
-def getProjectiveInverse(matrix):
-    # http://www.cis.rit.edu/class/simg782/lectures/lecture_02/lec782_05_02.pdf (p. 33)
-    c0 = matrix[0, 0]
-    c1 = matrix[0, 1]
-    c2 = matrix[0, 2]
-    c3 = matrix[1, 0]
-    c4 = matrix[1, 1]
-    c5 = matrix[1, 2]
-    c6 = matrix[2, 0]
-    c7 = matrix[2, 1]
-    result = numpy.array([[c4 - c5 * c7,
-                           c2 * c7 - c1,
-                           c1 * c5 - c2 * c4],
-                          [c5 * c6 - c3,
-                           c0 - c2 * c6,
-                           c3 * c2 - c0 * c5],
-                          [c3 * c7 - c4 * c6,
-                           c1 * c6 - c0 * c7,
-                           c0 * c4 - c1 * c3]])
-
-    # normalize just for the hell of it
-    result /= result[2, 2]
-
-    return result
-
-
 def applyProjectiveTransform(matrix, pt):
     print >> sys.stderr, pt
     u = numpy.array(list(pt) + [1], 'd')
@@ -191,79 +158,6 @@ def applyProjectiveTransform(matrix, pt):
     # projective rescaling: divide by z and truncate
     v = (v0 / v0[2])[:2]
     return v.tolist()
-
-
-class ProjectiveTransform(object):
-    def __init__(self, matrix):
-        self.matrix = numpy.array(matrix)
-        self.inverse = getProjectiveInverse(self.matrix)
-
-    def _apply(self, matrix, pt):
-        u = numpy.array(list(pt) + [1], 'd')
-        v0 = matrix.dot(u)
-        # projective rescaling: divide by z and truncate
-        v = (v0 / v0[2])[:2]
-        return v.tolist()
-
-    def forward(self, pt):
-        return self._apply(self.matrix, pt)
-
-    def reverse(self, pt):
-        return self._apply(self.inverse, pt)
-
-
-class QuadraticTransform(object):
-    def __init__(self, matrix):
-        self.matrix = numpy.array(matrix)
-
-        # there's a projective transform hiding in the quadratic
-        # transform if we drop the first two columns. we use it to
-        # estimate an initial value when calculating the inverse.
-        self.proj = ProjectiveTransform(self.matrix[:, 2:])
-
-    def _residuals(self, v, u):
-        vapprox = self.forward(u)
-        return (vapprox - v)
-
-    def forward(self, ulist):
-        u = numpy.array([ulist[0] ** 2, ulist[1] ** 2, ulist[0], ulist[1], 1])
-        v0 = self.matrix.dot(u)
-        v = (v0 / v0[2])[:2]
-        return v.tolist()
-
-    def reverse(self, vlist):
-        v = numpy.array(vlist)
-
-        # to get a rough initial value, apply the inverse of the simpler
-        # projective transform. this will give the exact answer if the
-        # quadratic terms happen to be 0.
-        u0 = self.proj.reverse(vlist)
-
-        # run levenberg-marquardt to get an exact inverse.
-        if HAVE_SCIPY_LEASTSQ:
-            # scipy version is about 10 times faster
-            umin, _error = leastsq(lambda u: self._residuals(v, u),
-                                   u0)
-        else:
-            uminVec, _status = (geocamTiePoint.optimize.lm
-                                (v,
-                                 lambda u: numpy.array(self.forward(u)),
-                                 numpy.array(u0)))
-            umin = uminVec.tolist()
-
-        return umin
-
-
-def makeTransform(transformDict):
-    transformType = transformDict['type']
-    transformMatrix = transformDict['matrix']
-    if transformType == 'projective':
-        return ProjectiveTransform(transformMatrix)
-    elif transformType == 'quadratic':
-        return QuadraticTransform(transformMatrix)
-    else:
-        raise ValueError('unknown transform type %s, expected one of: projective, quadratic'
-                         % transformType)
 
 
 def flatten(listOfLists):
@@ -326,16 +220,23 @@ def metersToPixels(x, y, zoom):
     return [px, py]
 
 
-def imageMapBounds(imageSize, transform):
+def imageMapBounds(imageSize, tform):
     w, h = imageSize
     imageCorners = cornerPoints([0, 0, w, h])
-    mercatorCorners = [transform.forward(c) for c in imageCorners]
+    mercatorCorners = [tform.forward(c) for c in imageCorners]
     latLonCorners = [metersToLatLon(c) for c in mercatorCorners]
     bounds = Bounds(latLonCorners)
     return {'west': bounds.xmin,
             'south': bounds.ymin,
             'east': bounds.xmax,
             'north': bounds.ymax}
+
+
+def intMap(floatList):
+    if floatList is None:
+        return None
+    else:
+        return [int(round(x)) for x in floatList]
 
 
 class ZipWriter(object):
@@ -353,10 +254,10 @@ class ZipWriter(object):
         self.zip = zipfile.ZipFile(self.out, 'w')
         self.closed = False
 
-    def writeImage(self, path, pilImage, format):
+    def writeImage(self, path, pilImage, fmt):
         assert not self.closed
         imgOut = StringIO()
-        pilImage.save(imgOut, format=format)
+        pilImage.save(imgOut, format=fmt)
         self.zip.writestr(os.path.join(self.dirName, path),
                           imgOut.getvalue())
 
@@ -386,10 +287,10 @@ class FileWriter(object):
         if not os.path.exists(d):
             os.makedirs(d)
 
-    def writeImage(self, path, pilImage, format):
+    def writeImage(self, path, pilImage, fmt):
         fullPath = os.path.join(self.basePath, path)
         self.makeParentDirIfNeeded(fullPath)
-        pilImage.save(fullPath, format=format)
+        pilImage.save(fullPath, format=fmt)
 
     def writeData(self, path, data):
         fullPath = os.path.join(self.basePath, path)
@@ -485,10 +386,42 @@ class SimpleQuadTreeGenerator(object):
             return image.crop(tileBounds)
 
 
+def pairsWithWrap(lst):
+    prev = None
+    item = None
+    for item in lst:
+        if prev is None:
+            first = item
+        else:
+            yield prev, item
+        prev = item
+    if first is not None:
+        yield item, first
+
+
+def interp(d, pt1, pt2):
+    return (1.0 - d) * pt1 + d * pt2
+
+
+def fillEdgesVec(corners, numSteps):
+    result = []
+    for c1, c2 in pairsWithWrap(corners):
+        for d in numpy.linspace(0, 1, numSteps):
+            result.append(interp(d, c1, c2))
+    return result
+
+
+def fillEdges(corners, numSteps):
+    resultVec = fillEdgesVec([numpy.array(c)
+                              for c in corners],
+                             numSteps)
+    return [v.tolist() for v in resultVec]
+
+
 class WarpedQuadTreeGenerator(object):
     def __init__(self, image, transformDict):
         self.image = image
-        self.transform = makeTransform(transformDict)
+        self.transform = transform.makeTransform(transformDict)
 
         corners = getImageCorners(self.image)
         self.mercatorCorners = [self.transform.forward(corner)
@@ -504,17 +437,21 @@ class WarpedQuadTreeGenerator(object):
                 c1, c2 = pair
                 print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
 
+        imageEdgePoints = fillEdges(corners, 5)
+        mercatorEdgePoints = [self.transform.forward(edgePoint)
+                              for edgePoint in imageEdgePoints]
+
         bounds = Bounds()
-        for corner in self.mercatorCorners:
-            bounds.extend(corner)
+        for edgePoint in mercatorEdgePoints:
+            bounds.extend(edgePoint)
 
         self.maxZoom = calculateMaxZoom(bounds, self.image)
 
         self.tileBounds = [None] * (self.maxZoom + 1)
         for zoom in xrange(int(self.maxZoom), -1, -1):
             tbounds = Bounds()
-            for corner in self.mercatorCorners:
-                tileCoords = tileIndex(zoom, corner)
+            for edgePoint in mercatorEdgePoints:
+                tileCoords = tileIndex(zoom, edgePoint)
                 tbounds.extend(tileCoords)
             self.tileBounds[zoom] = tbounds
 
@@ -571,15 +508,19 @@ class WarpedQuadTreeGenerator(object):
         xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
         if (not ((xmin <= x <= xmax)
                  and (ymin <= y <= ymax))):
+            print ("ERROR: tile at zoom=%d, x=%d, y=%d is out of the image bounds"
+                   % (zoom, x, y))
             raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
                               % (zoom, x, y))
 
         sys.stderr.write('.')
 
-        if isinstance(self.transform, ProjectiveTransform):
+        if isinstance(self.transform,
+                      (transform.LinearTransform,
+                       transform.ProjectiveTransform)):
             transformArgs = self.getPilTransformArgsProjective(zoom, x, y)
         else:
-            transformArgs = self.getPilTransformArgsQuadratic(zoom, x, y)
+            transformArgs = self.getPilTransformArgsGeneral(zoom, x, y)
 
         if BENCHMARK_WARP_STEPS:
             warpDataStart = time.time()
@@ -597,8 +538,7 @@ class WarpedQuadTreeGenerator(object):
 
     def getPilTransformArgsProjective(self, zoom, x, y):
         corners = tileExtent(zoom, x, y)
-        sourceCorners = [[int(round(c))
-                          for c in self.transform.reverse(corner)]
+        sourceCorners = [intMap(self.transform.reverse(corner))
                          for corner in corners]
 
         return ((int(TILE_SIZE * 2),) * 2,
@@ -606,7 +546,7 @@ class WarpedQuadTreeGenerator(object):
                 flatten(sourceCorners),
                 Image.BICUBIC)
 
-    def getPilTransformArgsQuadratic(self, zoom, x, y):
+    def getPilTransformArgsGeneral(self, zoom, x, y):
         corners = tileExtent(zoom, x, y)
 
         if BENCHMARK_WARP_STEPS:
@@ -622,8 +562,7 @@ class WarpedQuadTreeGenerator(object):
                 mercatorPatchOrigin = pixelsToMeters(targetPatchOrigin[0],
                                                      targetPatchOrigin[1],
                                                      zoom + PATCH_ZOOM_OFFSET)
-                sourcePatchOrigin = [int(round(c))
-                                     for c in self.transform.reverse(mercatorPatchOrigin)]
+                sourcePatchOrigin = intMap(self.transform.reverse(mercatorPatchOrigin))
                 patchTable[(px, py)] = sourcePatchOrigin
         if BENCHMARK_WARP_STEPS:
             print
@@ -639,6 +578,12 @@ class WarpedQuadTreeGenerator(object):
                            (px + 1, py))
                 sourcePatchCorners = [patchTable[corner]
                                       for corner in corners]
+
+                # reject the patch if any corner is out of bounds
+                if any([c is None
+                        for c in sourcePatchCorners]):
+                    continue
+
                 xoff = px * doublePatchSize
                 yoff = py * doublePatchSize
                 targetBox = (xoff,

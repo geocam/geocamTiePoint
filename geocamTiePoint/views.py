@@ -15,7 +15,7 @@ import PIL.Image
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseNotAllowed, Http404
 from django.template import RequestContext
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -26,7 +26,7 @@ from django.db import transaction
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
-from geocamTiePoint import quadTree
+from geocamTiePoint import quadTree, transform
 from geocamTiePoint import anypdf as pdf
 
 if settings.USING_APP_ENGINE:
@@ -52,14 +52,13 @@ def transparentPngResponse():
 def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
 
+
 def export_settings(export_vars=None):
     if export_vars == None:
-        export_vars = (
-            'GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
-            'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',
-        )
-    return dumps( dict([(k, getattr(settings, k)) for k in export_vars]) )
-    
+        export_vars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
+                       'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',
+                       )
+    return dumps(dict([(k, getattr(settings, k)) for k in export_vars]))
 
 
 def ember(request):
@@ -69,12 +68,13 @@ def ember(request):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+
 def backbone(request):
-    initial_overlays = Overlay.objects.order_by('pk');
+    initial_overlays = Overlay.objects.order_by('pk')
     if request.method == 'GET':
-        return render_to_response('geocamTiePoint/backbone.html', 
+        return render_to_response('geocamTiePoint/backbone.html',
             {
-                'initial_overlays_json': dumps( list(o.jsonDict for o in initial_overlays) ) if initial_overlays else [],
+                'initial_overlays_json': dumps(list(o.jsonDict for o in initial_overlays)) if initial_overlays else [],
                 'settings': export_settings(),
             },
             context_instance=RequestContext(request))
@@ -211,16 +211,18 @@ def overlayIdJson(request, key):
         if transformDict:
             overlay.extras.bounds = (quadTree.imageMapBounds
                                      (overlay.extras.imageSize,
-                                      quadTree.makeTransform(transformDict)))
+                                      transform.makeTransform(transformDict)))
         overlay.save()
         return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET', 'POST'])
 
+
 @csrf_exempt
 def overlayListJson(request):
     overlays = Overlay.objects.all()
-    return HttpResponse(dumps( list(o.jsonDict for o in overlays) ), content_type='application/json')
+    return HttpResponse(dumps(list(o.jsonDict for o in overlays)), content_type='application/json')
+
 
 @csrf_exempt
 def overlayIdWarp(request, key):
