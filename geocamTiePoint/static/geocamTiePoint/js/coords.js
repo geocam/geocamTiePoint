@@ -45,7 +45,7 @@ function metersToPixels(meters) {
 
 function pixelsToMeters(pixels, maxZoom) {
     maxZoom = maxZoom || maxZoom0G; // Use the global maxZoom if none is given.
-    assert(typeof maxZoom !== 'undefined', "maxZoom required");
+    assert(typeof maxZoom !== 'undefined', 'maxZoom required');
     var res = resolution(maxZoom0G);
     var mx = (pixels.x * res) - ORIGIN_SHIFT;
     var my = -(pixels.y * res) + ORIGIN_SHIFT;
