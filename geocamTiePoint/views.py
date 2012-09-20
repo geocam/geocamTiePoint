@@ -6,6 +6,9 @@
 
 import os
 import json
+import logging
+import time
+import rfc822
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -23,6 +26,7 @@ from django.core.urlresolvers import reverse
 from django.views.decorators.cache import cache_page
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.core.cache import cache
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
@@ -45,8 +49,8 @@ PDF_MIME_TYPES = ('application/pdf',
                   )
 
 
-def transparentPngResponse():
-    return HttpResponse(TRANSPARENT_PNG_BINARY, content_type='image/png')
+def transparentPngData():
+    return (TRANSPARENT_PNG_BINARY, 'image/png')
 
 
 def dumps(obj):
@@ -247,21 +251,50 @@ def overlayIdImageFileName(request, key, fileName):
         return HttpResponseNotAllowed(['GET'])
 
 
-@cache_page(3600 * 24 * 365)
+def getTileData(quadTreeId, zoom, x, y):
+    qt = get_object_or_404(QuadTree, id=quadTreeId)
+    gen = qt.getGeneratorWithCache()
+    try:
+        return gen.getTileData(zoom, x, y)
+    except quadTree.ZoomTooBig:
+        return transparentPngData()
+    except quadTree.OutOfBounds:
+        return transparentPngData()
+
+
+def neverExpires(response):
+    """
+    Manually sets the HTTP 'Expires' header one year in the
+    future. Normally the Django cache middleware handles this, but we
+    are directly using the low-level cache API.
+
+    Empirically, this *hugely* reduces the number of requests from the
+    Google Maps API. One example is that zooming out one level stupidly
+    loads all the tiles in the new zoom level twice if tiles immediately
+    expire.
+    """
+    response['Expires'] = rfc822.formatdate(time.time() + 365 * 24 * 60 * 60)
+    return response
+
+
 def getTile(request, quadTreeId, zoom, x, y):
     quadTreeId = int(quadTreeId)
     zoom = int(zoom)
     x = int(x)
     y = int(os.path.splitext(y)[0])
 
-    qt = get_object_or_404(QuadTree, id=quadTreeId)
-    gen = qt.getGenerator()
-    try:
-        return gen.getTileResponse(zoom, x, y)
-    except quadTree.ZoomTooBig:
-        return transparentPngResponse()
-    except quadTree.OutOfBounds:
-        return transparentPngResponse()
+    key = quadTree.getTileCacheKey(quadTreeId, zoom, x, y)
+    data = cache.get(key)
+    if data is None:
+        logging.debug('\ngetTile MISS %s\n', key)
+        data = getTileData(quadTreeId, zoom, x, y)
+        cache.set(key, data)
+    else:
+        logging.debug('getTile hit %s', key)
+
+    bytes, contentType = data
+    response = HttpResponse(bytes, content_type=contentType)
+    return neverExpires(response)
 
 
 def dummyView(*args, **kwargs):

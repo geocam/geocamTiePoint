@@ -11,17 +11,18 @@ import os
 import math
 import sys
 import time
+import re
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 import zipfile
 
-from django.http import HttpResponse
-
 from PIL import Image
 import numpy
 import numpy.linalg
+
+from django.core.cache import cache
 
 from geocamTiePoint import transform, settings
 
@@ -32,7 +33,7 @@ PATCH_ZOOM_OFFSET = math.log(PATCHES_PER_TILE, 2)
 INITIAL_RESOLUTION = 2 * math.pi * 6378137 / TILE_SIZE
 ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
-BENCHMARK_WARP_STEPS = False
+BENCHMARK_WARP_STEPS = True
 BLACK = (0, 0, 0)
 
 
@@ -164,10 +165,15 @@ def flatten(listOfLists):
     return [item for subList in listOfLists for item in subList]
 
 
-def getImageResponsePng(image):
+def getImageDataPng(image):
     out = StringIO()
     image.save(out, format='png')
-    return HttpResponse(out.getvalue(), mimetype='image/png')
+    return (out.getvalue(), 'image/png')
+
+
+def getTileCacheKey(quadTreeId, zoom, x, y):
+    return ('geocamTiePoint.tile.%s.%s.%s.%s'
+            % (quadTreeId, zoom, x, y))
 
 
 def setBackgroundColor(image, backgroundColor):
@@ -179,11 +185,11 @@ def setBackgroundColor(image, backgroundColor):
     return background
 
 
-def getImageResponseJpg(image):
+def getImageDataJpg(image):
     out = StringIO()
     image = setBackgroundColor(image, BLACK)
     image.save(out, format='jpeg')
-    return HttpResponse(out.getvalue(), mimetype='image/jpeg')
+    return (out.getvalue(), 'image/jpeg')
 
 
 def resolution(zoom):
@@ -239,6 +245,15 @@ def intMap(floatList):
         return [int(round(x)) for x in floatList]
 
 
+def contentTypeToExtension(contentType):
+    if contentType == 'image/png':
+        return '.png'
+    elif contentType == 'image/jpeg':
+        return '.jpg'
+    else:
+        raise ValueError('unknown content type')
+
+
 class ZipWriter(object):
     """
     A writer class where writeX() methods add file entries to an
@@ -253,13 +268,6 @@ class ZipWriter(object):
         self.out = StringIO()
         self.zip = zipfile.ZipFile(self.out, 'w')
         self.closed = False
-
-    def writeImage(self, path, pilImage, fmt):
-        assert not self.closed
-        imgOut = StringIO()
-        pilImage.save(imgOut, format=fmt)
-        self.zip.writestr(os.path.join(self.dirName, path),
-                          imgOut.getvalue())
 
     def writeData(self, path, data):
         assert not self.closed
@@ -287,19 +295,39 @@ class FileWriter(object):
         if not os.path.exists(d):
             os.makedirs(d)
 
-    def writeImage(self, path, pilImage, fmt):
-        fullPath = os.path.join(self.basePath, path)
-        self.makeParentDirIfNeeded(fullPath)
-        pilImage.save(fullPath, format=fmt)
-
     def writeData(self, path, data):
         fullPath = os.path.join(self.basePath, path)
         self.makeParentDirIfNeeded(fullPath)
         open(fullPath, 'w').write(data)
 
 
-class SimpleQuadTreeGenerator(object):
-    def __init__(self, image):
+class AbstractQuadTreeGenerator(object):
+    def getTileData(self, zoom, x, y):
+        raise NotImplementedError('implement in derived classes')
+
+    def getTileDataWithCache(self, zoom, x, y):
+        key = getTileCacheKey(self.quadTreeId, zoom, x, y)
+        data = cache.get(key)
+        if data is None:
+            data = self.getTileData(zoom, x, y)
+            cache.set(key, data)
+        return data
+
+    def writeTile(self, writer, zoom, x, y):
+        tileImage = self.generateTile(zoom, x, y)
+        bytes, contentType = self.getTileDataWithCache(zoom, x, y)
+
+        if BENCHMARK_WARP_STEPS:
+            saveStart = time.time()
+        writer.writeData('%s/%s/%s.jpg' % (zoom, x, y),
+                         bytes)
+        if BENCHMARK_WARP_STEPS:
+            print 'saveTime:', time.time() - saveStart
+
+
+class SimpleQuadTreeGenerator(AbstractQuadTreeGenerator):
+    def __init__(self, quadTreeId, image):
+        self.quadTreeId = quadTreeId
         self.imageSize = image.size
         w, h = self.imageSize
         self.coords = ((0, 0),
@@ -340,14 +368,8 @@ class SimpleQuadTreeGenerator(object):
                         # no surprise if some tiles are empty around the edges
                         pass
 
-    def writeTile(self, writer, zoom0, x, y):
-        tileImage = self.generateTile(zoom0, x, y)
-        writer.writeImage('%s/%s/%s.jpg' % (zoom0, x, y),
-                          tileImage,
-                          format='jpeg')
-
-    def getTileResponse(self, zoom0, x, y):
-        return getImageResponseJpg(self.generateTile(zoom0, x, y))
+    def getTileData(self, zoom0, x, y):
+        return getImageDataJpg(self.generateTile(zoom0, x, y))
 
     def generateTile(self, zoom0, x, y):
         zoom = zoom0 - ZOOM_OFFSET
@@ -418,8 +440,9 @@ def fillEdges(corners, numSteps):
     return [v.tolist() for v in resultVec]
 
 
-class WarpedQuadTreeGenerator(object):
-    def __init__(self, image, transformDict):
+class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
+    def __init__(self, quadTreeId, image, transformDict):
+        self.quadTreeId = quadTreeId
         self.image = image
         self.transform = transform.makeTransform(transformDict)
 
@@ -486,19 +509,8 @@ class WarpedQuadTreeGenerator(object):
         print >> sys.stderr, ('warping complete: %d tiles, elapsed time %.1f seconds = %d ms/tile'
                               % (totalTiles, elapsedTime, int(1000 * elapsedTime / totalTiles)))
 
-    def writeTile(self, writer, zoom, x, y):
-        tileImage = self.generateTile(zoom, x, y)
-
-        if BENCHMARK_WARP_STEPS:
-            saveStart = time.time()
-        writer.writeImage('%s/%s/%s.png' % (zoom, x, y),
-                          tileImage,
-                          format='png')
-        if BENCHMARK_WARP_STEPS:
-            print 'saveTime:', time.time() - saveStart
-
-    def getTileResponse(self, zoom, x, y):
-        return getImageResponsePng(self.generateTile(zoom, x, y))
+    def getTileData(self, zoom, x, y):
+        return getImageDataPng(self.generateTile(zoom, x, y))
 
     def generateTile(self, zoom, x, y):
         if zoom > self.maxZoom:
@@ -508,8 +520,6 @@ class WarpedQuadTreeGenerator(object):
         xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
         if (not ((xmin <= x <= xmax)
                  and (ymin <= y <= ymax))):
-            print ("ERROR: tile at zoom=%d, x=%d, y=%d is out of the image bounds"
-                   % (zoom, x, y))
             raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
                               % (zoom, x, y))
 
@@ -524,17 +534,17 @@ class WarpedQuadTreeGenerator(object):
 
         if BENCHMARK_WARP_STEPS:
             warpDataStart = time.time()
-        tileData = self.image.transform(*transformArgs)
+        tileImage = self.image.transform(*transformArgs)
         if BENCHMARK_WARP_STEPS:
             print 'warpDataTime:', time.time() - warpDataStart
 
         if BENCHMARK_WARP_STEPS:
             resizeStart = time.time()
-        tileData = tileData.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
+        tileImage = tileImage.resize((int(TILE_SIZE),) * 2, Image.ANTIALIAS)
         if BENCHMARK_WARP_STEPS:
             print 'resizeTime:', time.time() - resizeStart
 
-        return tileData
+        return tileImage
 
     def getPilTransformArgsProjective(self, zoom, x, y):
         corners = tileExtent(zoom, x, y)

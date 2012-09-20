@@ -10,6 +10,7 @@
 import os
 import datetime
 import re
+import logging
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -21,11 +22,21 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
+from django.core.cache import cache
 
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 
 from geocamTiePoint import quadTree, transform, settings
+
+
+# poor man's local memory cache for one quadtree tile generator. a
+# common access pattern is that the same instance of the app gets
+# multiple tile requests on the same quadtree. optimize for that case by
+# keeping the generator in memory. note: an alternative approach would
+# use the memcached cache, but that would get rid of much of the benefit
+# in terms of serialization/deserialization.
+cachedGeneratorG = {'key': None, 'value': None}
 
 
 def getNewImageFileName(instance, filename):
@@ -115,19 +126,41 @@ class QuadTree(models.Model):
             self.imageData.contentType = 'image/png'
             self.imageData.save()
 
+    def getImage(self):
+        im = PIL.Image.open(self.imageData.image.file)
+        self.convertImageToRgbaIfNeeded(im)
+        return im
+
+    def getGeneratorCacheKey(self):
+        return 'geocamTiePoint.QuadTreeGenerator.%s' % self.id
+
+    def getGeneratorWithCache(self):
+        global cachedGeneratorG
+        cachedGeneratorCopy = cachedGeneratorG
+        key = self.getGeneratorCacheKey()
+        if cachedGeneratorCopy['key'] == key:
+            logging.debug('getGeneratorWithCache hit %s', key)
+            result = cachedGeneratorCopy['value']
+        else:
+            logging.debug('getGeneratorWithCache miss %s', key)
+            result = self.getGenerator()
+            cachedGeneratorG = dict(key=key, value=result)
+        return result
+
     def getGenerator(self):
-        image = PIL.Image.open(self.imageData.image.file)
-        self.convertImageToRgbaIfNeeded(image)
+        image = self.getImage()
 
         if self.transform:
             return (quadTree.WarpedQuadTreeGenerator
-                    (image,
+                    (self.id,
+                     image,
                      json.loads(self.transform)))
         else:
-            return quadTree.SimpleQuadTreeGenerator(image)
+            return quadTree.SimpleQuadTreeGenerator(self.id,
+                                                    image)
 
     def generateExportZip(self, exportName, metaJson):
-        gen = self.getGenerator()
+        gen = self.getGeneratorWithCache()
         writer = quadTree.ZipWriter(exportName)
         gen.writeQuadTree(writer)
         writer.writeData('meta.json', dumps(metaJson))
