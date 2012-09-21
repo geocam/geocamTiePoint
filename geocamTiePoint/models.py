@@ -22,7 +22,6 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
-from django.core.cache import cache
 
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField

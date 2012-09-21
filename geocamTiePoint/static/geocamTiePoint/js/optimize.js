@@ -383,7 +383,7 @@ geocamTiePoint.optimize = {};
     // default arguments
     var LM_DEFAULT_ABS_TOLERANCE = 1e-16;
     var LM_DEFAULT_REL_TOLERANCE = 1e-16;
-    var LM_DEFAULT_MAX_ITERATIONS = 1000; // FIX 100;
+    var LM_DEFAULT_MAX_ITERATIONS = 100;
 
     // status values
     var LM_DID_NOT_CONVERGE = -1;
@@ -418,6 +418,9 @@ geocamTiePoint.optimize = {};
         return jacobian;
     }
 
+
+    var lmLog = function() {};
+    // var lmLog = console.log;
 
     /* Use the Levenberg-Marquardt algorithm to calculate a local minimum
      * x for the error function
@@ -468,7 +471,7 @@ geocamTiePoint.optimize = {};
         while (!done) {
             var shortCircuit = false;
 
-            console.log('outerIterations=' + outerIterations + ' x=' + x);
+            lmLog('outerIterations=' + outerIterations + ' x=' + x);
             outerIterations++;
 
             // Compute the value, derivative, and hessian of the cost function
@@ -482,7 +485,7 @@ geocamTiePoint.optimize = {};
             // (2-norm of difference)
             error = diff(y, yhat);
             normStart = error.meanNorm();
-            console.log('outer iteration starting robust norm=' + normStart);
+            lmLog('outer iteration starting robust norm=' + normStart);
 
             var J = jacobian(x);
 
@@ -507,11 +510,6 @@ geocamTiePoint.optimize = {};
 
                 // Solve for update
                 var deltaX = linearLeastSquares(delJ, hessianLm);
-                console.log('J=' + J);
-                console.log('hessianLm=' + hessianLm);
-                console.log('deltaX=' + deltaX.transpose());
-                console.log('delJ=' + delJ);
-                console.log('delJApprox=' + hessianLm.multiply(deltaX));
 
                 // update parameter vector
                 var xTry = x.subtract(deltaX);
@@ -519,8 +517,8 @@ geocamTiePoint.optimize = {};
                 var errorTry = diff(y, yTry);
                 var normTry = errorTry.meanNorm();
 
-                console.log('iteration ' + iterations +
-                            ' norm ' + normTry);
+                lmLog('iteration ' + iterations +
+                      ' norm ' + normTry);
 
                 if (normTry > normStart) {
                     // Increase lambda and try again
@@ -531,34 +529,34 @@ geocamTiePoint.optimize = {};
 
                 // Sanity check on iterations in this loop
                 if (iterations > 5) {
-                    console.log('too many iterations - short circuiting');
+                    lmLog('too many iterations - short circuiting');
                     shortCircuit = true;
                     normTry = normStart;
-                    console.log('lambda=' + lamb);
+                    lmLog('lambda=' + lamb);
                 }
             }
 
             // Percentage change convergence criterion
-            console.log('normStart=' + normStart +
-                        ' normTry=' + normTry +
-                        ' relTolerance=' + relTolerance);
+            lmLog('normStart=' + normStart +
+                  ' normTry=' + normTry +
+                  ' relTolerance=' + relTolerance);
             if (((normStart - normTry) / normStart) < relTolerance) {
                 status = LM_CONVERGED_REL_TOLERANCE;
-                console.log('converged to relative tolerance');
+                lmLog('converged to relative tolerance');
                 done = true;
             }
 
             // Absolute error convergence criterion
             if (normTry < absTolerance) {
                 status = LM_CONVERGED_ABS_TOLERANCE;
-                console.log('converged to absolute tolerance');
+                lmLog('converged to absolute tolerance');
                 done = true;
             }
 
             // Max iterations convergence criterion
             if (outerIterations >= maxIterations) {
                 status = LM_DID_NOT_CONVERGE;
-                console.log('reached max iterations!');
+                lmLog('reached max iterations!');
                 done = true;
             }
 
@@ -574,13 +572,13 @@ geocamTiePoint.optimize = {};
 
             // Decrease lambda
             lamb /= 10;
-            console.log('lambda = %s', lamb);
-            console.log('end of outer iteration ' + outerIterations +
+            lmLog('lambda = %s', lamb);
+            lmLog('end of outer iteration ' + outerIterations +
                         ' with error ' + normTry);
         }
 
-        console.log('finished after iteration ' + outerIterations +
-                    ' error=' + normTry);
+        lmLog('finished after iteration ' + outerIterations +
+              ' error=' + normTry);
         return [x.tolist(), status];
     }
 

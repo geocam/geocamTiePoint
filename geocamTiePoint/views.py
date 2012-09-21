@@ -23,7 +23,6 @@ from django.template import RequestContext
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
-from django.views.decorators.cache import cache_page
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.core.cache import cache
@@ -292,8 +291,8 @@ def getTile(request, quadTreeId, zoom, x, y):
     else:
         logging.debug('getTile hit %s', key)
 
-    bytes, contentType = data
-    response = HttpResponse(bytes, content_type=contentType)
+    bits, contentType = data
+    response = HttpResponse(bits, content_type=contentType)
     return neverExpires(response)
 
 

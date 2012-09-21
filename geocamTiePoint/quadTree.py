@@ -4,14 +4,14 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-# Imports are copied from the old views.py,
-# so I'm basically taking a wild guess at what's required.
+# Instance of X has no 'Y' member (false alarm for abstract classes)
+# pylint: disable=E1101
+
 import json
 import os
 import math
 import sys
 import time
-import re
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -314,13 +314,12 @@ class AbstractQuadTreeGenerator(object):
         return data
 
     def writeTile(self, writer, zoom, x, y):
-        tileImage = self.generateTile(zoom, x, y)
-        bytes, contentType = self.getTileDataWithCache(zoom, x, y)
+        bits, _contentType = self.getTileDataWithCache(zoom, x, y)
 
         if BENCHMARK_WARP_STEPS:
             saveStart = time.time()
         writer.writeData('%s/%s/%s.jpg' % (zoom, x, y),
-                         bytes)
+                         bits)
         if BENCHMARK_WARP_STEPS:
             print 'saveTime:', time.time() - saveStart
 

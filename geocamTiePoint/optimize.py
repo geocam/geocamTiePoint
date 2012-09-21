@@ -130,12 +130,6 @@ def lm(y, f, x0,
             # Solve for update
             soln, _residues, _rank, _sngVal = numpy.linalg.lstsq(hessianLm, delJ)
             deltaX = soln
-            logging.warning('J=%s', J)
-            logging.warning('hessianLm=%s', hessianLm)
-            logging.warning('deltaX=%s', deltaX)
-            logging.warning('delJ=%s', delJ)
-            logging.warning('delJApprox=%s', hessianLm.dot(deltaX))
-            logging.warning('sngVal=%s', _sngVal)
 
             # update parameter vector
             xTry = x - deltaX

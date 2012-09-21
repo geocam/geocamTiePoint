@@ -92,7 +92,7 @@ $(function($) {
 
     Transform.fit = function(cls, toPts, fromPts) {
         var params0 = cls.getInitParams(toPts, fromPts);
-        console.log(params0);
+        //console.log(params0);
         var params = (leastSquares
                       (toPts.flatten(),
                        function(params) {
@@ -338,31 +338,13 @@ $(function($) {
     var SCALE = 1e+7;
 
     QuadraticTransform2.getInitParams = function(toPts, fromPts) {
-        // pre-conditioning by SCALE helps our crappy linear least-squares solver
+        // pre-conditioning by SCALE improves numerical stability
         var toPtsConditioned = toPts.multiply(1.0 / SCALE);
         var p = AffineTransform.fit(AffineTransform, toPtsConditioned, fromPts);
         return p.concat([0, 0, 0, 0, 0, 0]);
     };
 
     QuadraticTransform2.fit = Transform.fit;
-    /*
-    QuadraticTransform2.fit = function(cls, toPts, fromPts) {
-        var pc = Transform.fit(cls, toPts, fromPts);
-        // correct for pre-conditioning
-        return [pc[0] * SCALE,
-                pc[1] * SCALE,
-                pc[2] * SCALE,
-                pc[3] * SCALE,
-                pc[4] * SCALE,
-                pc[5] * SCALE,
-                pc[6] * SCALE,
-                pc[7] * SCALE,
-                pc[8] / SCALE,
-                pc[9] / SCALE,
-                pc[10] / SCALE,
-                pc[11] / SCALE];
-    };
-    */
 
     QuadraticTransform2.prototype.forward = function(pt) {
         var u = columnVectorFromPt(pt);
@@ -412,8 +394,6 @@ $(function($) {
             return ProjectiveTransform;
         } else {
             return QuadraticTransform2;
-            // return QuadraticTransform;
-            // return ProjectiveTransform;
         }
     }
 

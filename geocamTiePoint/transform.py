@@ -332,7 +332,7 @@ class QuadraticTransform2(Transform):
     @classmethod
     def getInitParams(cls, toPts, fromPts):
         # pre-conditioning by SCALE improves numerical stability
-        tmat = AffineTransform.fit(toPts / self.SCALE,
+        tmat = AffineTransform.fit(toPts / cls.SCALE,
                                    fromPts).matrix
         return numpy.append(tmat.flatten()[:8],
                             numpy.zeros(4))
