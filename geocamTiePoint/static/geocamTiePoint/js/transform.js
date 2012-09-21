@@ -58,15 +58,6 @@ $(function($) {
     }
 
     function leastSquares(y, f, x0) {
-        /*
-        function residuals(x) {
-            var err = y.subtract(f(x)).meanNorm();
-            console.log(err);
-            return err;
-        }
-        return (geocamTiePoint
-                .minimize(residuals, x0)
-                .finalParams);*/
         var result = geocamTiePoint.optimize.lm(y, f, x0);
         return result[0];
     }
@@ -310,6 +301,16 @@ $(function($) {
     /**********************************************************************
      * QuadraticTransform2
      **********************************************************************/
+
+    /* QuadraticTransform2 is similar to QuadraticTransform but modified
+     * slightly to make it easy to invert analytically (see //
+     * transform.py). The modification introduces some 4th and 6th order
+     * terms that should not make much difference in practice.
+     *
+     * In order to improve numerical stability when fitting tie points,
+     * the forward transfrom output is rescaled by a factor of SCALE at
+     * the last step. Thus the entries in the matrix will be much
+     * smaller than for the other Transform types. */
 
     function QuadraticTransform2(matrix, quadraticTerms) {
         this.matrix = matrix;
