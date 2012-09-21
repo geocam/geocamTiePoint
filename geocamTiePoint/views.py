@@ -26,6 +26,7 @@ from django.core.urlresolvers import reverse
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
@@ -285,15 +286,40 @@ def getTile(request, quadTreeId, zoom, x, y):
     key = quadTree.getTileCacheKey(quadTreeId, zoom, x, y)
     data = cache.get(key)
     if data is None:
-        logging.debug('\ngetTile MISS %s\n', key)
+        logging.info('\ngetTile MISS %s\n', key)
         data = getTileData(quadTreeId, zoom, x, y)
         cache.set(key, data)
     else:
-        logging.debug('getTile hit %s', key)
+        logging.info('getTile hit %s', key)
 
     bits, contentType = data
     response = HttpResponse(bits, content_type=contentType)
     return neverExpires(response)
+
+
+def getPublicTile(request, quadTreeId, zoom, x, y):
+    cacheKey = 'geocamTiePoint.QuadTree.isPublic.%s' % quadTreeId
+    quadTreeIsPublic = cache.get(cacheKey)
+    if quadTreeIsPublic is None:
+        logging.info('getPublicTile MISS %s' % cacheKey)
+        try:
+            quadTree = QuadTree.objects.get(id=quadTreeId)
+            overlay = quadTree.alignedOverlays.get()
+        except ObjectDoesNotExist:
+            overlay = None
+        if overlay:
+            quadTreeIsPublic = overlay.isPublic
+        else:
+            quadTreeIsPublic = False
+        cache.set(cacheKey, quadTreeIsPublic, 60)
+    else:
+        logging.info('getPublicTile hit %s' % cacheKey)
+
+    if quadTreeIsPublic:
+        return getTile(request, quadTreeId, zoom, x, y)
+    else:
+        return HttpResponseNotFound('QuadTree %s does not exist or is not public'
+                                    % quadTreeId)
 
 
 def dummyView(*args, **kwargs):

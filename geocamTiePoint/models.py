@@ -184,6 +184,7 @@ class Overlay(models.Model):
     alignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
                                         related_name='alignedOverlays',
                                         on_delete=models.SET_NULL)
+    isPublic = models.BooleanField(default=False)
 
     # extras: a special JSON-format field that holds additional
     # schema-free fields in the overlay model. Members of the field can
@@ -222,7 +223,11 @@ class Overlay(models.Model):
                                                         '[Y].jpg'])
             result['unalignedTilesZoomOffset'] = quadTree.ZOOM_OFFSET
         if self.alignedQuadTree is not None:
-            result['alignedTilesUrl'] = reverse('geocamTiePoint_tile',
+            if self.isPublic:
+                urlName = 'geocamTiePoint_publicTile'
+            else:
+                urlName = 'geocamTiePoint_tile'
+            result['alignedTilesUrl'] = reverse(urlName,
                                                 args=[str(self.alignedQuadTree.id),
                                                       '[ZOOM]',
                                                       '[X]',
