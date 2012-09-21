@@ -295,7 +295,10 @@ function save(serverState) {
 
     // solve for the transform
     if (imageCoordsG.length) {
-        state.transform = calculateAlignmentModel(state.points);
+        //state.transform = calculateAlignmentModel(state.points);
+        state.transform = (geocamTiePoint.transform
+                           .getTransform(state.points)
+                           .toDict());
     } else {
         state.transform = {
             'type': '',

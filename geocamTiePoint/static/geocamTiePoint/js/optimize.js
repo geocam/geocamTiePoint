@@ -355,10 +355,11 @@ if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
         xicom = [];
 
         //matrix of unit vectors
-        var xi = new Array(p.length);
-        for (var i = 0; i < p.length; i++) {
-            xi[i] = new Array(p.length);
-            for (var j = 0; j < p.length; j++) {
+        var n = x0.length;
+        var xi = new Array(n);
+        for (var i = 0; i < n; i++) {
+            xi[i] = new Array(n);
+            for (var j = 0; j < n; j++) {
                 if (i == j) {
                     xi[i][j] = 1;
                 } else {
@@ -366,7 +367,7 @@ if (! window.geocamTiePoint) { window.geocamTiePoint = {}; }
                 }
             }
         }
-        var xiM = new Matrix(p.length, p.length, xi);
+        var xiM = new Matrix(n, n, xi);
         var ftol = 0.001;
 
         return powell(fun, x0, xiM, ftol, ncom, pcom, xicom);

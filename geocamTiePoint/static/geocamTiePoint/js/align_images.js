@@ -133,9 +133,19 @@ function calculateAlignmentModel(points)
         var USE_QUADRATIC = true;
         if (USE_QUADRATIC && (numTiePts >= 7)) {
             // 12-parameter quadratic
+            /* old QuadraticTransform
             p = [0, 0, a[0], a[1], a[2],
                  0, 0, a[3], a[4], a[5],
                  0, 0];
+            */
+
+            /* QuadraticTransform2. The first 8 parameters are the first
+               8 entries of a projective matrix and the last 4 are quadratic
+               terms. */
+            p = [a[0], a[1], a[2],
+                 a[3], a[4], a[5],
+                 0, 0,
+                 0, 0, 0, 0];
         } else if (numTiePts >= 5) {
             // 8-parameter projective
             p = a.concat([0, 0]);
