@@ -45,7 +45,7 @@ def numericalJacobian(f):
         result = numpy.zeros((n, k))
         for i in xrange(k):
             xp = x.copy()
-            eps = 1e-7 + 1e-7 * x[i]
+            eps = 1e-7 + abs(1e-7 * x[i])
             xp[i] += eps
             yp = f(xp)
             result[:, i] = (yp - y) / eps
@@ -114,9 +114,9 @@ def lm(y, f, x0,
 
         J = jacobian(x)
 
-        delJ = -1.0 * Rinv * (J.transpose() * error)
+        delJ = -1.0 * Rinv * J.transpose().dot(error)
         # Hessian of cost function (using Gauss-Newton approximation)
-        hessian = Rinv * (J.transpose() * J)
+        hessian = Rinv * J.transpose().dot(J)
 
         iterations = 0
         normTry = normStart + 1.0
@@ -129,7 +129,13 @@ def lm(y, f, x0,
 
             # Solve for update
             soln, _residues, _rank, _sngVal = numpy.linalg.lstsq(hessianLm, delJ)
-            deltaX = soln.diagonal()
+            deltaX = soln
+            logging.warning('J=%s', J)
+            logging.warning('hessianLm=%s', hessianLm)
+            logging.warning('deltaX=%s', deltaX)
+            logging.warning('delJ=%s', delJ)
+            logging.warning('delJApprox=%s', hessianLm.dot(deltaX))
+            logging.warning('sngVal=%s', _sngVal)
 
             # update parameter vector
             xTry = x - deltaX

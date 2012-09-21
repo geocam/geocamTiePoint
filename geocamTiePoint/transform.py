@@ -263,6 +263,8 @@ class QuadraticTransform(Transform):
 
 
 class QuadraticTransform2(Transform):
+    SCALE = 1e+7
+
     def __init__(self, matrix, quadraticTerms):
         self.matrix = matrix
         self.quadraticTerms = quadraticTerms
@@ -281,6 +283,10 @@ class QuadraticTransform2(Transform):
         r = p + c * q * q
         s = q + d * r * r
 
+        # correct for pre-conditioning
+        r = r * self.SCALE
+        s = s * self.SCALE
+
         return [r, s]
 
     def reverse(self, vlist):
@@ -290,6 +296,11 @@ class QuadraticTransform2(Transform):
         v = numpy.array(list(vlist) + [1])
 
         r, s = v[:2]
+
+        # correct for pre-conditioning
+        r = r / self.SCALE
+        s = s / self.SCALE
+
         a, b, c, d = self.quadraticTerms
 
         q = s - d * r * r
@@ -320,7 +331,9 @@ class QuadraticTransform2(Transform):
 
     @classmethod
     def getInitParams(cls, toPts, fromPts):
-        tmat = AffineTransform.fit(toPts, fromPts).matrix
+        # pre-conditioning by SCALE improves numerical stability
+        tmat = AffineTransform.fit(toPts / self.SCALE,
+                                   fromPts).matrix
         return numpy.append(tmat.flatten()[:8],
                             numpy.zeros(4))
 

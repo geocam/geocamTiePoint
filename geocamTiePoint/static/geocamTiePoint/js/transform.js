@@ -9,162 +9,6 @@ geocamTiePoint.transform = {};
 
 $(function($) {
 
-    function getVMatrixFromPoints(points) {
-        var V = new Matrix(points.length, 2);
-        for (var i = 0; i < points.length; i++) {
-            V.values[0][i] = points[i][0];
-            V.values[1][i] = points[i][1];
-        }
-        return V;
-    }
-
-    function getSimpleUMatrixFromPoints(points) {
-        var U = new Matrix(points.length, 2);
-        for (var i = 0; i < points.length; i++) {
-            U.values[0][i] = points[i][2];
-            U.values[1][i] = points[i][3];
-        }
-        return U;
-    }
-
-    function getProjectiveUMatrixFromPoints(points) {
-        var U = new Matrix(points.length, 3);
-        for (var i = 0; i < points.length; i++) {
-            U.values[0][i] = points[i][2];
-            U.values[1][i] = points[i][3];
-            U.values[2][i] = 1;
-        }
-        return U;
-    }
-
-    function getQuadraticUMatrixFromPoints(points) {
-        var U = new Matrix(points.length, 5);
-        for (var i = 0; i < points.length; i++) {
-            U.values[0][i] = Math.pow(points[i][2], 2);
-            U.values[1][i] = Math.pow(points[i][3], 2);
-            U.values[2][i] = points[i][2];
-            U.values[3][i] = points[i][3];
-            U.values[4][i] = 1;
-        }
-        return U;
-    }
-
-    function getTransform(p) {
-        if (p.length == 4) {
-            var xscale = p[0];
-            var yscale = p[1];
-            var tx = p[2];
-            var ty = p[3];
-            return {
-                type: 'projective',
-                n: 4,
-                params: {
-                    xscale: xscale,
-                    yscale: yscale,
-                    tx: tx,
-                    ty: ty
-                },
-                matrix: [[xscale, 0, tx],
-                         [0, yscale, ty],
-                         [0, 0, 1]]
-            };
-
-        } else if (p.length == 5) {
-            var xscale = p[0];
-            var yscale = p[1];
-            var theta = p[2];
-            var tx = p[3];
-            var ty = p[4];
-            return {
-                type: 'projective',
-                n: 5,
-                params: {
-                    xscale: xscale,
-                    yscale: yscale,
-                    theta: theta,
-                    tx: tx,
-                    ty: ty
-                },
-                matrix: [[Math.cos(theta) * xscale,
-                          -Math.sin(theta) * yscale, tx],
-                         [Math.sin(theta) * xscale,
-                          Math.cos(theta) * yscale, ty],
-                         [0, 0, 1]]
-            };
-
-        } else if (p.length == 6) {
-            return {
-                type: 'projective',
-                n: 6,
-                matrix: [[p[0], p[1], p[2]],
-                         [p[3], p[4], p[5]],
-                         [0, 0, 1]]
-            };
-
-        } else if (p.length == 8) {
-            return {
-                type: 'projective',
-                n: 8,
-                matrix: [[p[0], p[1], p[2]],
-                         [p[3], p[4], p[5]],
-                         [p[6], p[7], 1]]
-            };
-
-        } else if (p.length == 12) {
-            /*
-              return {
-              type: 'quadratic',
-              n: 12,
-              matrix: [[p[0], p[1], p[2], p[3], p[4]],
-              [p[5], p[6], p[7], p[8], p[9]],
-              [0, 0, p[10], p[11], 1]]
-              };*/
-            return {
-                type: 'quadratic2',
-                n: 12,
-                matrix: [[p[0], p[1], p[2]],
-                         [p[3], p[4], p[5]],
-                         [p[6], p[7], 1]],
-                quadraticTerms: [p[8], p[9], p[10], p[11]]
-            };
-
-        } else {
-            throw 'error in getTransform: wrong number of parameters!';
-        }
-    }
-
-    function applyMatrixAndRescale(matrix, U) {
-        var height = matrix.length;
-        var width = matrix[0].length;
-        var T = new Matrix(width, height, matrix);
-
-        /*
-          console.log(width);
-          console.log(height);
-          console.log('T: ' + JSON.stringify(T));
-        */
-
-        var Vapprox0 = T.multiply(U);
-
-        // projective rescale and truncate the bottom row
-        var n = U.w;
-        var Vapprox = new Matrix(n, 2);
-        for (var i = 0; i < n; i++) {
-            var z = Vapprox0.values[2][i];
-            Vapprox.values[0][i] = Vapprox0.values[0][i] / z;
-            Vapprox.values[1][i] = Vapprox0.values[1][i] / z;
-        }
-
-        /*
-          console.log('U: ' + JSON.stringify(U));
-          console.log('T: ' + JSON.stringify(T));
-          console.log('Vapprox0: ' + JSON.stringify(Vapprox0));
-          console.log('Vapprox: ' + JSON.stringify(Vapprox));
-        */
-
-        return Vapprox;
-    }
-
     function matrixFromNestedList(nestedList) {
         var height = nestedList.length;
         var width = nestedList[0].length;
@@ -179,7 +23,7 @@ $(function($) {
     }
 
     function quadraticColumnVectorFromPt(pt) {
-        return new Matrix(1, 3,
+        return new Matrix(1, 5,
                           [[pt[0] * pt[0]],
                            [pt[1] * pt[1]],
                            [pt[0]],
@@ -193,7 +37,7 @@ $(function($) {
                 v.values[1][0] / z];
     }
 
-    function forwardPts(tform, fromPts) {
+    function forwardPoints(tform, fromPts) {
         var toPts = new Matrix(fromPts.w, fromPts.h);
         var n = fromPts.w;
         for (var i = 0; i < n; i++) {
@@ -214,14 +58,17 @@ $(function($) {
     }
 
     function leastSquares(y, f, x0) {
+        /*
         function residuals(x) {
             var err = y.subtract(f(x)).meanNorm();
-            // console.log(JSON.stringify(x));
+            console.log(err);
             return err;
         }
         return (geocamTiePoint
                 .minimize(residuals, x0)
-                .finalParams);
+                .finalParams);*/
+        var result = geocamTiePoint.optimize.lm(y, f, x0);
+        return result[0];
     }
 
     function splitPoints(points) {
@@ -237,26 +84,37 @@ $(function($) {
         return [toPts, fromPts];
     }
 
+    /**********************************************************************
+     * Transform
+     **********************************************************************/
+
     function Transform() {}
 
     Transform.fit = function(cls, toPts, fromPts) {
         var params0 = cls.getInitParams(toPts, fromPts);
+        console.log(params0);
         var params = (leastSquares
-                      (toPts,
+                      (toPts.flatten(),
                        function(params) {
-                           return forwardPts(cls.fromParams(params), fromPts);
+                           return (forwardPoints(cls.fromParams(params),
+                                                 fromPts)
+                                   .flatten());
                        },
                        params0));
         return params;
     };
+
+    /**********************************************************************
+     * LinearTransform
+     **********************************************************************/
 
     function LinearTransform(matrix) {
         this.matrix = matrix;
     }
 
     LinearTransform.prototype = $.extend(true,
-                                         Transform.prototype,
-                                         {});
+                                         {},
+                                         Transform.prototype);
 
     LinearTransform.prototype.forward = function(pt) {
         var u = columnVectorFromPt(pt);
@@ -266,18 +124,22 @@ $(function($) {
 
     LinearTransform.prototype.toDict = function() {
         return {
-            type: "projective",
+            type: 'projective',
             matrix: this.matrix.values
         };
     };
+
+    /**********************************************************************
+     * AffineTransform
+     **********************************************************************/
 
     function AffineTransform(matrix) {
         this.matrix = matrix;
     }
 
     AffineTransform.prototype = $.extend(true,
-                                         LinearTransform.prototype,
-                                         {});
+                                         {},
+                                         LinearTransform.prototype);
 
     AffineTransform.fit = function(cls, toPts, fromPts) {
         var n = toPts.w;
@@ -311,14 +173,18 @@ $(function($) {
         return new AffineTransform(matrix);
     };
 
+    /**********************************************************************
+     * RotateScaleTranslateTransform
+     **********************************************************************/
+
     function RotateScaleTranslateTransform(matrix) {
         this.matrix = matrix;
     }
 
     (RotateScaleTranslateTransform.prototype =
      $.extend(true,
-              LinearTransform.prototype,
-              {}));
+              {},
+              LinearTransform.prototype));
 
     RotateScaleTranslateTransform.fromDict = function(transformDict) {
         var matrix = matrixFromNestedList(transformDict.matrix);
@@ -362,13 +228,17 @@ $(function($) {
 
     RotateScaleTranslateTransform.fit = Transform.fit;
 
+    /**********************************************************************
+     * ProjectiveTransform
+     **********************************************************************/
+
     function ProjectiveTransform(matrix) {
         this.matrix = matrix;
     }
 
     ProjectiveTransform.prototype = $.extend(true,
-                                             LinearTransform.prototype,
-                                             {});
+                                             {},
+                                             LinearTransform.prototype);
 
     ProjectiveTransform.fromDict = function(transformDict) {
         var matrix = matrixFromNestedList(transformDict.matrix);
@@ -390,14 +260,65 @@ $(function($) {
 
     ProjectiveTransform.fit = Transform.fit;
 
+    /**********************************************************************
+     * QuadraticTransform
+     **********************************************************************/
+
+    function QuadraticTransform(matrix) {
+        this.matrix = matrix;
+    }
+
+    QuadraticTransform.prototype = $.extend(true,
+                                            {},
+                                            Transform.prototype);
+
+    QuadraticTransform.fromDict = function(transformDict) {
+        var matrix = matrixFromNestedList(transformDict.matrix);
+        return new QuadraticTransform(matrix);
+    };
+
+    QuadraticTransform.fromParams = function(p) {
+        var matrix = new Matrix(5, 3,
+                                [[p[0], p[1], p[2], p[3], p[4]],
+                                 [p[5], p[6], p[7], p[8], p[9]],
+                                 [0, 0, p[10], p[11], 1]]);
+        return new QuadraticTransform(matrix);
+    };
+
+    QuadraticTransform.getInitParams = function(toPts, fromPts) {
+        var p = AffineTransform.fit(AffineTransform, toPts, fromPts);
+        return [0, 0, p[0], p[1], p[2],
+                0, 0, p[3], p[4], p[5],
+                0, 0];
+    };
+
+    QuadraticTransform.fit = Transform.fit;
+
+    QuadraticTransform.prototype.forward = function(pt) {
+        var u = quadraticColumnVectorFromPt(pt);
+        var v = this.matrix.multiply(u);
+        return ptFromColumnVector(v);
+    };
+
+    QuadraticTransform.prototype.toDict = function() {
+        return {
+            type: 'quadratic',
+            matrix: this.matrix.values
+        };
+    };
+
+    /**********************************************************************
+     * QuadraticTransform2
+     **********************************************************************/
+
     function QuadraticTransform2(matrix, quadraticTerms) {
         this.matrix = matrix;
         this.quadraticTerms = quadraticTerms;
     }
 
     QuadraticTransform2.prototype = $.extend(true,
-                                             Transform.prototype,
-                                             {});
+                                             {},
+                                             Transform.prototype);
 
     QuadraticTransform2.fromDict = function(transformDict) {
         var matrix = matrixFromNestedList(transformDict.matrix);
@@ -414,12 +335,34 @@ $(function($) {
         return new QuadraticTransform2(matrix, quadraticTerms);
     };
 
+    var SCALE = 1e+7;
+
     QuadraticTransform2.getInitParams = function(toPts, fromPts) {
-        var p = AffineTransform.fit(AffineTransform, toPts, fromPts);
+        // pre-conditioning by SCALE helps our crappy linear least-squares solver
+        var toPtsConditioned = toPts.multiply(1.0 / SCALE);
+        var p = AffineTransform.fit(AffineTransform, toPtsConditioned, fromPts);
         return p.concat([0, 0, 0, 0, 0, 0]);
     };
 
     QuadraticTransform2.fit = Transform.fit;
+    /*
+    QuadraticTransform2.fit = function(cls, toPts, fromPts) {
+        var pc = Transform.fit(cls, toPts, fromPts);
+        // correct for pre-conditioning
+        return [pc[0] * SCALE,
+                pc[1] * SCALE,
+                pc[2] * SCALE,
+                pc[3] * SCALE,
+                pc[4] * SCALE,
+                pc[5] * SCALE,
+                pc[6] * SCALE,
+                pc[7] * SCALE,
+                pc[8] / SCALE,
+                pc[9] / SCALE,
+                pc[10] / SCALE,
+                pc[11] / SCALE];
+    };
+    */
 
     QuadraticTransform2.prototype.forward = function(pt) {
         var u = columnVectorFromPt(pt);
@@ -439,65 +382,24 @@ $(function($) {
         var r = p + c * q * q;
         var s = q + d * r * r;
 
+        // correct for pre-conditioning
+        r = r * SCALE;
+        s = s * SCALE;
+
         return [r, s];
     };
 
     QuadraticTransform2.prototype.toDict = function() {
         return {
-            type: "quadratic2",
+            type: 'quadratic2',
             matrix: this.matrix.values,
             quadraticTerms: this.quadraticTerms
         };
     };
 
-    function applyProjectiveTransform(tform, points) {
-        var U = getProjectiveUMatrixFromPoints(points);
-        return applyMatrixAndRescale(tform.matrix, U);
-    }
-
-    function applyQuadraticTransform(tform, points) {
-        var U = getQuadraticUMatrixFromPoints(points);
-        return applyMatrixAndRescale(tform.matrix, U);
-    }
-
-    function applyQuadraticTransform2(tform, points) {
-        var U = getProjectiveUMatrixFromPoints(points);
-        var V0 = applyMatrixAndRescale(tform.matrix, U);
-
-        var a = tform.quadraticTerms[0];
-        var b = tform.quadraticTerms[1];
-        var c = tform.quadraticTerms[2];
-        var d = tform.quadraticTerms[3];
-
-        var n = points.length;
-        var V = new Matrix(n, 2);
-        for (var i = 0; i < n; i++) {
-            var x = V0.values[0][i];
-            var y = V0.values[1][i];
-
-            var p = x + a * x * x;
-            var q = y + b * y * y;
-            var r = p + c * q * q;
-            var s = q + d * r * r;
-
-            V.values[0][i] = r;
-            V.values[1][i] = s;
-        }
-
-        return V;
-    }
-
-    function applyTransform(tform, points) {
-        if (tform.type == 'projective') {
-            return applyProjectiveTransform(tform, points);
-        } else if (tform.type == 'quadratic') {
-            return applyQuadraticTransform(tform, points);
-        } else if (tform.type == 'quadratic2') {
-            return applyQuadraticTransform2(tform, points);
-        } else {
-            throw 'unknown transform type ' + tform.type;
-        }
-    }
+    /**********************************************************************
+     * top-level functions
+     **********************************************************************/
 
     function getTransformClass(n) {
         if (n < 2) {
@@ -510,6 +412,8 @@ $(function($) {
             return ProjectiveTransform;
         } else {
             return QuadraticTransform2;
+            // return QuadraticTransform;
+            // return ProjectiveTransform;
         }
     }
 
@@ -527,7 +431,13 @@ $(function($) {
         return getTransform0(toPts, fromPts);
     }
 
-    // exports
+    /**********************************************************************
+     * exports
+     **********************************************************************/
+
     var ns = geocamTiePoint.transform;
+
     ns.getTransform = getTransform;
+    ns.splitPoints = splitPoints;
+    ns.forwardPoints = forwardPoints;
 });
