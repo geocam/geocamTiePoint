@@ -6,6 +6,9 @@
 
 import os
 import json
+import logging
+import time
+import rfc822
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -15,18 +18,19 @@ import PIL.Image
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
-from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseNotAllowed, Http404
 from django.template import RequestContext
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.core.urlresolvers import reverse
-from django.views.decorators.cache import cache_page
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
-from geocamTiePoint import quadTree
+from geocamTiePoint import quadTree, transform
 from geocamTiePoint import anypdf as pdf
 
 if settings.USING_APP_ENGINE:
@@ -45,21 +49,20 @@ PDF_MIME_TYPES = ('application/pdf',
                   )
 
 
-def transparentPngResponse():
-    return HttpResponse(TRANSPARENT_PNG_BINARY, content_type='image/png')
+def transparentPngData():
+    return (TRANSPARENT_PNG_BINARY, 'image/png')
 
 
 def dumps(obj):
     return json.dumps(obj, sort_keys=True, indent=4)
 
+
 def export_settings(export_vars=None):
     if export_vars == None:
-        export_vars = (
-            'GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
-            'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',
-        )
-    return dumps( dict([(k, getattr(settings, k)) for k in export_vars]) )
-    
+        export_vars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
+                       'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',
+                       )
+    return dumps(dict([(k, getattr(settings, k)) for k in export_vars]))
 
 
 def ember(request):
@@ -69,12 +72,13 @@ def ember(request):
     else:
         return HttpResponseNotAllowed(['GET'])
 
+
 def backbone(request):
-    initial_overlays = Overlay.objects.order_by('pk');
+    initial_overlays = Overlay.objects.order_by('pk')
     if request.method == 'GET':
-        return render_to_response('geocamTiePoint/backbone.html', 
+        return render_to_response('geocamTiePoint/backbone.html',
             {
-                'initial_overlays_json': dumps( list(o.jsonDict for o in initial_overlays) ) if initial_overlays else [],
+                'initial_overlays_json': dumps(list(o.jsonDict for o in initial_overlays)) if initial_overlays else [],
                 'settings': export_settings(),
             },
             context_instance=RequestContext(request))
@@ -218,16 +222,18 @@ def overlayIdJson(request, key):
         if transformDict:
             overlay.extras.bounds = (quadTree.imageMapBounds
                                      (overlay.extras.imageSize,
-                                      quadTree.makeTransform(transformDict)))
+                                      transform.makeTransform(transformDict)))
         overlay.save()
         return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET', 'POST'])
 
+
 @csrf_exempt
 def overlayListJson(request):
     overlays = Overlay.objects.all()
-    return HttpResponse(dumps( list(o.jsonDict for o in overlays) ), content_type='application/json')
+    return HttpResponse(dumps(list(o.jsonDict for o in overlays)), content_type='application/json')
+
 
 @csrf_exempt
 def overlayIdWarp(request, key):
@@ -252,21 +258,75 @@ def overlayIdImageFileName(request, key, fileName):
         return HttpResponseNotAllowed(['GET'])
 
 
-@cache_page(3600 * 24 * 365)
+def getTileData(quadTreeId, zoom, x, y):
+    qt = get_object_or_404(QuadTree, id=quadTreeId)
+    gen = qt.getGeneratorWithCache()
+    try:
+        return gen.getTileData(zoom, x, y)
+    except quadTree.ZoomTooBig:
+        return transparentPngData()
+    except quadTree.OutOfBounds:
+        return transparentPngData()
+
+
+def neverExpires(response):
+    """
+    Manually sets the HTTP 'Expires' header one year in the
+    future. Normally the Django cache middleware handles this, but we
+    are directly using the low-level cache API.
+
+    Empirically, this *hugely* reduces the number of requests from the
+    Google Maps API. One example is that zooming out one level stupidly
+    loads all the tiles in the new zoom level twice if tiles immediately
+    expire.
+    """
+    response['Expires'] = rfc822.formatdate(time.time() + 365 * 24 * 60 * 60)
+    return response
+
+
 def getTile(request, quadTreeId, zoom, x, y):
     quadTreeId = int(quadTreeId)
     zoom = int(zoom)
     x = int(x)
     y = int(os.path.splitext(y)[0])
 
-    qt = get_object_or_404(QuadTree, id=quadTreeId)
-    gen = qt.getGenerator()
-    try:
-        return gen.getTileResponse(zoom, x, y)
-    except quadTree.ZoomTooBig:
-        return transparentPngResponse()
-    except quadTree.OutOfBounds:
-        return transparentPngResponse()
+    key = quadTree.getTileCacheKey(quadTreeId, zoom, x, y)
+    data = cache.get(key)
+    if data is None:
+        logging.info('\ngetTile MISS %s\n', key)
+        data = getTileData(quadTreeId, zoom, x, y)
+        cache.set(key, data)
+    else:
+        logging.info('getTile hit %s', key)
+
+    bits, contentType = data
+    response = HttpResponse(bits, content_type=contentType)
+    return neverExpires(response)
+
+
+def getPublicTile(request, quadTreeId, zoom, x, y):
+    cacheKey = 'geocamTiePoint.QuadTree.isPublic.%s' % quadTreeId
+    quadTreeIsPublic = cache.get(cacheKey)
+    if quadTreeIsPublic is None:
+        logging.info('getPublicTile MISS %s' % cacheKey)
+        try:
+            quadTree = QuadTree.objects.get(id=quadTreeId)
+            overlay = quadTree.alignedOverlays.get()
+        except ObjectDoesNotExist:
+            overlay = None
+        if overlay:
+            quadTreeIsPublic = overlay.isPublic
+        else:
+            quadTreeIsPublic = False
+        cache.set(cacheKey, quadTreeIsPublic, 60)
+    else:
+        logging.info('getPublicTile hit %s' % cacheKey)
+
+    if quadTreeIsPublic:
+        return getTile(request, quadTreeId, zoom, x, y)
+    else:
+        return HttpResponseNotFound('QuadTree %s does not exist or is not public'
+                                    % quadTreeId)
 
 
 def dummyView(*args, **kwargs):

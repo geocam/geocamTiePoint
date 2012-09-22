@@ -34,9 +34,9 @@ function sendExportRequest() {
                           ('.json', '/generateZip'));
     ($.post(generateZipUrl,
             '', /* empty post data */
-            function() {}, /* no-op on success */ 
+            function() {}, /* no-op on success */
             'json')
-     .error(function (xhr, status, error) {
+     .error(function(xhr, status, error) {
          $('#exportError').html('Error during export: ' + error);
          renderExportButton();
          cancelPollForExportComplete();
@@ -44,7 +44,7 @@ function sendExportRequest() {
 }
 
 function checkForExportComplete() {
-    $.getJSON(overlay.url, function (response) {
+    $.getJSON(overlay.url, function(response) {
         overlay = response;
         if (overlay.exportZipUrl) {
             renderDownloadLink();
@@ -56,12 +56,14 @@ function checkForExportComplete() {
 function pollForExportComplete0() {
     checkForExportComplete();
     exportCompleteTimeoutG *= 1.5;
-    exportCompleteTimerG = setTimeout(pollForExportComplete0, exportCompleteTimeoutG);
+    exportCompleteTimerG = setTimeout(pollForExportComplete0,
+                                      exportCompleteTimeoutG);
 }
 
 function pollForExportComplete() {
     exportCompleteTimeoutG = 1000;
-    exportCompleteTimerG = setTimeout(pollForExportComplete0, exportCompleteTimeoutG);
+    exportCompleteTimerG = setTimeout(pollForExportComplete0,
+                                      exportCompleteTimeoutG);
 }
 
 function cancelPollForExportComplete() {

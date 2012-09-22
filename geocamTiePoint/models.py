@@ -10,6 +10,7 @@
 import os
 import datetime
 import re
+import logging
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -25,7 +26,16 @@ from django.core.files.base import ContentFile
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 
-from geocamTiePoint import quadTree, settings
+from geocamTiePoint import quadTree, transform, settings
+
+
+# poor man's local memory cache for one quadtree tile generator. a
+# common access pattern is that the same instance of the app gets
+# multiple tile requests on the same quadtree. optimize for that case by
+# keeping the generator in memory. note: an alternative approach would
+# use the memcached cache, but that would get rid of much of the benefit
+# in terms of serialization/deserialization.
+cachedGeneratorG = {'key': None, 'value': None}
 
 
 def getNewImageFileName(instance, filename):
@@ -115,19 +125,41 @@ class QuadTree(models.Model):
             self.imageData.contentType = 'image/png'
             self.imageData.save()
 
+    def getImage(self):
+        im = PIL.Image.open(self.imageData.image.file)
+        self.convertImageToRgbaIfNeeded(im)
+        return im
+
+    def getGeneratorCacheKey(self):
+        return 'geocamTiePoint.QuadTreeGenerator.%s' % self.id
+
+    def getGeneratorWithCache(self):
+        global cachedGeneratorG
+        cachedGeneratorCopy = cachedGeneratorG
+        key = self.getGeneratorCacheKey()
+        if cachedGeneratorCopy['key'] == key:
+            logging.debug('getGeneratorWithCache hit %s', key)
+            result = cachedGeneratorCopy['value']
+        else:
+            logging.debug('getGeneratorWithCache miss %s', key)
+            result = self.getGenerator()
+            cachedGeneratorG = dict(key=key, value=result)
+        return result
+
     def getGenerator(self):
-        image = PIL.Image.open(self.imageData.image.file)
-        self.convertImageToRgbaIfNeeded(image)
+        image = self.getImage()
 
         if self.transform:
             return (quadTree.WarpedQuadTreeGenerator
-                    (image,
+                    (self.id,
+                     image,
                      json.loads(self.transform)))
         else:
-            return quadTree.SimpleQuadTreeGenerator(image)
+            return quadTree.SimpleQuadTreeGenerator(self.id,
+                                                    image)
 
     def generateExportZip(self, exportName, metaJson):
-        gen = self.getGenerator()
+        gen = self.getGeneratorWithCache()
         writer = quadTree.ZipWriter(exportName)
         gen.writeQuadTree(writer)
         writer.writeData('meta.json', dumps(metaJson))
@@ -152,6 +184,7 @@ class Overlay(models.Model):
     alignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
                                         related_name='alignedOverlays',
                                         on_delete=models.SET_NULL)
+    isPublic = models.BooleanField(default=False)
 
     # extras: a special JSON-format field that holds additional
     # schema-free fields in the overlay model. Members of the field can
@@ -190,7 +223,11 @@ class Overlay(models.Model):
                                                         '[Y].jpg'])
             result['unalignedTilesZoomOffset'] = quadTree.ZOOM_OFFSET
         if self.alignedQuadTree is not None:
-            result['alignedTilesUrl'] = reverse('geocamTiePoint_tile',
+            if self.isPublic:
+                urlName = 'geocamTiePoint_publicTile'
+            else:
+                urlName = 'geocamTiePoint_tile'
+            result['alignedTilesUrl'] = reverse(urlName,
                                                 args=[str(self.alignedQuadTree.id),
                                                       '[ZOOM]',
                                                       '[X]',
@@ -264,3 +301,8 @@ class Overlay(models.Model):
          (self.getExportName(),
           self.getJsonDict()))
         return self.alignedQuadTree.exportZip
+
+    def updateAlignment(self):
+        toPts, fromPts = transform.splitPoints(self.extras.points)
+        tform = transform.getTransform(toPts, fromPts)
+        self.extras.transform = tform.getJsonDict()

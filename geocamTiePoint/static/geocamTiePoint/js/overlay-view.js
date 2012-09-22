@@ -295,7 +295,9 @@ function save(serverState) {
 
     // solve for the transform
     if (imageCoordsG.length) {
-        state.transform = calculateAlignmentModel(state.points);
+        state.transform = (geocamTiePoint.transform
+                           .getTransform(state.points)
+                           .toDict());
     } else {
         state.transform = {
             'type': '',
@@ -450,25 +452,30 @@ function setState(state) {
 }
 
 function debugFit() {
-    var U = getProjectiveUMatrixFromPoints(overlay.points);
-    var T = new Matrix(3, 3, overlay.transform.matrix);
-    var V = getVMatrixFromPoints(overlay.points);
-    var Vapprox = applyTransform(overlay.transform, overlay.points);
-    var Verror = Vapprox.subtract(V);
-    console.log('U:\n' + U.toString());
-    console.log('T:\n' + T.toString());
-    console.log('V:\n' + V.toString());
-    console.log('Vapprox:\n' + Vapprox.toString());
-    console.log('Verror:\n' + Verror.toString());
+    var transform = geocamTiePoint.transform;
+    var spl = transform.splitPoints(overlay.points);
+    var toPts = spl[0];
+    var fromPts = spl[1];
+    var tform = transform.getTransform(overlay.points);
+    var toPtsApprox = transform.forwardPoints(tform, fromPts);
+    var diff = toPtsApprox.subtract(toPts);
+    console.log('tform:\n' + JSON.stringify(tform));
+    console.log('toPts:\n' + toPts.toString());
+    console.log('toPtsApprox:\n' + toPtsApprox.toString());
+    console.log('diff:\n' + diff.toString());
+    console.log('err:' + diff.meanNorm());
 
     var greenIcon = (new google.maps.MarkerImage
                      ('http://maps.google.com/mapfiles/ms/icons/green.png'));
     var n = overlay.points.length;
     for (var i = 0; i < n; i++) {
-        var meterCoords = {x: Vapprox.values[0][i], y: Vapprox.values[1][i]};
-        console.log(meterCoords);
+        var meterCoords = {
+            x: toPtsApprox.values[0][i],
+            y: toPtsApprox.values[1][i]
+        };
+        console.log(JSON.stringify(meterCoords));
         var latlng = metersToLatLon(meterCoords);
-        console.log(latlng);
+        console.log(JSON.stringify(latlng));
         var markerOpts = {
             title: '' + (i + 1),
             draggable: true,
@@ -483,3 +490,4 @@ function debugFit() {
     }
 
 }
+

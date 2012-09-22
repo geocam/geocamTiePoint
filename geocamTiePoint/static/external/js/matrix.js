@@ -32,6 +32,14 @@ Matrix.cloneValues = function (values) {
   return clone; 
 }
 
+Matrix.columnVectorFromList = function (lst) {
+    var result = new Matrix(1, lst.length);
+    for (var i = 0; i < lst.length; ++i) {
+        result.values[i][0] = lst[i];
+    }
+    return result;
+}
+
 Matrix.prototype.add = function (operand) {
   if (operand.w != this.w || operand.h != this.h) {
     throw "Matrix add size mismatch";
@@ -304,4 +312,24 @@ Matrix.prototype.transpose = function () {
         }
     }
     return new Matrix(this.h, this.w, values);
+}
+
+Matrix.prototype.tolist = function () {
+    var result = [];
+    for (var y = 0; y < this.h; ++y) {
+        for (var x = 0; x < this.w; ++x) {
+            result.push(this.values[y][x]);
+        }
+    }
+    return result;
+}
+
+Matrix.prototype.flatten = function () {
+    var result = new Matrix(1, this.w * this.h);
+    for (var y = 0; y < this.h; ++y) {
+        for (var x = 0; x < this.w; ++x) {
+            result.values[y * this.w + x][0] = this.values[y][x];
+        }
+    }
+    return result;
 }

@@ -22,9 +22,9 @@ function fillTemplate(tmpl, fields) {
 
 // Convenient assertions.  Nice for debugging.
 function AssertException(message) { this.message = message; }
-AssertException.prototype.toString = function () {
+AssertException.prototype.toString = function() {
   return 'AssertException: ' + this.message;
-}
+};
 function assert(exp, message) {
   if (!exp) {
     throw new AssertException(message);
@@ -33,13 +33,13 @@ function assert(exp, message) {
 
 if (window.Handlebars != undefined) {
     // helper for debugging handlebars templates.
-    Handlebars.registerHelper("debug", function(optionalValue) {
-        console.log("Current Context");
-        console.log("====================");
+    Handlebars.registerHelper('debug', function(optionalValue) {
+        console.log('Current Context');
+        console.log('====================');
         console.log(this);
         if (optionalValue) {
-            console.log("Value");
-            console.log("====================");
+            console.log('Value');
+            console.log('====================');
             console.log(optionalValue);
         }
     });
