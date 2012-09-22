@@ -69,7 +69,7 @@ $( function( $ ) {
             var mouseDown = null;
 
             function enhance() {
-                console.log('ENHANCE.');
+                console.log('ENHANCE!');
                 originalZoom = view.gmap.getZoom();
                 var targetZoom = Math.max(originalZoom + zoomFactor, view.model.maxZoom() );
                 //var targetZoom = view.model.maxZoom();
@@ -284,13 +284,71 @@ $( function( $ ) {
                        _.each(views, function(_view){
                            _.each(_view.markers, function(_marker, _index) {
                                _marker.set('selected', _index === index );
-                            });
-                        });
+                           });
+                       });
                     });
                 });
             });
         },
     
+    });
+
+    app.views.NewOverlayView = app.views.View.extend({
+
+	template: '<form encytype="multipart/form-data" id="newOverlayForm"><input type="image" name="file" id="newOverlayFile" /><input type="submit" value="Submit" />'+window.csrf_token+'</form>',
+
+	afterRender: function() {
+	    this.$('form#newOverlayForm').submit(this.submitForm);
+	},
+
+        getCookie: function(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = $.trim(cookies[i]);
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        },
+
+	submitForm: function() {
+	    console.log("Submiting new overlay form");
+	    var data = new FormData();
+	    $.each(this.$('input#newOverlayFile')[0].files, function(i, file) {
+		data.append('image', file);
+	    });
+            var csrftoken = this.getCookie('csrftoken');
+	    $.ajax({
+		url: 'overlay/new.html',
+                crossDomain: false,
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type)) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+		data: data,
+		cache: false,
+		contentType: false,
+		processData: false,
+		type: 'POST',
+		success: this.submitSuccess
+	    });
+	},
+
+	submitSuccess: function(data) {
+            try {
+	        var json = JSON.parse(data);
+            } catch (error) {
+                console.log('Failed to parse response as JSON: ' + error.message);
+                return;
+            }
+            app.router.navigate('overlay/'+json['id']);
+        }
     });
 
 });

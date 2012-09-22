@@ -152,6 +152,13 @@ def overlayNew(request):
             # generate initial quad tree
             overlay.generateUnalignedQuadTree()
 
+            # check to see if the client was ajax, in which case
+            # we respond with json
+            if request.is_ajax():
+                data = {'status': 'success', 'id': overlay.key}
+                return HttpResponse(json.dumps(data))
+
+            # otherwise respond with a normal page.
             return render_to_response('geocamTiePoint/new-overlay-result.html',
                                       {'status': 'success',
                                        'id': overlay.key},

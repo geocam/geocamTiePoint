@@ -25,6 +25,11 @@ $(function ($) {
             view.render();
         },
 
+	newOverlay: function() {
+	    console.log('Routed to newOveraly');
+	    var view = new apps.views.NewOverlayView();
+	    view.render();
+	},
 
         start: function(){
             Backbone.history.start();
