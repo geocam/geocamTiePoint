@@ -129,17 +129,22 @@ def overlayNew(request):
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
-                image = PIL.Image.open(imageRef.file)
+                bits = imageRef.file.read()
+                image = PIL.Image.open(StringIO(bits))
                 if image.mode != 'RGBA':
                     # add alpha channel to image for better
                     # transparency handling later
                     image = image.convert('RGBA')
                     out = StringIO()
                     image.save(out, format='png')
-                    imageData.image.save('dummy.png', ContentFile(out.getvalue()), save=False)
+                    convertedBits = out.getvalue()
+                    logging.info('converted image to RGBA, output length %s bytes'
+                                 % len(bits))
+                    imageData.image.save('dummy.png', ContentFile(convertedBits),
+                                         save=False)
                     imageData.contentType = 'image/png'
                 else:
-                    imageData.image = imageRef
+                    imageData.image.save('dummy.png', ContentFile(bits), save=False)
                     imageData.contentType = imageRef.content_type
             imageData.save()
 
@@ -252,8 +257,7 @@ def overlayIdImageFileName(request, key, fileName):
 
 
 def getTileData(quadTreeId, zoom, x, y):
-    qt = get_object_or_404(QuadTree, id=quadTreeId)
-    gen = qt.getGeneratorWithCache()
+    gen = QuadTree.getGeneratorWithCache(quadTreeId)
     try:
         return gen.getTileData(zoom, x, y)
     except quadTree.ZoomTooBig:
