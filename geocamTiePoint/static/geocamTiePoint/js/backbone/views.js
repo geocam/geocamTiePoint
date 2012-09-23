@@ -38,6 +38,7 @@ $(function($) {
 
     app.views.ListOverlaysView = app.views.View.extend({
         template: '<h1>Choose an overlay:</h1>' +
+            '<a href="#overlay/new">New Overlay</a>' +
             '{{debug}}' +
             '<ul>' +
             '{{#each overlays }}' +

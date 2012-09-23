@@ -5,6 +5,7 @@ $(function($) {
         routes: {
             'overlays/': 'listOverlays',
             'overlay/:overlay_id': 'showOverlay',
+            'overlay/new': 'newOverlay',
             '': 'root'
         },
 
