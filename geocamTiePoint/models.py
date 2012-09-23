@@ -22,6 +22,7 @@ from django.db import models
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
+from django.shortcuts import get_object_or_404
 
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
@@ -126,23 +127,33 @@ class QuadTree(models.Model):
             self.imageData.save()
 
     def getImage(self):
-        im = PIL.Image.open(self.imageData.image.file)
+        # apparently image.file is not a very good file work-alike,
+        # so let's delegate to StringIO(), which PIL is tested against
+        bits = self.imageData.image.file.read()
+        logging.info('getImage len=%s header=%s'
+                     % (len(bits), repr(bits[:10])))
+        fakeFile = StringIO(bits)
+
+        im = PIL.Image.open(fakeFile)
         self.convertImageToRgbaIfNeeded(im)
         return im
 
-    def getGeneratorCacheKey(self):
-        return 'geocamTiePoint.QuadTreeGenerator.%s' % self.id
+    @classmethod
+    def getGeneratorCacheKey(cls, quadTreeId):
+        return 'geocamTiePoint.QuadTreeGenerator.%s' % quadTreeId
 
-    def getGeneratorWithCache(self):
+    @classmethod
+    def getGeneratorWithCache(cls, quadTreeId):
         global cachedGeneratorG
         cachedGeneratorCopy = cachedGeneratorG
-        key = self.getGeneratorCacheKey()
+        key = cls.getGeneratorCacheKey(quadTreeId)
         if cachedGeneratorCopy['key'] == key:
             logging.debug('getGeneratorWithCache hit %s', key)
             result = cachedGeneratorCopy['value']
         else:
             logging.debug('getGeneratorWithCache miss %s', key)
-            result = self.getGenerator()
+            quadTree = get_object_or_404(QuadTree, id=quadTreeId)
+            result = quadTree.getGenerator()
             cachedGeneratorG = dict(key=key, value=result)
         return result
 
@@ -159,7 +170,7 @@ class QuadTree(models.Model):
                                                     image)
 
     def generateExportZip(self, exportName, metaJson):
-        gen = self.getGeneratorWithCache()
+        gen = self.getGeneratorWithCache(self.id)
         writer = quadTree.ZipWriter(exportName)
         gen.writeQuadTree(writer)
         writer.writeData('meta.json', dumps(metaJson))
