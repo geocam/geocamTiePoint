@@ -277,7 +277,7 @@ $(function($) {
             var isSelected = function(marker) {
                 return marker.get('selected');
             };
-            if (_.any(this.mapView.markers, isSelected) {
+            if (_.any(this.mapView.markers, isSelected)) {
                 var selected = _.find(this.mapView.markers, isSelected);
                 var idx = _.indexOf(this.mapView.markers, selected);
                 this.mapView.gmap.panTo(this.mapView.markers[idx].position);
