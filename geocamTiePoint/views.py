@@ -115,6 +115,7 @@ def overlayNew(request):
         form = forms.NewImageDataForm(request.POST, request.FILES)
         if form.is_valid():
             # create and save new empty overlay so we can refer to it
+            # this causes a ValueError if the user isn't logged in
             overlay = models.Overlay(author=request.user)
             overlay.save()
 

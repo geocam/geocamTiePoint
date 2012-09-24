@@ -4,8 +4,8 @@ $(function($) {
     var AppRouter = Backbone.Router.extend({
         routes: {
             'overlays/': 'listOverlays',
+	    'overlays/new': 'newOverlay',
             'overlay/:overlay_id': 'showOverlay',
-            'overlay/new': 'newOverlay',
             '': 'root'
         },
 
@@ -28,7 +28,7 @@ $(function($) {
 
 	newOverlay: function() {
 	    console.log('Routed to newOveraly');
-	    var view = new apps.views.NewOverlayView();
+	    var view = new app.views.NewOverlayView();
 	    view.render();
 	},
 
@@ -38,5 +38,5 @@ $(function($) {
     });
 
     app.router = new AppRouter();
-
+    //app.router.start();
 });

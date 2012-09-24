@@ -38,7 +38,7 @@ $(function($) {
 
     app.views.ListOverlaysView = app.views.View.extend({
         template: '<h1>Choose an overlay:</h1>' +
-            '<a href="#overlay/new">New Overlay</a>' +
+            '<a href="#overlays/new">New Overlay</a>' +
             '{{debug}}' +
             '<ul>' +
             '{{#each overlays }}' +
@@ -335,10 +335,15 @@ $(function($) {
 
     app.views.NewOverlayView = app.views.View.extend({
 
-	template: '<form encytype="multipart/form-data" id="newOverlayForm"><input type="image" name="file" id="newOverlayFile" /><input type="submit" value="Submit" />'+window.csrf_token+'</form>',
+	template: '<form encytype="multipart/form-data" id="newOverlayForm">Image: <input type="file" name="file" id="newOverlayFile" /><br><input type="button" value="Submit" id="newOverlayFormSubmitButton" />'+window.csrf_token+'</form>',
+
+	initialize: function() {
+           app.views.View.prototype.initialize.apply(this, arguments);
+           this.context = { overlays: app.overlays.toJSON() };
+        },
 
 	afterRender: function() {
-	    this.$('form#newOverlayForm').submit(this.submitForm);
+	    this.$('input#newOverlayFormSubmitButton').click(this.submitForm);
 	},
 
         getCookie: function(name) {
@@ -356,18 +361,21 @@ $(function($) {
             return cookieValue;
         },
 
+	csrfSafeMethod: function(method) {
+	    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+	},
+
 	submitForm: function() {
-	    console.log("Submiting new overlay form");
 	    var data = new FormData();
-	    $.each(this.$('input#newOverlayFile')[0].files, function(i, file) {
+	    $.each($('input#newOverlayFile')[0].files, function(i, file) {
 		data.append('image', file);
 	    });
-            var csrftoken = this.getCookie('csrftoken');
+            var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
 	    $.ajax({
-		url: 'overlay/new.html',
+		url: '/overlays/new.html',
                 crossDomain: false,
                 beforeSend: function(xhr, settings) {
-                    if (!csrfSafeMethod(settings.type)) {
+                    if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
                         xhr.setRequestHeader("X-CSRFToken", csrftoken);
                     }
                 },
@@ -376,18 +384,21 @@ $(function($) {
 		contentType: false,
 		processData: false,
 		type: 'POST',
-		success: this.submitSuccess
+		success: app.views.NewOverlayView.prototype.submitSuccess
 	    });
 	},
 
 	submitSuccess: function(data) {
+	    console.log("got data back");
             try {
 	        var json = JSON.parse(data);
             } catch (error) {
                 console.log('Failed to parse response as JSON: ' + error.message);
                 return;
             }
-            app.router.navigate('overlay/'+json['id']);
+	    if (json['status'] == 'success') {
+		app.router.navigate('overlay/'+json['id'], {trigger: true});
+	    }
         }
     });
 
