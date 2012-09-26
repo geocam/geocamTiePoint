@@ -15,7 +15,8 @@ $(function($) {
     app.models.Overlay = Backbone.Model.extend({
         idAttribute: 'key', // Backend uses "key" as the primary key
         url: function() {
-            return this.get('url') || '/overlay/' + this.id + '.json';
+            var pk = _.isUndefined(this.get('id')) ? this.get('key') : this.get('id');
+            return this.get('url') || '/overlay/' + pk + '.json';
         },
 
         initialize: function() {
@@ -30,12 +31,13 @@ $(function($) {
                 });
                 return url;
             };
-
-            window.maxZoom0G = this.maxZoom();
         },
 
         maxDimension: function() {
             var size = this.get('imageSize');
+            if (_.isUndefined(size)) {
+                throw "Overlay image's size is not defined or not yet loaded.";
+            }
             return Math.max(size[0], size[1]);
         },
 

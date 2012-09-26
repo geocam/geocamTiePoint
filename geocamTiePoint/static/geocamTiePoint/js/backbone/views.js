@@ -128,6 +128,11 @@ $(function($) {
     app.views.ImageQtreeView = app.views.OverlayView.extend({
         template: '<div id="image_canvas"></div>',
 
+        beforeRender: function() {
+            // somebody set us up the global variable!
+            window.maxZoom0G = this.model.maxZoom();
+        },
+
         afterRender: function() {
             app.gmap = new google.maps.Map(this.$('#image_canvas')[0], {
             //var gmap = app.gmap = new google.maps.Map(this.el, {
@@ -397,7 +402,11 @@ $(function($) {
                 return;
             }
 	    if (json['status'] == 'success') {
-		app.router.navigate('overlay/'+json['id'], {trigger: true});
+            var overlay = new app.models.Overlay({key: json.id});
+            app.overlays.add(overlay);
+            overlay.fetch({ 'success': function() {
+                app.router.navigate('overlay/'+json['id'], {trigger: true});
+            } });
 	    }
         }
     });
