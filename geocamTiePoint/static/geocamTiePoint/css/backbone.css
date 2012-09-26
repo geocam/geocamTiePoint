@@ -8,6 +8,10 @@
     width: 100%;
 }
 
+input#locationSearch {
+    width: 160px;
+}
+
 /* Map marker labels */
 .labels {
     text-align: center;

@@ -244,7 +244,8 @@ $(function($) {
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
-        template: '<div id="zoom_controls">' +
+        template: '<input type="search" id="locationSearch" placeholder="Enter a location"></input>' +
+            '<div id="zoom_controls">' +
             '<button id="zoom_100">100%</button>' +
             '<button id="zoom_fit">Fit Overlay</button>' +
             '</div>' +
@@ -266,6 +267,7 @@ $(function($) {
                 resizeToWidth: true
                 //dock: 'leftDock'
             });
+            maputils.locationSearchBar('#locationSearch', this.mapView.gmap);
             this.initZoomButtons();
             this.initMarkerMouseHandlers();
         },
