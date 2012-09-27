@@ -68,7 +68,11 @@ $(function($) {
             this.context = this.model.toJSON();
             this.markers = [];
 
-            this.on('gmap_loaded', this.initMouseHandlers);
+            this.on('gmap_loaded', this.initGmapUIHandlers);
+        },
+
+        updateTiepointFromMarker: function (index, marker) {
+            assert(false, "Override me in a subclass!");
         },
 
         handleClick: function(event) {
@@ -80,13 +84,26 @@ $(function($) {
                 var index = this.markers.length;
 
                 var marker = maputils.createLabeledMarker(latLng, ''+(index+1), this.gmap);
+                this.initMarkerDragHandlers(marker);
 
                 this.markers.push(marker);
+                this.updateTiepointFromMarker(index, marker);
                 //imageCoordsG.push(coord);
         },
 
-        initMouseHandlers: function(){
+        initGmapUIHandlers: function(){
             google.maps.event.addListener( this.gmap, 'click', _.bind(this.handleClick, this) );
+        },
+
+        initMarkerDragHandlers: function(marker) {
+            google.maps.event.addListener(marker, 'dragstart', function(evt){ window.draggingG = true; });
+            google.maps.event.addListener(marker, 'dragend', _.bind(function(event) {
+                actionPerformed();
+                var index = this.markers.indexOf(marker);
+                assert(index >= 0, "Marker not found.");
+                this.updateTiepointFromMarker(index, marker);
+                _.delay(function(){window.draggingG = false;}, 200);
+            }, this));
         },
 
         initZoomHotkey: function() {
@@ -189,12 +206,17 @@ $(function($) {
                 if (! _.any(_.values(pixelCoords), _.isNull)) {
                     var latLon = pixelsToLatLon(pixelCoords, model.maxZoom());
                     //var marker = getLabeledImageMarker(latLon, index);
-                    var marker = (maputils.createLabeledMarker
-                                  (latLon, '' + (index + 1), gmap));
+                    var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
+                    this.initMarkerDragHandlers(marker);
                     markers[index] = marker;
                 }
             });
-        }
+        },
+
+        updateTiepointFromMarker: function (index, marker) {
+            var coords = latLonToPixel(marker.getPosition());
+            this.model.updateTiepoint( 'image', index, coords);
+        },
 
     });
 
@@ -257,12 +279,18 @@ $(function($) {
                 var meterCoords = { x: point[0], y: point[1] };
                 var latLon = metersToLatLon(meterCoords);
                 if (! _.any(_.values(latLon), _.isNull)) {
-                    var marker = (maputils.createLabeledMarker
-                                  (latLon, '' + (index + 1), gmap));
+                    var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
+                    this.initMarkerDragHandlers(marker);
                     markers[index] = marker;
                 }
             });
-        }
+        },
+
+        updateTiepointFromMarker: function (index, marker) {
+            var coords = latLonToMeters(marker.getPosition());
+            this.model.updateTiepoint( 'map', index, coords);
+        },
+
     });
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({

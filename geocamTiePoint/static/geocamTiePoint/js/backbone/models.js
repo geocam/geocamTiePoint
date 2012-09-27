@@ -62,7 +62,23 @@ $(function($) {
                 new google.maps.LatLng(bounds.south, bounds.west),
                 new google.maps.LatLng(bounds.north, bounds.east)
             );
-        }
+        },
+
+        /**
+         * Update one "side" (map or image) of an entry in the model's tipeoing array.
+         * Will add a new tiepoint if one doesn't already exist at that index.
+        */
+        updateTiepoint: function( whichSide, pointIndex, coords ) {
+            var tiepoint = this.get('points')[pointIndex] || [null,null,null,null];
+            var coordIdx= {
+                'map': [0,1],
+                'image': [2,3],
+            }[whichSide];
+            assert(coordIdx, "Unexpected whichSide argument: "+whichSide);
+            tiepoint[coordIdx[0]] = coords.x;
+            tiepoint[coordIdx[1]] = coords.y;
+            this.get('points')[pointIndex] = tiepoint;
+        },
 
     });
 
