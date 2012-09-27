@@ -67,6 +67,26 @@ $(function($) {
             assert(this.model, 'Requires a model!');
             this.context = this.model.toJSON();
             this.markers = [];
+
+            this.on('gmap_loaded', this.initMouseHandlers);
+        },
+
+        handleClick: function(event) {
+                if (!_.isUndefined(window.draggingG) && draggingG) return;
+                assert(!_.isUndefined(window.actionPerformed), "Missing global actionPerformed().  Check for undo.js");
+                actionPerformed();
+                var latLng = event.latLng;
+                var coord = latLonToPixel(latLng);
+                var index = this.markers.length;
+
+                var marker = maputils.createLabeledMarker(latLng, ''+(index+1), this.gmap);
+
+                this.markers.push(marker);
+                //imageCoordsG.push(coord);
+        },
+
+        initMouseHandlers: function(){
+            google.maps.event.addListener( this.gmap, 'click', _.bind(this.handleClick, this) );
         },
 
         initZoomHotkey: function() {
@@ -156,6 +176,7 @@ $(function($) {
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
             this.drawMarkers();
+            this.trigger('gmap_loaded');
             //this.initZoomHotkey();
         },
 
@@ -174,6 +195,7 @@ $(function($) {
                 }
             });
         }
+
     });
 
 
@@ -181,7 +203,7 @@ $(function($) {
         template: '<div id="map_canvas"></div>',
 
         initialize: function() {
-            app.views.View.prototype.initialize.apply(this, arguments);
+            app.views.OverlayView.prototype.initialize.apply(this, arguments);
             if (this.id && !this.model) {
                 this.model = app.overlays.get(this.id);
             }
@@ -223,6 +245,7 @@ $(function($) {
             //google.maps.event.addListener(gmap, 'click', handleMapClick);
             this.gmap = gmap;
             this.drawMarkers();
+            this.trigger('gmap_loaded');
             //this.initZoomHotkey();
         },
 

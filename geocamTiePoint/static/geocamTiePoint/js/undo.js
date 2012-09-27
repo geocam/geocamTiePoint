@@ -10,6 +10,15 @@
 // object suitable for JSON serialization, and setState() should set the
 // interface state using the same type of object returned by getState().
 
+
+// global GetState and Setstate stubs should be overridden in application code.
+if (_.isUndefined(window.getState) ) {
+    window.getState = function(){ console.log("getState stub was called."); return {}; };
+}
+if (_.isUndefined(window.setState) ) {
+    window.setState = function(state){ console.log("setState stub was called."); };
+}
+
 var undoStackG = [];
 var redoStackG = [];
 

@@ -41,7 +41,7 @@ $(function($) {
         var selectedIcon =
             'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue.png';
         var markerOpts = {
-            title: label,
+            title: ''+label,
             draggable: true,
             position: latLng,
             map: map,
