@@ -4,7 +4,7 @@ app.models = app.models || {};
 // All these globals should be loaded from elsewhere.
 assert(! _.isUndefined(getNormalizedCoord),
        'Missing global: getNormalizedCoord');
-assert(! _.isUndefined(getNormalizedCoord),
+assert(! _.isUndefined(fillTemplate),
        'Missing global: fillTemplate');
 assert(! _.isUndefined(TILE_SIZE),
        'Missing global: TILE_SIZE');
@@ -34,6 +34,15 @@ $(function($) {
                 y: normalizedCoord.y
             });
             return url;
+        },
+
+        getAlignedImageTileUrl: function(coord, zoom) {
+            var normalizedCoord = getNormalizedCoord(coord, zoom);
+            if (!normalizedCoord) {return null;}
+            return fillTemplate(this.get('alignedTilesUrl'),
+                {zoom: zoom,
+                 x: normalizedCoord.x,
+                 y: normalizedCoord.y});
         },
 
         maxDimension: function() {

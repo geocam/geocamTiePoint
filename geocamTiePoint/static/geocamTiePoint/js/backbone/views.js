@@ -271,6 +271,24 @@ $(function($) {
             //this.initZoomHotkey();
         },
 
+        initAlignedImageQtree: function() {
+            if( ! this.alignedImageVisible ) {
+                this.alignedImageVisible = true;
+                var mapType = new maputils.AlignedImageMapType(this.model);
+                var initialOpacity = 60;
+                this.gmap.overlayMapTypes.insertAt(0, mapType);
+                maputils.createOpacityControl(this.gmap, mapType, initialOpacity);
+            }
+        },
+
+        destroyAlignedImageQtree: function(){
+            if ( this.alignedImageVisible ) {
+                this.gmap.overlayMapTypes.pop();
+                this.gmap.controls[google.maps.ControlPosition.TOP_RIGHT].pop()
+                this.alignedImageVisible = false;
+            }
+        },
+
         drawMarkers: function() {
             var model = this.model;
             var gmap = this.gmap;
@@ -299,14 +317,14 @@ $(function($) {
             '<div id="workflow_controls">' +
                 '<button id="save">save</button>'+
                 '<button id="warp">warp</button>'+
-                '<button id="preview">preview</button>'+
-                '<button id="export">export</button>'+
-                '<button id="reset">reset</button>'+
+                '<button id="export" disabled="true">export</button>'+
+                '<button id="reset" disabled="true">reset</button>'+
             '</div>' +
             '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
             '<div id="zoom_controls">' +
                 '<button id="zoom_100">100%</button>' +
                 '<button id="zoom_fit">Fit Overlay</button>' +
+                '<input id="show_overlay" type="checkbox"/><label for="show_overlay">Show Overlay</label>' +
             '</div>' +
             '<div id="split_container">' +
                 '<div id="split_left"></div>' +
@@ -382,6 +400,7 @@ $(function($) {
         },
 
         initWorkflowControls: function() {
+            var splitView = this;
             var overlay = this.model;
 
             $('button#save').click( function() {
@@ -409,6 +428,7 @@ $(function($) {
                         button.disabled = false;
                         button.text("WARPED");
                         _.delay(function(){button.text("warp");}, 1000);
+                        $('input#show_overlay').attr('checked', true).change();
                     },
                     error: function(model, response) {
                         button.disabled = false;
@@ -416,6 +436,14 @@ $(function($) {
                         _.delay(function(){button.text("warp");}, 1000);
                     },
                 });
+            });
+
+            $('input#show_overlay').change(function(evt){
+                if (this.checked) {
+                    splitView.mapView.initAlignedImageQtree();
+                } else{ 
+                    splitView.mapView.destroyAlignedImageQtree();
+                }
             });
         },
 
