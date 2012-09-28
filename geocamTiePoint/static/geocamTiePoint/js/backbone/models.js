@@ -14,23 +14,26 @@ assert(! _.isUndefined(MIN_ZOOM_OFFSET),
 $(function($) {
     app.models.Overlay = Backbone.Model.extend({
         idAttribute: 'key', // Backend uses "key" as the primary key
+
+        initialize: function(){
+            // Bind all the model's function properties to the instance, so they can be passed around as event handlers and such.
+            _.bindAll(this);
+        },
+
         url: function() {
             var pk = _.isUndefined(this.get('id')) ? this.get('key') : this.get('id');
             return this.get('url') || '/overlay/' + pk + '.json';
         },
 
-        initialize: function() {
-            var model = this;
-            this.getImageTileUrl = function(coord, zoom) {
-                var normalizedCoord = getNormalizedCoord(coord, zoom);
-                if (!normalizedCoord) { return null; }
-                var url = fillTemplate(model.get('unalignedTilesUrl'), {
-                    zoom: zoom,
-                    x: normalizedCoord.x,
-                    y: normalizedCoord.y
-                });
-                return url;
-            };
+        getImageTileUrl: function(coord, zoom) {
+            var normalizedCoord = getNormalizedCoord(coord, zoom);
+            if (!normalizedCoord) { return null; }
+            var url = fillTemplate(this.get('unalignedTilesUrl'), {
+                zoom: zoom,
+                x: normalizedCoord.x,
+                y: normalizedCoord.y
+            });
+            return url;
         },
 
         maxDimension: function() {
