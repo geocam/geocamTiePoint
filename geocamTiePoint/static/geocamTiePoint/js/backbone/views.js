@@ -210,7 +210,7 @@ $(function($) {
                     this.initMarkerDragHandlers(marker);
                     markers[index] = marker;
                 }
-            });
+            }, this);
         },
 
         updateTiepointFromMarker: function (index, marker) {
@@ -283,7 +283,7 @@ $(function($) {
                     this.initMarkerDragHandlers(marker);
                     markers[index] = marker;
                 }
-            });
+            }, this);
         },
 
         updateTiepointFromMarker: function (index, marker) {
@@ -295,14 +295,21 @@ $(function($) {
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
-        template: '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
+        template: 
+            '<div id="workflow_controls">' +
+                '<button id="save">save</button>'+
+                '<button id="preview">preview</button>'+
+                '<button id="export">export</button>'+
+                '<button id="reset">reset</button>'+
+            '</div>' +
+            '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
             '<div id="zoom_controls">' +
-            '<button id="zoom_100">100%</button>' +
-            '<button id="zoom_fit">Fit Overlay</button>' +
+                '<button id="zoom_100">100%</button>' +
+                '<button id="zoom_fit">Fit Overlay</button>' +
             '</div>' +
             '<div id="split_container">' +
-            '<div id="split_left"></div>' +
-            '<div id="split_right"></div>' +
+                '<div id="split_left"></div>' +
+                '<div id="split_right"></div>' +
             '</div>',
 
         afterRender: function() {
@@ -320,6 +327,7 @@ $(function($) {
             });
             maputils.locationSearchBar('#locationSearch', this.mapView.gmap);
             this.initZoomButtons();
+            this.initWorkflowControls();
             this.initMarkerMouseHandlers();
         },
 
@@ -369,6 +377,26 @@ $(function($) {
                         view.zoomFit();
                     }
                 }
+            });
+        },
+
+        initWorkflowControls: function() {
+            var overlay = this.model;
+            $('button#save').click( function() {
+                var button = $(this);
+                button.disabled = true;
+                overlay.save({}, {
+                    success: function(model, response) {
+                        button.disabled = false;
+                        button.text("SAVED");
+                        _.delay(function(){button.text("save");}, 1000);
+                    },
+                    error: function(model, response) {
+                        button.disabled = false;
+                        button.text("FAILED");
+                        _.delay(function(){button.text("save");}, 1000);
+                    },
+                });
             });
         },
 

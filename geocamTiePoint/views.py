@@ -221,7 +221,7 @@ def overlayIdJson(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
-    elif request.method == 'POST':
+    elif request.method in ('POST', 'PUT'):
         overlay = get_object_or_404(Overlay, key=key)
         overlay.jsonDict = json.loads(request.raw_post_data)
         transformDict = overlay.extras.get('transform', None)
@@ -232,7 +232,7 @@ def overlayIdJson(request, key):
         overlay.save()
         return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
     else:
-        return HttpResponseNotAllowed(['GET', 'POST'])
+        return HttpResponseNotAllowed(['GET', 'POST', 'PUT'])
 
 
 @csrf_exempt
