@@ -80,6 +80,35 @@ $(function($) {
             this.get('points')[pointIndex] = tiepoint;
         },
 
+        computeTransform: function() {
+            // only operate on points that have all four values.
+            var points = _.filter(this.get('points'), function(coords){return _.all(coords, _.identity);});
+            this.set('transform', 
+                points ? geocamTiePoint.transform.getTransform(points).toDict() : {type: '', matrix: []}
+            );
+        },
+
+        save: function(attributes, options) {
+            // Always compute transform on before save.
+            this.computeTransform();
+            return Backbone.Model.prototype.save.call(this, attributes, options);
+        },
+
+        warp: function(options) {
+            // Save the overlay, then trigger a server-side warp.
+            options = options || {};
+            var warpUrl = this.url().replace('.json', '/warp');
+            saveOptions = {
+                error: options.error || function(){},
+                success: function() {
+                    var jqXHR = $.post(warpUrl);
+                    if (options.success) { jqXHR.success(options.success); }
+                    if (options.error) { jqXHR.error(options.error); }
+                },
+            };
+            this.save({}, saveOptions);
+        },
+
     });
 
     app.OverlayCollection = Backbone.Collection.extend({

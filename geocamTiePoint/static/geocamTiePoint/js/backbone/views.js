@@ -298,6 +298,7 @@ $(function($) {
         template: 
             '<div id="workflow_controls">' +
                 '<button id="save">save</button>'+
+                '<button id="warp">warp</button>'+
                 '<button id="preview">preview</button>'+
                 '<button id="export">export</button>'+
                 '<button id="reset">reset</button>'+
@@ -382,6 +383,7 @@ $(function($) {
 
         initWorkflowControls: function() {
             var overlay = this.model;
+
             $('button#save').click( function() {
                 var button = $(this);
                 button.disabled = true;
@@ -395,6 +397,23 @@ $(function($) {
                         button.disabled = false;
                         button.text("FAILED");
                         _.delay(function(){button.text("save");}, 1000);
+                    },
+                });
+            });
+
+            $('button#warp').click( function() {
+                var button = $(this);
+                button.disabled = true;
+                overlay.warp({
+                    success: function(model, response) {
+                        button.disabled = false;
+                        button.text("WARPED");
+                        _.delay(function(){button.text("warp");}, 1000);
+                    },
+                    error: function(model, response) {
+                        button.disabled = false;
+                        button.text("FAILED");
+                        _.delay(function(){button.text("warp");}, 1000);
                     },
                 });
             });
