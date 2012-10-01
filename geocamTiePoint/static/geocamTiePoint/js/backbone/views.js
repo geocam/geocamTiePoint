@@ -340,9 +340,16 @@ $(function($) {
                 el: '#split_left',
                 model: this.model
             }).render();
+
+            var subviews = [this.mapView, this.imageView];
             this.$('#split_container').splitter({
                 resizeToWidth: true
                 //dock: 'leftDock'
+            }).bind('resize', function(evt){
+                // ensure Google Maps instances get resized when the splitter moves.
+                _.each(subviews, function(subview) {
+                    google.maps.event.trigger(subview.gmap, 'resize');
+                });
             });
             maputils.locationSearchBar('#locationSearch', this.mapView.gmap);
             this.initZoomButtons();
