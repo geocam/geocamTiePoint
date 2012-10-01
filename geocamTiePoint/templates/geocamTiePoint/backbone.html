@@ -37,7 +37,6 @@ window.csrf_token = "{% csrf_token %}";
 <script type="text/javascript" src="/static/geocamTiePoint/js/backbone/views.js"></script>
 <script type="text/javascript" src="/static/geocamTiePoint/js/backbone/router.js"></script>
 
-{% if initial_overlays_json %}
     <script type="text/javascript">
         $(function($){
 
@@ -46,14 +45,15 @@ window.csrf_token = "{% csrf_token %}";
 
             window.settings = {{settings|safe}};
 
+            app.overlays = app.overlays || new app.models.OverlayCollection;
+            {% if initial_overlays_json %}
             // Seed app.overlays with initally loaded data
             var overlay_bootstrap = {{ initial_overlays_json|safe }};
-            app.overlays = app.overlays || new app.models.OverlayCollection;
             app.overlays.reset(overlay_bootstrap);
+            {% endif %}
             app.router.start(); // initializes the app view based on url fragment.
         });
     </script>
-{% endif %}
 
 {% endblock scripts %}
 
