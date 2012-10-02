@@ -343,8 +343,8 @@ $(function($) {
 
             var subviews = [this.mapView, this.imageView];
             this.$('#split_container').splitter({
-                resizeToWidth: true
-                //dock: 'leftDock'
+                resizeToWidth: true,
+                dock: 'right',
             }).bind('resize', function(evt){
                 // ensure Google Maps instances get resized when the splitter moves.
                 _.each(subviews, function(subview) {

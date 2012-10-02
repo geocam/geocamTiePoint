@@ -20,7 +20,7 @@ input#locationSearch {
 }
 
 
-.vsplitbar{
+.vsplitbar,.splitter-bar-vertical{
     width: 12px;
     background: #aaa;
 }
