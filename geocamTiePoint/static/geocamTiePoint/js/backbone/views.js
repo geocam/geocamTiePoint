@@ -42,7 +42,7 @@ $(function($) {
             '{{debug}}' +
             '<ul>' +
             '{{#each overlays }}' +
-            '<li><a href="#overlay/{{key}}">{{name}}</a></li>' +
+            '<li><a href="#overlay/{{key}}">{{name}}</a><a href="#overlay/{{key}}/delete">delete</a></li>' +
             '{{/each}}' +
             '</ul>',
 
@@ -512,7 +512,7 @@ $(function($) {
 	    });
             var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
 	    $.ajax({
-		url: '/old/overlays/new.html',
+		url: '/overlays/new.json',
                 crossDomain: false,
                 beforeSend: function(xhr, settings) {
                     if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
@@ -540,10 +540,50 @@ $(function($) {
             var overlay = new app.models.Overlay({key: json.id});
             app.overlays.add(overlay);
             overlay.fetch({ 'success': function() {
-                app.router.navigate('overlay/'+json['id'], {trigger: true});
+                app.router.navigate('overlay/'+json['id']);
             } });
 	    }
         }
     });
 
+    app.views.DeleteOverlayView = app.views.View.extend({
+
+        template: '<form id="deleteOverlayForm"><h4>Are you sure you want to delete overlay {{name}}?</h4><br><input type="button" value="Delete" id="deleteOverlayFormSubmitButton" /><input type="button" value="Cancel" id="deleteOverlayFormCancelButton" />',
+
+        initialize: function() {
+            app.views.View.prototype.initialize.apply(this, arguments);
+            if (this.id && !this.model) {
+                this.model = app.overlays.get(this.id);
+            }
+            assert(this.model, 'Requires a model!');
+            this.context = this.model.toJSON();
+        },
+
+        afterRender: function() {
+            this.$('input#deleteOverlayFormSubmitButton').click(this.submitForm);
+            this.$('input#deleteOverlayFormCancelButton').click(this.cancel);
+        },
+
+        cancel: function() {
+            app.router.navigate('overlays/');
+        },
+
+        submitForm: function() {
+            var key = this.context['key']
+            $.ajax({
+                url: '/overlay/'+key+'/delete.html',
+                crossDomain: false,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'POST',
+                success: app.views.DeleteOverlayView.prototype.submitSuccess
+            });
+        },
+
+        submitSuccess: function(data) {
+            console.log("got data back");
+            app.router.navigate('overlays/');
+        },
+    });
 });
