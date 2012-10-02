@@ -6,6 +6,7 @@ $(function($) {
             'overlays/': 'listOverlays',
 	    'overlays/new': 'newOverlay',
             'overlay/:overlay_id': 'showOverlay',
+            'overlay/:overlay_id/delete': 'deleteOverlay',
             '': 'root'
         },
 
@@ -31,6 +32,12 @@ $(function($) {
 	    var view = new app.views.NewOverlayView();
 	    view.render();
 	},
+
+        deleteOverlay: function(overlay_id) {
+            console.log('Routed to deleteOverlay');
+            var view = new app.views.DeleteOverlayView({id: overlay_id});
+            view.render();
+        },
 
         start: function() {
             Backbone.history.start();
