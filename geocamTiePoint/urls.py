@@ -5,16 +5,29 @@
 # __END_LICENSE__
 
 from django.conf.urls.defaults import url, patterns
+from django.shortcuts import redirect
+from django.core.urlresolvers import reverse
 
 urlpatterns = patterns(
     'geocamTiePoint.views',
 
-    ## Old Client ##
-    url(r'^overlays/list.html$', 'overlayIndex',
+    ## New Workflow ##
+    url(r'^overlays/', 'backbone',
+        {}, 'geocamTiePoint_backbone_overlays'),
+
+    ## Urls to make current pages work with new workflow ##
+    url(r'^overlays/list.html$', lambda request: redirect('geocamTiePoint_backbone_overlays'),
         {}, 'geocamTiePoint_overlayIndex'),
 
-    url(r'^overlays/new.html$', 'overlayNew',
+    url(r'^overlays/new.html$', lambda request: redirect(reverse('geocamTiePoint_backbone_overlays')+'#overlays/new'),
         {}, 'geocamTiePoint_overlayNew'),
+
+    ## Old Client ##
+    url(r'^old/overlays/list.html$', 'overlayIndex',
+        {}, 'geocamTiePoint_overlayIndex_old'),
+
+    url(r'^old/overlays/new.html$', 'overlayNew',
+        {}, 'geocamTiePoint_overlayNew_old'),
 
     url(r'^overlay/(?P<key>\d+).html$', 'overlayId',
         {}, 'geocamTiePoint_overlayId'),

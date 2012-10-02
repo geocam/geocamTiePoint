@@ -512,7 +512,7 @@ $(function($) {
 	    });
             var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
 	    $.ajax({
-		url: '/overlays/new.html',
+		url: '/old/overlays/new.html',
                 crossDomain: false,
                 beforeSend: function(xhr, settings) {
                     if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
