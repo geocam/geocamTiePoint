@@ -83,6 +83,7 @@ $(function($) {
     /*
     * OverlayView: id-accepting base class for views that deal with a
     * single Overlay.
+    * Base class for both OverlayGoogleMapsView and SplitOverlayView
     */
     app.views.OverlayView = app.views.View.extend({
         initialize: function(options) {
@@ -92,20 +93,31 @@ $(function($) {
             }
             assert(this.model, 'Requires a model!');
             this.context = this.model.toJSON();
-            this.markers = [];
-
-            this.on('gmap_loaded', this.initGmapUIHandlers);
-            this.model.on('change:points', this.drawMarkers, this);
         },
 
         getState: function() {
-            console.log("getState: " + this.model.toJSON())
             return this.model.toJSON();
         },
 
         setState: function(state) {
-            console.log("setState: " + state);
             return this.model.set(state);
+        },
+    });
+
+
+    /*
+     * OverlayGoogleMapsView: 
+     * Base class for ImageQtreeView and MapView
+     * Implements Google Maps and Marker initialization & management
+    */
+    app.views.OverlayGoogleMapsView = app.views.OverlayView.extend({
+        
+        initialize: function(options) {
+            app.views.OverlayView.prototype.initialize.apply(this, arguments);
+            this.markers = [];
+
+            this.on('gmap_loaded', this.initGmapUIHandlers);
+            this.model.on('change:points', this.drawMarkers, this);
         },
 
         updateTiepointFromMarker: function (index, marker) {
@@ -130,7 +142,7 @@ $(function($) {
         },
 
         drawMarkers: function(){
-            // Override me in a subclass!
+            assert(false, "Override me in a subclass!");
         },
 
         handleClick: function(event) {
@@ -220,7 +232,7 @@ $(function($) {
         }
     });
 
-    app.views.ImageQtreeView = app.views.OverlayView.extend({
+    app.views.ImageQtreeView = app.views.OverlayGoogleMapsView.extend({
         template: '<div id="image_canvas"></div>',
 
         beforeRender: function() {
@@ -276,11 +288,11 @@ $(function($) {
     });
 
 
-    app.views.MapView = app.views.OverlayView.extend({
+    app.views.MapView = app.views.OverlayGoogleMapsView.extend({
         template: '<div id="map_canvas"></div>',
 
         initialize: function() {
-            app.views.OverlayView.prototype.initialize.apply(this, arguments);
+            app.views.OverlayGoogleMapsView.prototype.initialize.apply(this, arguments);
             if (this.id && !this.model) {
                 this.model = app.overlays.get(this.id);
             }
@@ -369,9 +381,9 @@ $(function($) {
             '<div id="workflow_controls">' +
                 '<button id="save">save</button>'+
                 '<button id="warp">warp</button>'+
-                '<button id="export" disabled="true">export</button>'+
                 '<button id="undo" onclick="undo()">undo</button>'+
                 '<button id="redo" onclick="redo()">redo</button>'+
+                '<button id="export" disabled="true">export</button>'+
             '</div>' +
             '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
             '<div id="zoom_controls">' +
