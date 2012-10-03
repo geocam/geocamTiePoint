@@ -95,13 +95,16 @@ $(function($) {
             this.markers = [];
 
             this.on('gmap_loaded', this.initGmapUIHandlers);
+            this.model.on('change:points', this.drawMarkers, this);
         },
 
         getState: function() {
+            console.log("getState: " + this.model.toJSON())
             return this.model.toJSON();
         },
 
         setState: function(state) {
+            console.log("setState: " + state);
             return this.model.set(state);
         },
 
@@ -127,7 +130,7 @@ $(function($) {
         },
 
         drawMarkers: function(){
-            assert(false, "Override me in a subclass!");
+            // Override me in a subclass!
         },
 
         handleClick: function(event) {
@@ -367,7 +370,8 @@ $(function($) {
                 '<button id="save">save</button>'+
                 '<button id="warp">warp</button>'+
                 '<button id="export" disabled="true">export</button>'+
-                '<button id="reset" disabled="true">reset</button>'+
+                '<button id="undo" onclick="undo()">undo</button>'+
+                '<button id="redo" onclick="redo()">redo</button>'+
             '</div>' +
             '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
             '<div id="zoom_controls">' +
