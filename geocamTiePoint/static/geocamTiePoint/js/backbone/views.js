@@ -139,6 +139,7 @@ $(function($) {
                     markers[index] = marker;
                 }
             }, this);
+            model.trigger('redraw_markers');
         },
 
         drawMarkers: function(){
@@ -418,7 +419,9 @@ $(function($) {
             maputils.locationSearchBar('#locationSearch', this.mapView.gmap);
             this.initZoomButtons();
             this.initWorkflowControls();
-            this.initMarkerMouseHandlers();
+            this.initMarkerSelectHandlers();
+            this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
+        
         },
 
         zoomMaximum: function() {
@@ -516,19 +519,29 @@ $(function($) {
             });
         },
 
-        initMarkerMouseHandlers: function() {
+        initMarkerSelectHandlers: function() {
+
+            /* Clear any extant select handlers, lest they get duplicated */
+            var selectHandlers = this._selectHandlers = this._selectHandlers || [];
+            while (selectHandlers.length > 0) {
+                google.maps.event.removeListener(selectHandlers.pop())
+            }
+
             var views = [this.imageView, this.mapView];
             /* Select one pair of markers at a time */
             _.each(views, function(view) {
                 _.each(view.markers, function(marker, index) {
-                    (google.maps.event.addListener
-                     (marker, 'mousedown', function() {
-                         _.each(views, function(_view) {
-                             _.each(_view.markers, function(_marker, _index) {
-                                 _marker.set('selected', _index === index);
-                             });
-                         });
-                     }));
+                    selectHandlers.push(
+                        google.maps.event.addListener(
+                             marker, 'mousedown', function() {
+                                 _.each(views, function(_view) {
+                                     _.each(_view.markers, function(_marker, _index) {
+                                         _marker.set('selected', _index === index);
+                                     });
+                                 });
+                             }
+                        )
+                    );
                 });
             });
         }

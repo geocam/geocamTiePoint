@@ -82,6 +82,7 @@ $(function($) {
         */
         updateTiepoint: function( whichSide, pointIndex, coords ) {
             var points = this.get('points');
+            var initial_length = points.length;
             var tiepoint = points[pointIndex] || [null,null,null,null];
             var coordIdx= {
                 'map': [0,1],
@@ -92,6 +93,7 @@ $(function($) {
             tiepoint[coordIdx[1]] = coords.y;
             points[pointIndex] = tiepoint;
             this.set('points', points);
+            if (points.length > initial_length) this.trigger( 'add_point' );
             this.trigger('change:points');  // Manually trigger this, because the value of model.points (an array reference) hasn't actually changed.
         },
 
