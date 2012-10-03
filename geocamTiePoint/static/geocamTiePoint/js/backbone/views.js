@@ -6,8 +6,17 @@ $(function($) {
 
     app.container_id = '#backbone_app_container';
 
+    /*
+    * Handlebars helper that allows us to access
+    * model instance attributes from within a template.
+    * attr must be passed in as a (quoted) string literal from the template.
+    */
+    Handlebars.registerHelper('get', function(attr) {
+        return this.get(attr);
+    });
+
     app.views.View = Backbone.View.extend({
-        // views will render here another element is specified on instantiation.
+        // views will render here unless another element is specified on instantiation.
         el: app.container_id,
         template: null,
         context: null,
@@ -40,16 +49,28 @@ $(function($) {
         template: '<h1>Choose an overlay:</h1>' +
             '<a href="#overlays/new">New Overlay</a>' +
             '{{debug}}' +
-            '<ul>' +
-            '{{#each overlays }}' +
-            '<li><a href="#overlay/{{key}}">{{name}}</a></li>' +
+            '<ul id="overlay_list">' +
+            '{{#each overlays.models }}' +
+            '<li><a href="#overlay/{{id}}">{{get "name"}}</a> <a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.overlays.get({{id}}).destroy()">[delete]</a></li>' +
             '{{/each}}' +
             '</ul>',
 
         initialize: function() {
            app.views.View.prototype.initialize.apply(this, arguments);
-           this.context = { overlays: app.overlays.toJSON() };
-        }
+           this.context = { overlays: app.overlays };
+           app.overlays.on('all', function(){this.render();}, this);
+        },
+
+        /*
+        afterRender: function(){
+            this.$('#overlay_list li a.delete').each(function(idx, a){
+                a.click(function(evt){
+                    var overlay_id = parseInt(this.id.split('_').pop());
+                    app.overlys.get(overlay_id).destroy();
+                });
+            });
+        },
+        */
 
     });
 

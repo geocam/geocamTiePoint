@@ -231,8 +231,11 @@ def overlayIdJson(request, key):
                                       transform.makeTransform(transformDict)))
         overlay.save()
         return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
+    elif request.method == 'DELETE':
+        get_object_or_404(Overlay, pk=key).delete()
+        return HttpResponse("OK")
     else:
-        return HttpResponseNotAllowed(['GET', 'POST', 'PUT'])
+        return HttpResponseNotAllowed(['GET', 'POST', 'PUT', 'DELETE'])
 
 
 @csrf_exempt
