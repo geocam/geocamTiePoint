@@ -380,7 +380,6 @@ $(function($) {
         template: 
             '<div id="workflow_controls">' +
                 '<button id="save">save</button>'+
-                '<button id="warp">warp</button>'+
                 '<button id="undo" onclick="undo()">undo</button>'+
                 '<button id="redo" onclick="redo()">redo</button>'+
                 '<button id="export" disabled="true">export</button>'+
@@ -475,37 +474,35 @@ $(function($) {
             var splitView = this;
             var overlay = this.model;
 
-            $('button#save').click( function() {
-                var button = $(this);
-                button.disabled = true;
-                overlay.save({}, {
-                    success: function(model, response) {
-                        button.disabled = false;
-                        button.text("SAVED");
-                        _.delay(function(){button.text("save");}, 1000);
-                    },
-                    error: function(model, response) {
-                        button.disabled = false;
-                        button.text("FAILED");
-                        _.delay(function(){button.text("save");}, 1000);
-                    },
-                });
-            });
+            // Don't allow the user to save the tiepoints until at least two are defined.
+            if (! overlay.get('points') || overlay.get('points').length < 2) {
+                var save_button = $('button#save');
+                save_button.attr('disabled', true);
+                function observePoints(){
+                    if (this.get('points').length >= 2) {
+                        if ( _.filter(this.get('points'), function(p){return _.all(p, _.identity)} ).length >= 2 ){
+                            save_button.attr('disabled', false);
+                            this.off('change:points', observePoints);
+                        }
+                    }
+                }
+                overlay.on('change:points', observePoints, overlay);
+            }
 
-            $('button#warp').click( function() {
+            $('button#save').click( function() {
                 var button = $(this);
                 button.disabled = true;
                 overlay.warp({
                     success: function(model, response) {
                         button.disabled = false;
                         button.text("WARPED");
-                        _.delay(function(){button.text("warp");}, 1000);
+                        _.delay(function(){button.text("save");}, 1000);
                         $('input#show_overlay').attr('checked', true).change();
                     },
                     error: function(model, response) {
                         button.disabled = false;
                         button.text("FAILED");
-                        _.delay(function(){button.text("warp");}, 1000);
+                        _.delay(function(){button.text("save");}, 1000);
                     },
                 });
             });

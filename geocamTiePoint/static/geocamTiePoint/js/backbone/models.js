@@ -81,7 +81,8 @@ $(function($) {
          * Will add a new tiepoint if one doesn't already exist at that index.
         */
         updateTiepoint: function( whichSide, pointIndex, coords ) {
-            var tiepoint = this.get('points')[pointIndex] || [null,null,null,null];
+            var points = this.get('points');
+            var tiepoint = points[pointIndex] || [null,null,null,null];
             var coordIdx= {
                 'map': [0,1],
                 'image': [2,3],
@@ -89,7 +90,9 @@ $(function($) {
             assert(coordIdx, "Unexpected whichSide argument: "+whichSide);
             tiepoint[coordIdx[0]] = coords.x;
             tiepoint[coordIdx[1]] = coords.y;
-            this.get('points')[pointIndex] = tiepoint;
+            points[pointIndex] = tiepoint;
+            this.set('points', points);
+            this.trigger('change:points');  // Manually trigger this, because the value of model.points (an array reference) hasn't actually changed.
         },
 
         computeTransform: function() {
