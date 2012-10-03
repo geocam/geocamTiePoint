@@ -27,10 +27,15 @@ $(function($) {
             if (! this._renderedTemplate) {
                 this._renderedTemplate = Handlebars.compile(this.template);
             }
-            assert(this.context || this.model.toJson(),
+            assert(this.context || this.model.toJson,
                    'Could note find a a context for the template.');
-            var output = this._renderedTemplate(this.context ||
-                                                this.model.toJson());
+            var context;
+            if (this.context) {
+                context = _.isFunction(this.context) ? this.context() : this.context;
+            } else {
+                context = this.model.toJson();
+            }
+            var output = this._renderedTemplate(context);
             this.$el.html(output);
             this.afterRender();
             if (this.el === $(app.container_id)[0]) {
@@ -92,7 +97,36 @@ $(function($) {
             this.on('gmap_loaded', this.initGmapUIHandlers);
         },
 
+        getState: function() {
+            return this.model.toJSON();
+        },
+
+        setState: function(state) {
+            return this.model.set(state);
+        },
+
         updateTiepointFromMarker: function (index, marker) {
+            assert(false, "Override me in a subclass!");
+        },
+
+        _drawMarkers: function(latlons_in_gmap_space) {
+            var model = this.model;
+            var gmap = this.gmap;
+            // destroy existing markers, if they exist.
+            while (this.markers && this.markers.length > 0) {
+                this.markers.pop().setMap(null);
+            }
+            var markers = this.markers = [];
+            _.each(latlons_in_gmap_space, function(latLon, index) {
+                if (! _.any(_.values(latLon), _.isNull)) {
+                    var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
+                    this.initMarkerDragHandlers(marker);
+                    markers[index] = marker;
+                }
+            }, this);
+        },
+
+        drawMarkers: function(){
             assert(false, "Override me in a subclass!");
         },
 
@@ -220,18 +254,15 @@ $(function($) {
 
         drawMarkers: function() {
             var model = this.model;
-            var gmap = this.gmap;
-            var markers = this.markers = [];
+            var latLons = [];
             _.each(this.model.get('points'), function(point, index) {
                 var pixelCoords = { x: point[2], y: point[3] };
                 if (! _.any(_.values(pixelCoords), _.isNull)) {
                     var latLon = pixelsToLatLon(pixelCoords, model.maxZoom());
-                    //var marker = getLabeledImageMarker(latLon, index);
-                    var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
-                    this.initMarkerDragHandlers(marker);
-                    markers[index] = marker;
+                    latLons.push(latLon);
                 }
             }, this);
+            return this._drawMarkers(latLons);
         },
 
         updateTiepointFromMarker: function (index, marker) {
@@ -311,18 +342,15 @@ $(function($) {
         },
 
         drawMarkers: function() {
-            var model = this.model;
-            var gmap = this.gmap;
-            var markers = this.markers = [];
+            var latLons = [];
             _.each(this.model.get('points'), function(point, index) {
                 var meterCoords = { x: point[0], y: point[1] };
-                var latLon = metersToLatLon(meterCoords);
-                if (! _.any(_.values(latLon), _.isNull)) {
-                    var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
-                    this.initMarkerDragHandlers(marker);
-                    markers[index] = marker;
+                if (! _.any(_.values(meterCoords), _.isNull)) {
+                    var latLon = metersToLatLon(meterCoords);
+                    latLons.push(latLon);
                 }
             }, this);
+            return this._drawMarkers(latLons);
         },
 
         updateTiepointFromMarker: function (index, marker) {

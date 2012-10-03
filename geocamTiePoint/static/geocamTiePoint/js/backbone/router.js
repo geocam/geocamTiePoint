@@ -39,4 +39,14 @@ $(function($) {
 
     app.router = new AppRouter();
     //app.router.start();
+
+    /* 
+     * Support for undo/redo global functions
+    */
+    window.getState = function() {
+        if (app.currentView && app.currentView.getState) return app.currentView.getState();
+    };
+    window.setState = function(state) {
+        if (app.currentView && app.currentView.setState) return app.currentView.setState(state);
+    };
 });
