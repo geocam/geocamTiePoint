@@ -38,7 +38,6 @@ from geocamTiePoint import quadTree, transform, settings
 # use the memcached cache, but that would get rid of much of the benefit
 # in terms of serialization/deserialization.
 cachedGeneratorG = threading.local()
-cachedGeneratorG.gen = {'key': None, 'value': None}
 
 
 def getNewImageFileName(instance, filename):
@@ -152,7 +151,8 @@ class QuadTree(models.Model):
     @classmethod
     def getGeneratorWithCache(cls, quadTreeId):
         global cachedGeneratorG
-        cachedGeneratorCopy = cachedGeneratorG.gen
+        cachedGeneratorCopy = getattr(cachedGeneratorG, 'gen',
+                                      {'key': None, 'value': None})
         key = cls.getGeneratorCacheKey(quadTreeId)
         if cachedGeneratorCopy['key'] == key:
             logging.debug('getGeneratorWithCache hit %s', key)
