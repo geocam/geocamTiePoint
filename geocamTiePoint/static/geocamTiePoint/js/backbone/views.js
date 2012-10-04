@@ -63,7 +63,7 @@ $(function($) {
         initialize: function() {
            app.views.View.prototype.initialize.apply(this, arguments);
            this.context = { overlays: app.overlays };
-           app.overlays.on('all', function(){this.render();}, this);
+           app.overlays.on('remove', function(){this.render();}, this);
         },
 
         /*
