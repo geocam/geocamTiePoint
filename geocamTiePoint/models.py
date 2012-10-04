@@ -135,8 +135,8 @@ class QuadTree(models.Model):
         # apparently image.file is not a very good file work-alike,
         # so let's delegate to StringIO(), which PIL is tested against
         bits = self.imageData.image.file.read()
-        logging.info('getImage len=%s header=%s'
-                     % (len(bits), repr(bits[:10])))
+        logging.info('getImage len=%s header=%s',
+                     len(bits), repr(bits[:10]))
         fakeFile = StringIO(bits)
 
         im = PIL.Image.open(fakeFile)
@@ -157,8 +157,8 @@ class QuadTree(models.Model):
             result = cachedGeneratorCopy['value']
         else:
             logging.debug('getGeneratorWithCache miss %s', key)
-            quadTree = get_object_or_404(QuadTree, id=quadTreeId)
-            result = quadTree.getGenerator()
+            q = get_object_or_404(QuadTree, id=quadTreeId)
+            result = q.getGenerator()
             cachedGeneratorG = dict(key=key, value=result)
         return result
 

@@ -139,8 +139,8 @@ def overlayNew(request):
                     out = StringIO()
                     image.save(out, format='png')
                     convertedBits = out.getvalue()
-                    logging.info('converted image to RGBA, output length %s bytes'
-                                 % len(bits))
+                    logging.info('converted image to RGBA, output length %s bytes',
+                                 len(bits))
                     imageData.image.save('dummy.png', ContentFile(convertedBits),
                                          save=False)
                     imageData.contentType = 'image/png'
@@ -316,10 +316,10 @@ def getPublicTile(request, quadTreeId, zoom, x, y):
     cacheKey = 'geocamTiePoint.QuadTree.isPublic.%s' % quadTreeId
     quadTreeIsPublic = cache.get(cacheKey)
     if quadTreeIsPublic is None:
-        logging.info('getPublicTile MISS %s' % cacheKey)
+        logging.info('getPublicTile MISS %s', cacheKey)
         try:
-            quadTree = QuadTree.objects.get(id=quadTreeId)
-            overlay = quadTree.alignedOverlays.get()
+            q = QuadTree.objects.get(id=quadTreeId)
+            overlay = q.alignedOverlays.get()
         except ObjectDoesNotExist:
             overlay = None
         if overlay:
@@ -328,7 +328,7 @@ def getPublicTile(request, quadTreeId, zoom, x, y):
             quadTreeIsPublic = False
         cache.set(cacheKey, quadTreeIsPublic, 60)
     else:
-        logging.info('getPublicTile hit %s' % cacheKey)
+        logging.info('getPublicTile hit %s', cacheKey)
 
     if quadTreeIsPublic:
         return getTile(request, quadTreeId, zoom, x, y)
