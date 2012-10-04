@@ -167,7 +167,11 @@ $(function($) {
         },
 
         initMarkerDragHandlers: function(marker) {
-            google.maps.event.addListener(marker, 'dragstart', function(evt){ window.draggingG = true; });
+            var view = this;
+            google.maps.event.addListener(marker, 'dragstart', function(evt){ 
+                window.draggingG = true; 
+                view.trigger('dragstart');
+            });
             google.maps.event.addListener(marker, 'dragend', _.bind(function(event) {
                 actionPerformed();
                 var index = this.markers.indexOf(marker);
@@ -291,6 +295,7 @@ $(function($) {
 
     app.views.MapView = app.views.OverlayGoogleMapsView.extend({
         template: '<div id="map_canvas"></div>',
+        overlay_enabled: true,
 
         initialize: function() {
             app.views.OverlayGoogleMapsView.prototype.initialize.apply(this, arguments);
@@ -298,7 +303,6 @@ $(function($) {
                 this.model = app.overlays.get(this.id);
             }
             assert(this.model, 'Requires a model!');
-            this.context = this.model.toJSON();
         },
 
         afterRender: function() {
@@ -337,10 +341,21 @@ $(function($) {
             this.drawMarkers();
             this.trigger('gmap_loaded');
             //this.initZoomHotkey();
+
+            /* Events and init for the  qtree overlay */
+            this.model.on('change:points', function(){
+                this.destroyAlignedImageQtree();
+                this.model.warp();
+            }, this);
+            this.on('dragstart', this.destroyAlignedImageQtree, this);
+            this.model.on('warp_success', this.refreshAlignedImageQtree, this);
+            if ( this.model.get('transform') && this.model.get('transform').type ) {
+                this.initAlignedImageQtree();
+            }
         },
 
         initAlignedImageQtree: function() {
-            if( ! this.alignedImageVisible ) {
+            if( this.overlay_enabled && !this.alignedImageVisible ) {
                 this.alignedImageVisible = true;
                 var mapType = new maputils.AlignedImageMapType(this.model);
                 var initialOpacity = 60;
@@ -357,6 +372,11 @@ $(function($) {
             }
         },
 
+        refreshAlignedImageQtree: function(){
+            this.destroyAlignedImageQtree();
+            this.initAlignedImageQtree();
+        },
+
         drawMarkers: function() {
             var latLons = [];
             _.each(this.model.get('points'), function(point, index) {
@@ -366,7 +386,7 @@ $(function($) {
                     latLons.push(latLon);
                 }
             }, this);
-            return this._drawMarkers(latLons);
+            result = this._drawMarkers(latLons);
         },
 
         updateTiepointFromMarker: function (index, marker) {
@@ -389,7 +409,7 @@ $(function($) {
             '<div id="zoom_controls">' +
                 '<button id="zoom_100">100%</button>' +
                 '<button id="zoom_fit">Fit Overlay</button>' +
-                '<input id="show_overlay" type="checkbox"/><label for="show_overlay">Show Overlay</label>' +
+                '<input id="show_overlay" type="checkbox" checked="true"/><label for="show_overlay">Show Overlay</label>' +
             '</div>' +
             '<div id="split_container">' +
                 '<div id="split_left"></div>' +
@@ -512,8 +532,10 @@ $(function($) {
 
             $('input#show_overlay').change(function(evt){
                 if (this.checked) {
+                    splitView.mapView.overlay_enabled = true;
                     splitView.mapView.initAlignedImageQtree();
                 } else{ 
+                    splitView.mapView.overlay_enabled = false;
                     splitView.mapView.destroyAlignedImageQtree();
                 }
             });

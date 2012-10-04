@@ -114,12 +114,16 @@ $(function($) {
         warp: function(options) {
             // Save the overlay, then trigger a server-side warp.
             options = options || {};
+            var model = this;
             var warpUrl = this.url().replace('.json', '/warp');
             saveOptions = {
                 error: options.error || function(){},
                 success: function() {
                     var jqXHR = $.post(warpUrl);
-                    if (options.success) { jqXHR.success(options.success); }
+                    jqXHR.success(function(){
+                        if (options.success) options.success(); 
+                        model.trigger('warp_success');
+                    });
                     if (options.error) { jqXHR.error(options.error); }
                 },
             };
