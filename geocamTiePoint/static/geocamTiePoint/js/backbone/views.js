@@ -405,10 +405,10 @@ $(function($) {
 
         template: 
             '<div id="workflow_controls">' +
-                '<button id="save">save</button>'+
-                '<button id="undo" onclick="undo()">undo</button>'+
-                '<button id="redo" onclick="redo()">redo</button>'+
-                '<button id="export" disabled="true">export</button>'+
+                '<button id="save">Save</button>'+
+                '<button id="undo" onclick="undo()">Undo</button>'+
+                '<button id="redo" onclick="redo()">Redo</button>'+
+                '<button id="export" disabled="true">Export</button>'+
             '</div>' +
             '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
             '<div id="zoom_controls">' +
@@ -519,12 +519,13 @@ $(function($) {
 
             $('button#save').click( function() {
                 var button = $(this);
+                button.data('original-text', button.text());
                 button.disabled = true;
                 overlay.warp({
                     success: function(model, response) {
                         button.disabled = false;
                         button.text("WARPED");
-                        _.delay(function(){button.text("save");}, 1000);
+                        _.delay(function(){button.text(button.data('original-text'));}, 1000);
                         $('input#show_overlay').attr('checked', true).change();
                     },
                     error: function(model, response) {
