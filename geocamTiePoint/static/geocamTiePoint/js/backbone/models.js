@@ -121,8 +121,12 @@ $(function($) {
                 success: function() {
                     var jqXHR = $.post(warpUrl);
                     jqXHR.success(function(){
-                        if (options.success) options.success(); 
-                        model.trigger('warp_success');
+                        model.fetch({
+                            success: function(){
+                                if (options.success) options.success(); 
+                                model.trigger('warp_success');
+                            }
+                        });
                     });
                     if (options.error) { jqXHR.error(options.error); }
                 },

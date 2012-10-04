@@ -345,9 +345,10 @@ $(function($) {
             /* Events and init for the  qtree overlay */
             this.model.on('change:points', function(){
                 this.destroyAlignedImageQtree();
-                this.model.warp();
+                if (this.model.get('points').length > 2) this.model.warp();
             }, this);
             this.on('dragstart', this.destroyAlignedImageQtree, this);
+            this.model.on('add_point', this.destroyAlignedImageQtree, this); 
             this.model.on('warp_success', this.refreshAlignedImageQtree, this);
             if ( this.model.get('transform') && this.model.get('transform').type ) {
                 this.initAlignedImageQtree();
