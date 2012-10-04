@@ -11,6 +11,7 @@ import os
 import datetime
 import re
 import logging
+import threading
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -36,7 +37,8 @@ from geocamTiePoint import quadTree, transform, settings
 # keeping the generator in memory. note: an alternative approach would
 # use the memcached cache, but that would get rid of much of the benefit
 # in terms of serialization/deserialization.
-cachedGeneratorG = {'key': None, 'value': None}
+cachedGeneratorG = threading.local()
+cachedGeneratorG.gen = {'key': None, 'value': None}
 
 
 def getNewImageFileName(instance, filename):
@@ -150,7 +152,7 @@ class QuadTree(models.Model):
     @classmethod
     def getGeneratorWithCache(cls, quadTreeId):
         global cachedGeneratorG
-        cachedGeneratorCopy = cachedGeneratorG
+        cachedGeneratorCopy = cachedGeneratorG.gen
         key = cls.getGeneratorCacheKey(quadTreeId)
         if cachedGeneratorCopy['key'] == key:
             logging.debug('getGeneratorWithCache hit %s', key)
@@ -159,7 +161,7 @@ class QuadTree(models.Model):
             logging.debug('getGeneratorWithCache miss %s', key)
             q = get_object_or_404(QuadTree, id=quadTreeId)
             result = q.getGenerator()
-            cachedGeneratorG = dict(key=key, value=result)
+            cachedGeneratorG.gen = dict(key=key, value=result)
         return result
 
     def getGenerator(self):
