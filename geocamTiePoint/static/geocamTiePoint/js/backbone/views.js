@@ -127,14 +127,18 @@ $(function($) {
         _drawMarkers: function(latlons_in_gmap_space) {
             var model = this.model;
             var gmap = this.gmap;
+            var selected_idx;
             // destroy existing markers, if they exist.
             while (this.markers && this.markers.length > 0) {
-                this.markers.pop().setMap(null);
+                var marker = this.markers.pop();
+                if ( marker.get('selected') ) selected_idx = this.markers.length;
+                marker.setMap(null);
             }
             var markers = this.markers = [];
             _.each(latlons_in_gmap_space, function(latLon, index) {
                 if (! _.any(_.values(latLon), _.isNull)) {
                     var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
+                    if (index === selected_idx) marker.set('selected', true);
                     this.initMarkerDragHandlers(marker);
                     markers[index] = marker;
                 }
