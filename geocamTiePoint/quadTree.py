@@ -17,6 +17,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 import zipfile
+import tarfile
 
 from PIL import Image
 import numpy
@@ -254,6 +255,52 @@ def contentTypeToExtension(contentType):
         raise ValueError('unknown content type')
 
 
+def getDirTarInfo(name, mode=0755):
+    result = tarfile.TarInfo(name)
+    result.mtime = time.time()
+    result.mode = mode
+    result.type = tarfile.DIRTYPE
+    return result
+
+
+def getFileTarInfo(name, rawData, mode=0644):
+    result = tarfile.TarInfo(name)
+    result.size = len(rawData)
+    result.mtime = time.time()
+    result.mode = mode
+    result.type = tarfile.REGTYPE
+    return result
+
+
+class TarWriter(object):
+    """
+    A writer class where writeX() methods add file entries to an
+    in-memory tar.gz file.  The paths of all entries in the tarball are
+    prefixed with dirName. Once all entries have been added, the raw
+    tarball contents can be extracted using the getData() method and
+    written to a file or blob storage.
+    """
+
+    def __init__(self, dirName):
+        self.dirName = dirName
+        self.out = StringIO()
+        self.tar = tarfile.open(fileobj=self.out, mode='w:gz')
+        self.tar.addfile(getDirTarInfo(self.dirName))
+        self.closed = False
+
+    def writeData(self, path, data):
+        assert not self.closed
+        tinfo = getFileTarInfo(os.path.join(self.dirName, path),
+                               data)
+        self.tar.addfile(tinfo, fileobj=StringIO(data))
+
+    def getData(self):
+        if not self.closed:
+            self.tar.close()
+            self.closed = True
+        return self.out.getvalue()
+
+
 class ZipWriter(object):
     """
     A writer class where writeX() methods add file entries to an
@@ -314,11 +361,12 @@ class AbstractQuadTreeGenerator(object):
         return data
 
     def writeTile(self, writer, zoom, x, y):
-        bits, _contentType = self.getTileDataWithCache(zoom, x, y)
+        bits, contentType = self.getTileDataWithCache(zoom, x, y)
 
         if BENCHMARK_WARP_STEPS:
             saveStart = time.time()
-        writer.writeData('%s/%s/%s.jpg' % (zoom, x, y),
+        ext = contentTypeToExtension(contentType)
+        writer.writeData('%s/%s/%s%s' % (zoom, x, y, ext),
                          bits)
         if BENCHMARK_WARP_STEPS:
             print 'saveTime:', time.time() - saveStart

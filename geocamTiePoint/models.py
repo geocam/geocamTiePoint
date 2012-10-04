@@ -43,8 +43,8 @@ def getNewImageFileName(instance, filename):
     return 'geocamTiePoint/overlay_images/' + filename
 
 
-def getNewZipFileName(instance, filename):
-    return 'geocamTiePoint/exportZip/' + filename
+def getNewExportFileName(instance, filename):
+    return 'geocamTiePoint/export/' + filename
 
 
 def dumps(obj):
@@ -91,11 +91,16 @@ class QuadTree(models.Model):
     # transform is either an empty string (simple quadTree) or a JSON-formatted
     # definition of the warping transform (warped quadTree)
     transform = models.TextField(blank=True)
+
+    # note: 'exportZip' is a bit of a misnomer since the archive may not
+    # be a zipfile (tarball by default).  but no real need to change the
+    # field name and force a db migration.
     exportZipName = models.CharField(max_length=255,
                                      null=True, blank=True)
-    exportZip = models.FileField(upload_to=getNewZipFileName,
+    exportZip = models.FileField(upload_to=getNewExportFileName,
                                  max_length=255,
                                  null=True, blank=True)
+
     # we set unusedTime when a QuadTree is no longer referenced by an Overlay.
     # it will eventually be deleted.
     unusedTime = models.DateTimeField(null=True, blank=True)
@@ -169,12 +174,12 @@ class QuadTree(models.Model):
             return quadTree.SimpleQuadTreeGenerator(self.id,
                                                     image)
 
-    def generateExportZip(self, exportName, metaJson):
+    def generateExport(self, exportName, metaJson):
         gen = self.getGeneratorWithCache(self.id)
-        writer = quadTree.ZipWriter(exportName)
+        writer = quadTree.TarWriter(exportName)
         gen.writeQuadTree(writer)
         writer.writeData('meta.json', dumps(metaJson))
-        self.exportZipName = '%s.zip' % exportName
+        self.exportZipName = '%s.tar.gz' % exportName
         self.exportZip.save(self.exportZipName,
                             ContentFile(writer.getData()))
 
@@ -246,9 +251,9 @@ class Overlay(models.Model):
             # note: when exportZip has not been set, its value is not
             # None but <FieldFile: None>, which is False in bool() context
             if self.alignedQuadTree.exportZip:
-                result['exportZipUrl'] = reverse('geocamTiePoint_overlayExportZip',
-                                                 args=[self.key,
-                                                       str(self.alignedQuadTree.exportZipName)])
+                result['exportUrl'] = reverse('geocamTiePoint_overlayExport',
+                                              args=[self.key,
+                                                    str(self.alignedQuadTree.exportZipName)])
 
         return result
 
@@ -307,8 +312,8 @@ class Overlay(models.Model):
 
         return qt
 
-    def generateExportZip(self):
-        (self.alignedQuadTree.generateExportZip
+    def generateExport(self):
+        (self.alignedQuadTree.generateExport
          (self.getExportName(),
           self.getJsonDict()))
         return self.alignedQuadTree.exportZip

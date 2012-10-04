@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block head %}
-<title>{{ overlay.name }} - Export Zip</title>
+<title>{{ overlay.name }} - Export</title>
 
 <style type="text/css">
   #exportError {
@@ -18,7 +18,7 @@
 {% endblock head %}
 
 {% block contents %}
-<h2>{{ overlay.name }} - Export Zip</h2>
+<h2>{{ overlay.name }} - Export</h2>
 <div id="exportError"></div>
 <div id="exportMain"></div>
 {% endblock contents %}
@@ -26,7 +26,7 @@
 {% block scripts %}
 {{ block.super }}
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/exportZip.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/export.js"></script>
 {% endblock scripts %}
 
 {% block jsInit %}

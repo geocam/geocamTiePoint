@@ -356,7 +356,7 @@ def uiDemo(request, key):
 
 
 @csrf_exempt
-def overlayGenerateZip(request, key):
+def overlayGenerateExport(request, key):
     if request.method == 'POST':
         if settings.USING_APP_ENGINE:
             onFrontEndInstance = (backends.get_backend() == None)
@@ -368,17 +368,17 @@ def overlayGenerateZip(request, key):
                 return HttpResponse('{"result": "ok"}',
                                     content_type='application/json')
         overlay = get_object_or_404(Overlay, key=key)
-        overlay.generateExportZip()
+        overlay.generateExport()
         return HttpResponse('{"result": "ok"}',
                             content_type='application/json')
     else:
         return HttpResponseNotAllowed(['POST'])
 
 
-def overlayExportZipInterface(request, key):
+def overlayExportInterface(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
-        return render_to_response('geocamTiePoint/exportZip.html',
+        return render_to_response('geocamTiePoint/export.html',
                                   {'overlay': overlay,
                                    'overlayJson': dumps(overlay.jsonDict)},
                                   context_instance=RequestContext(request))
@@ -386,12 +386,12 @@ def overlayExportZipInterface(request, key):
         return HttpResponseNotAllowed(['GET'])
 
 
-def overlayExportZip(request, key, fname):
+def overlayExport(request, key, fname):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
         if not (overlay.alignedQuadTree and overlay.alignedQuadTree.exportZip):
-            raise Http404('no exportZip generated for requested overlay yet')
+            raise Http404('no export archive generated for requested overlay yet')
         return HttpResponse(overlay.alignedQuadTree.exportZip.file.read(),
-                            content_type='application/zip')
+                            content_type='application/x-tgz')
     else:
         return HttpResponseNotAllowed(['GET'])

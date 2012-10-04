@@ -20,7 +20,7 @@
     <input type="button" id="save_button" value="save" onClick="saveButtonClicked()">
     <input type="button" id="warp_button" value="warp" onClick="warpButtonClicked({{ overlay.key }})" />
     <input type="button" value="preview" onClick="window.location='/overlay/{{overlay.key}}/preview.html'" />
-    <input type="button" value="export" onClick="window.location='{% url geocamTiePoint_overlayExportZipInterface overlay.key %}'" />
+    <input type="button" value="export" onClick="window.location='{% url geocamTiePoint_overlayExportInterface overlay.key %}'" />
     <input type="button" value="reset" onClick="resetButtonClicked()" />
     <input type="button" value="undo" onClick="undo()" />
     <input type="button" value="redo" onClick="redo()" />

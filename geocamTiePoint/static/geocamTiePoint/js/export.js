@@ -30,9 +30,9 @@ function renderExportingStatus() {
 }
 
 function sendExportRequest() {
-    var generateZipUrl = (overlay.url.replace
-                          ('.json', '/generateZip'));
-    ($.post(generateZipUrl,
+    var generateExportUrl = (overlay.url.replace
+                             ('.json', '/generateExport'));
+    ($.post(generateExportUrl,
             '', /* empty post data */
             function() {}, /* no-op on success */
             'json')
@@ -46,7 +46,7 @@ function sendExportRequest() {
 function checkForExportComplete() {
     $.getJSON(overlay.url, function(response) {
         overlay = response;
-        if (overlay.exportZipUrl) {
+        if (overlay.exportUrl) {
             renderDownloadLink();
             cancelPollForExportComplete();
         }
@@ -82,17 +82,17 @@ function handleExportClick() {
 
 function renderExportButton() {
     ($('#exportMain').html
-     ('<button id="generateZip" type="button">' +
+     ('<button id="generateExport" type="button">' +
       'Export Aligned Overlay</button> (may take a few minutes)'));
 
-    $('#generateZip').click(handleExportClick);
+    $('#generateExport').click(handleExportClick);
 }
 
 function renderDownloadLink() {
     ($('#exportMain').html
      ('<a href="' +
-      overlay.exportZipUrl +
-      '">Download aligned overlay in zip file format</a>'));
+      overlay.exportUrl +
+      '">Download aligned overlay in tar.gz file format</a>'));
 }
 
 function renderSorry() {
@@ -102,7 +102,7 @@ function renderSorry() {
 }
 
 function initialize() {
-    if (overlay.exportZipUrl) {
+    if (overlay.exportUrl) {
         renderDownloadLink();
     } else {
         if (overlay.alignedTilesUrl) {
