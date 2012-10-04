@@ -93,7 +93,7 @@ def overlayIndex(request):
                                   {'overlays': overlays},
                                   context_instance=RequestContext(request))
     else:
-        return HttpResponseNotAllowed(['GET', 'POST'])
+        return HttpResponseNotAllowed(['GET'])
 
 
 def overlayDelete(request, key):
