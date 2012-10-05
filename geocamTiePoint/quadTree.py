@@ -129,8 +129,7 @@ def calculateMaxZoom(bounds, image):
     metersPerPixel = min(metersPerPixelX, metersPerPixelY)
     assert metersPerPixel > 0
     decimalZoom = math.log((INITIAL_RESOLUTION / metersPerPixel), 2)
-    zoom = int(math.ceil(decimalZoom))
-    return zoom + settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION
+    return int(math.ceil(decimalZoom))
 
 
 def tileIndex(zoom, mercatorCoords):
@@ -383,14 +382,12 @@ class SimpleQuadTreeGenerator(AbstractQuadTreeGenerator):
                        (w, h))
 
         if self.imageSize[0] > self.imageSize[1]:
-            self.maxZoom0 = int(math.ceil(math.log(self.imageSize[0] / TILE_SIZE, 2)))
+            self.maxZoom = int(math.ceil(math.log(self.imageSize[0] / TILE_SIZE, 2)))
         else:
-            self.maxZoom0 = int(math.ceil(math.log(self.imageSize[1] / TILE_SIZE, 2)))
-        k = settings.GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION
-        self.maxZoom = self.maxZoom0 + k
+            self.maxZoom = int(math.ceil(math.log(self.imageSize[1] / TILE_SIZE, 2)))
 
         self.zoomedImage = {}
-        self.zoomedImage[self.maxZoom0] = image
+        self.zoomedImage[self.maxZoom] = image
 
     def getZoomedImage(self, zoom):
         result = self.zoomedImage.get(zoom, None)
@@ -421,21 +418,17 @@ class SimpleQuadTreeGenerator(AbstractQuadTreeGenerator):
     def generateTile(self, zoom0, x, y):
         zoom = zoom0 - ZOOM_OFFSET
 
-        if zoom > self.maxZoom:
-            raise ZoomTooBig("can't generate tiles with zoom %d > maximum of %d"
-                             % (zoom0, self.maxZoom + ZOOM_OFFSET))
-
         tileBounds = [TILE_SIZE * x,
                       TILE_SIZE * y,
                       TILE_SIZE * (x + 1),
                       TILE_SIZE * (y + 1)]
         tileBounds = [int(round(c)) for c in tileBounds]
 
-        if zoom > self.maxZoom0:
+        if zoom > self.maxZoom:
             # this tile is at greater resolution than the original
             # image. use transform() to upsample.
-            image = self.getZoomedImage(self.maxZoom0)
-            k = zoom - self.maxZoom0
+            image = self.getZoomedImage(self.maxZoom)
+            k = zoom - self.maxZoom
             sourceTileBounds = [v / 2 ** k for v in tileBounds]
             if allPointsOutsideCorners(cornerPoints(sourceTileBounds), getImageCorners(image)):
                 raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
@@ -560,10 +553,6 @@ class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
         return getImageDataPng(self.generateTile(zoom, x, y))
 
     def generateTile(self, zoom, x, y):
-        if zoom > self.maxZoom:
-            raise ZoomTooBig("can't generate tiles with zoom %d > maximum of %d"
-                             % (zoom, self.maxZoom))
-
         xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
         if (not ((xmin <= x <= xmax)
                  and (ymin <= y <= ymax))):
