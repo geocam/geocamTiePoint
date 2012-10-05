@@ -294,15 +294,12 @@ function save(serverState) {
     var state = getState();
 
     // solve for the transform
-    if (imageCoordsG.length) {
+    if (imageCoordsG.length >= 2) {
         state.transform = (geocamTiePoint.transform
                            .getTransform(state.points)
                            .toDict());
     } else {
-        state.transform = {
-            'type': '',
-            'matrix': []
-        };
+        state.transform = null;
     }
 
     var saveButton = $('#save_button')[0];
