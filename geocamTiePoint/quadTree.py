@@ -501,22 +501,25 @@ class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
                 print >> sys.stderr, i, numpy.array(c1) - numpy.array(c2)
 
         imageEdgePoints = fillEdges(corners, 5)
-        mercatorEdgePoints = [self.transform.forward(edgePoint)
-                              for edgePoint in imageEdgePoints]
+        self.mercatorEdgePoints = [self.transform.forward(edgePoint)
+                                   for edgePoint in imageEdgePoints]
 
         bounds = Bounds()
-        for edgePoint in mercatorEdgePoints:
+        for edgePoint in self.mercatorEdgePoints:
             bounds.extend(edgePoint)
 
         self.maxZoom = calculateMaxZoom(bounds, self.image)
+        self.tileBounds = {}
 
-        self.tileBounds = [None] * (self.maxZoom + 1)
-        for zoom in xrange(int(self.maxZoom), -1, -1):
-            tbounds = Bounds()
-            for edgePoint in mercatorEdgePoints:
+    def getTileBounds(self, zoom):
+        result = self.tileBounds.get(zoom)
+        if result is None:
+            result = Bounds()
+            for edgePoint in self.mercatorEdgePoints:
                 tileCoords = tileIndex(zoom, edgePoint)
-                tbounds.extend(tileCoords)
-            self.tileBounds[zoom] = tbounds
+                result.extend(tileCoords)
+            self.tileBounds[zoom] = result
+        return result
 
     def writeQuadTree(self, writer):
         print >> sys.stderr, 'warping...'
@@ -525,14 +528,14 @@ class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
 
         totalTiles = 0
         for zoom in xrange(int(self.maxZoom), -1, -1):
-            xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
+            xmin, ymin, xmax, ymax = self.getTileBounds(zoom).bounds
             numTilesAtZoom = (xmax - xmin + 1) * (ymax - ymin + 1)
             totalTiles += numTilesAtZoom
         sys.stderr.write('%d total tiles\n' % totalTiles)
 
         tilesSoFar = 0
         for zoom in xrange(int(self.maxZoom), -1, -1):
-            xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
+            xmin, ymin, xmax, ymax = self.getTileBounds(zoom).bounds
             maxNumTiles = (xmax - xmin + 1) * (ymax - ymin + 1)
             sys.stderr.write('zoom %d (%d tiles)' % (zoom, maxNumTiles))
             for x in xrange(int(xmin), int(xmax) + 1):
@@ -553,7 +556,7 @@ class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
         return getImageDataPng(self.generateTile(zoom, x, y))
 
     def generateTile(self, zoom, x, y):
-        xmin, ymin, xmax, ymax = self.tileBounds[zoom].bounds
+        xmin, ymin, xmax, ymax = self.getTileBounds(zoom).bounds
         if (not ((xmin <= x <= xmax)
                  and (ymin <= y <= ymax))):
             raise OutOfBounds("tile at zoom=%d, x=%d, y=%d is out of the image bounds"
