@@ -300,17 +300,18 @@ class Overlay(models.Model):
         qt.save()
 
         self.unalignedQuadTree = qt
-        self.save()
 
         return qt
 
     def generateAlignedQuadTree(self):
+        if self.extras.get('transform') is None:
+            return None
+
         qt = QuadTree(imageData=self.imageData,
                       transform=dumps(self.extras.transform))
         qt.save()
 
         self.alignedQuadTree = qt
-        self.save()
 
         return qt
 

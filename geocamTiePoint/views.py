@@ -161,6 +161,7 @@ def overlayNew(request):
 
             # generate initial quad tree
             overlay.generateUnalignedQuadTree()
+            overlay.save()
 
             # check to see if the client was ajax, in which case
             # we respond with json
@@ -224,11 +225,12 @@ def overlayIdJson(request, key):
     elif request.method in ('POST', 'PUT'):
         overlay = get_object_or_404(Overlay, key=key)
         overlay.jsonDict = json.loads(request.raw_post_data)
-        transformDict = overlay.extras.get('transform', None)
+        transformDict = overlay.extras.get('transform')
         if transformDict:
             overlay.extras.bounds = (quadTree.imageMapBounds
                                      (overlay.extras.imageSize,
                                       transform.makeTransform(transformDict)))
+            overlay.generateAlignedQuadTree()
         overlay.save()
         return HttpResponse(dumps(overlay.jsonDict), content_type='application/json')
     elif request.method == 'DELETE':
@@ -246,12 +248,17 @@ def overlayListJson(request):
 
 @csrf_exempt
 def overlayIdWarp(request, key):
+    """
+    Explicit warp call is deprecated. We now warp every time the client
+    posts an update to the overlay.
+    """
     if request.method == 'GET':
         return render_to_response('geocamTiePoint/warp-form.html', {},
                                   context_instance=RequestContext(request))
     elif request.method == 'POST':
         overlay = get_object_or_404(Overlay, key=key)
         overlay.generateAlignedQuadTree()
+        overlay.save()
         return HttpResponse("{}", content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET', 'POST'])
