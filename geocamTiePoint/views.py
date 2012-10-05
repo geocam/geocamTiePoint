@@ -30,7 +30,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
-from geocamTiePoint import quadTree, transform
+from geocamTiePoint import quadTree, transform, garbage
 from geocamTiePoint import anypdf as pdf
 
 if settings.USING_APP_ENGINE:
@@ -402,3 +402,17 @@ def overlayExport(request, key, fname):
                             content_type='application/x-tgz')
     else:
         return HttpResponseNotAllowed(['GET'])
+
+
+@csrf_exempt
+def garbageCollect(request, dryRun='1'):
+    if request.method == 'GET':
+        return render_to_response('geocamTiePoint/gc.html',
+                                  {},
+                                  context_instance=RequestContext(request))
+    elif request.method == 'POST':
+        dryRun = int(dryRun)
+        garbage.garbageCollect(dryRun)
+        return HttpResponse('{"result": "ok"}', content_type='application/json')
+    else:
+        return HttpResponseNotAllowed(['GET', 'POST'])

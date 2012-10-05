@@ -31,3 +31,7 @@ GEOCAM_TIE_POINT_OPTIMIZE_LOG_LEVEL = 'WARNING'
 # but now it only affects the client-side js map controls on the
 # unaligned image.
 GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION = 2
+
+# amount of time to retain records in the database and blob store
+# after they are marked as unused.
+GEOCAM_TIE_POINT_RETAIN_SECONDS = 3600

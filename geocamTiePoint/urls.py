@@ -77,4 +77,6 @@ urlpatterns = patterns(
     url(r'^overlays.json$', 'overlayListJson',
         {}, 'geocamTiePoint_overlayListJson'),
 
+    url(r'^gc/(?:(?P<dryRun>\d+)/)?$', 'garbageCollect',
+        {}, 'geocamTiePoint_garbageCollect'),
 )
