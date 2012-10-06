@@ -18,6 +18,13 @@ $(function($) {
         initialize: function(){
             // Bind all the model's function properties to the instance, so they can be passed around as event handlers and such.
             _.bindAll(this);
+            this.on('before_warp', this.beforeWarp);
+            this.on('change:exportUrl', function(){
+                if ( this.exportPending && this.get('exportUrl') ) {
+                    console.log('Export trigger.');
+                }
+            }, this);
+            this.on('export_ready', function(){ console.log('Export Ready!'); } );
         },
 
         url: function() {
@@ -111,6 +118,10 @@ $(function($) {
             return Backbone.Model.prototype.save.call(this, attributes, options);
         },
 
+        beforeWarp: function() {
+            this.unset('exportUrl'); // We have to clear this because this.fetch() won't.
+        },
+
         warp: function(options) {
             // Save the overlay, then trigger a server-side warp.
             options = options || {};
@@ -119,6 +130,7 @@ $(function($) {
             saveOptions = {
                 error: options.error || function(){},
                 success: function() {
+                    model.trigger('before_warp');
                     var jqXHR = $.post(warpUrl);
                     jqXHR.success(function(){
                         model.fetch({
@@ -133,6 +145,37 @@ $(function($) {
             };
             this.save({}, saveOptions);
         },
+
+        startExport: function(options) {
+            //this.unset('exportUrl');
+            assert(! this.get('exportUrl'), "Model has an exportUrl already.");
+            var request_url = this.get('url').replace('.json', '/generateExport');
+            this.exportPending = true;
+            var model = this;
+            model.on('export_ready', function(){this.exportPending = false;}, this);
+            $.post(request_url, '', function(){
+                model.fetch({ success: function(){
+                    model.trigger('export_ready'); 
+                    if (options.success) options.success();
+                } });
+            }, 'json')
+            .error(function(xhr, status, error){
+                 this.exportPending = false;
+                 if (options.error) options.error();
+            });
+            this.pollUntilExportComplete(model);
+        },
+
+        pollUntilExportComplete: function pollForExportComplete (model, timeout){
+            if (!model.exportPending) return false;
+            this.fetch();
+            //var timeout = timeout ? 1.5 * timeout : 1000;
+            var timeout = 10000;
+            console.log("polling overlay: " + timeout);
+            this.pollTimer = setTimeout(_.bind(pollForExportComplete, this), timeout, model, timeout);
+        },
+
+
 
     });
 
