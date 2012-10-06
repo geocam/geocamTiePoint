@@ -27,13 +27,13 @@ $(function($) {
             if (! this._renderedTemplate) {
                 this._renderedTemplate = Handlebars.compile(this.template);
             }
-            assert(this.context || this.model.toJson,
+            assert(this.context || this.model.toJSON,
                    'Could note find a a context for the template.');
             var context;
             if (this.context) {
                 context = _.isFunction(this.context) ? this.context() : this.context;
             } else {
-                context = this.model.toJson();
+                context = this.model.toJSON();
             }
             var output = this._renderedTemplate(context);
             this.$el.html(output);
@@ -92,7 +92,6 @@ $(function($) {
                 this.model = app.overlays.get(this.id);
             }
             assert(this.model, 'Requires a model!');
-            this.context = this.model.toJSON();
         },
 
         getState: function() {
@@ -239,7 +238,7 @@ $(function($) {
                 }
             });
         }
-    });
+    }); // end OverlayGoogleMapsView base class
 
     app.views.ImageQtreeView = app.views.OverlayGoogleMapsView.extend({
         template: '<div id="image_canvas"></div>',
@@ -294,7 +293,7 @@ $(function($) {
             this.model.updateTiepoint( 'image', index, coords);
         },
 
-    });
+    }); // end ImageQtreeView
 
 
     app.views.MapView = app.views.OverlayGoogleMapsView.extend({
@@ -399,7 +398,7 @@ $(function($) {
             this.model.updateTiepoint( 'map', index, coords);
         },
 
-    });
+    }); // end MapView
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
@@ -408,7 +407,7 @@ $(function($) {
                 '<button id="save">Save</button>'+
                 '<button id="undo" onclick="undo()">Undo</button>'+
                 '<button id="redo" onclick="redo()">Redo</button>'+
-                '<button id="export" disabled="true">Export</button>'+
+                '<button id="export">Export</button>'+
             '</div>' +
             '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
             '<div id="zoom_controls">' +
@@ -536,6 +535,10 @@ $(function($) {
                 });
             });
 
+            $('button#export').click(function() {
+                app.router.navigate('overlay/'+overlay.id+'/export', {trigger: true});
+            });
+
             $('input#show_overlay').change(function(evt){
                 if (this.checked) {
                     splitView.mapView.overlay_enabled = true;
@@ -574,82 +577,82 @@ $(function($) {
             });
         }
 
-    });
+    }); // end SplitOverlayView
 
     app.views.NewOverlayView = app.views.View.extend({
 
-	template: '<form encytype="multipart/form-data" id="newOverlayForm">Image: <input type="file" name="file" id="newOverlayFile" /><br><input type="button" value="Submit" id="newOverlayFormSubmitButton" />'+window.csrf_token+'</form>',
+        template: '<form encytype="multipart/form-data" id="newOverlayForm">Image: <input type="file" name="file" id="newOverlayFile" /><br><input type="button" value="Submit" id="newOverlayFormSubmitButton" />'+window.csrf_token+'</form>',
 
-	initialize: function() {
-           app.views.View.prototype.initialize.apply(this, arguments);
-           this.context = { overlays: app.overlays.toJSON() };
+        initialize: function() {
+               app.views.View.prototype.initialize.apply(this, arguments);
+               this.context = { overlays: app.overlays.toJSON() };
+            },
+
+        afterRender: function() {
+            this.$('input#newOverlayFormSubmitButton').click(this.submitForm);
         },
 
-	afterRender: function() {
-	    this.$('input#newOverlayFormSubmitButton').click(this.submitForm);
-	},
-
-        getCookie: function(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie != '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = $.trim(cookies[i]);
-                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+            getCookie: function(name) {
+                var cookieValue = null;
+                if (document.cookie && document.cookie != '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = $.trim(cookies[i]);
+                        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
                     }
                 }
-            }
-            return cookieValue;
+                return cookieValue;
+            },
+
+        csrfSafeMethod: function(method) {
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
         },
 
-	csrfSafeMethod: function(method) {
-	    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-	},
+        submitForm: function() {
+            var data = new FormData();
+            $.each($('input#newOverlayFile')[0].files, function(i, file) {
+            data.append('image', file);
+            });
+                var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
+            $.ajax({
+            url: '/overlays/new.html',
+                    crossDomain: false,
+                    beforeSend: function(xhr, settings) {
+                        if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
+                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                        }
+                    },
+            data: data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'POST',
+            success: app.views.NewOverlayView.prototype.submitSuccess
+            });
+        },
 
-	submitForm: function() {
-	    var data = new FormData();
-	    $.each($('input#newOverlayFile')[0].files, function(i, file) {
-		data.append('image', file);
-	    });
-            var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
-	    $.ajax({
-		url: '/overlays/new.json',
-                crossDomain: false,
-                beforeSend: function(xhr, settings) {
-                    if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    }
-                },
-		data: data,
-		cache: false,
-		contentType: false,
-		processData: false,
-		type: 'POST',
-		success: app.views.NewOverlayView.prototype.submitSuccess
-	    });
-	},
-
-	submitSuccess: function(data) {
-	    console.log("got data back");
-            try {
-	        var json = JSON.parse(data);
-            } catch (error) {
-                console.log('Failed to parse response as JSON: ' + error.message);
-                return;
+        submitSuccess: function(data) {
+            console.log("got data back");
+                try {
+                var json = JSON.parse(data);
+                } catch (error) {
+                    console.log('Failed to parse response as JSON: ' + error.message);
+                    return;
+                }
+            if (json['status'] == 'success') {
+                var overlay = new app.models.Overlay({key: json.id});
+                app.overlays.add(overlay);
+                overlay.fetch({ 'success': function() {
+                    app.router.navigate('overlay/'+json['id'], {trigger: true});
+                } });
             }
-	    if (json['status'] == 'success') {
-            var overlay = new app.models.Overlay({key: json.id});
-            app.overlays.add(overlay);
-            overlay.fetch({ 'success': function() {
-                app.router.navigate('overlay/'+json['id']);
-            } });
-	    }
         }
-    });
+    }); // end NewOverlayView
 
-    app.views.DeleteOverlayView = app.views.View.extend({
+    app.views.DeleteOverlayView = app.views.View.extend({ 
 
         template: '<form id="deleteOverlayForm"><h4>Are you sure you want to delete overlay {{name}}?</h4><br><input type="button" value="Delete" id="deleteOverlayFormSubmitButton" /><input type="button" value="Cancel" id="deleteOverlayFormCancelButton" />',
 
@@ -688,5 +691,64 @@ $(function($) {
             console.log("got data back");
             app.router.navigate('overlays/');
         },
-    });
-});
+    }); // end DeleteOverlayView
+
+
+    app.views.ExportOverlayView = app.views.OverlayView.extend({
+
+        initialize: function() {
+            app.views.OverlayView.prototype.initialize.apply(this, arguments);
+            _.bindAll(this);
+        },
+
+        template:   '<h1>Export Map</h1>'+
+                    '<h2><a href="#overlay/{{key}}">{{name}}</a><h2>'+
+                    '{{#if exportUrl}}'+
+                        '<p>Your exported tarball is ready.</p>' +
+                        '<div id="download_link">'+
+                            '<a href="{{exportUrl}}">Click to Download</a>'+
+                        '</div>'+
+                    '{{else}}'+
+                        '<div id="export_controls">' +
+                            '{{#if alignedTilesUrl}}' +
+                                '<span id="export_button"><button id="create_archive">Create Archive</button></span>' +
+                                '<span id="exportError" style="color:red"></span>' +
+                            '{{else}}' +
+                                '<p>Add at least 2 tiepoint pairs before exporting the aligned image.</p>' +
+                            '{{/if}}' +
+                        '</div>' +
+                    '{{/if}}',
+
+        afterRender: function(){
+            this.$('#create_archive').click( _.bind(this.requestExport, this) );
+            if( this.model.exportPending ) {
+                this.startSpinner();
+            }
+        },
+
+        requestExport: function(){
+            //this.model.unset('exportUrl');
+            this.$('#create_archive').attr('disabled', true);
+            this.model.startExport({
+                error: function(){
+                 $('#exportError').html('Error during export: ' + error);
+                },
+            });
+            this.startSpinner();
+        },
+
+        startSpinner: function(){
+            thisView = this;
+            this.model.on('export_ready', function onExportReady(){
+                debugger;
+                this.model.off(null, onExportReady, null);
+                if ( app.currentView === thisView ) this.render();
+            }, this);
+            this.$('#create_archive').attr('disabled', true);
+            this.$('#export_button').html('<img src="/static/geocamTiePoint/images/loading.gif">');
+        },
+
+    }); //end ExportOverlayView
+
+}); // end jQuery ready handler
+>>>>>>> Export controls functional.
