@@ -618,7 +618,7 @@ $(function($) {
             });
                 var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
             $.ajax({
-            url: '/overlays/new.html',
+            url: '/overlays/new.json',
                     crossDomain: false,
                     beforeSend: function(xhr, settings) {
                         if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
@@ -751,4 +751,3 @@ $(function($) {
     }); //end ExportOverlayView
 
 }); // end jQuery ready handler
->>>>>>> Export controls functional.
