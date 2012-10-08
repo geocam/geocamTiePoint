@@ -158,7 +158,7 @@ maputils.createOpacityControl = function(map, mapType, opacity) {
                             container: opacityDiv
     });
 
-    google.maps.event.addListener(opacityCtrlKnob, 'dragend', function() {
+    google.maps.event.addListener(opacityCtrlKnob, 'drag', function() {
             setOpacity(mapType, opacityCtrlKnob.valueX());
     });
 
