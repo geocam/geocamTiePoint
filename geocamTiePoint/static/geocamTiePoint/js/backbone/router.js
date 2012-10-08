@@ -3,6 +3,7 @@ var app = app || {};
 $(function($) {
     var AppRouter = Backbone.Router.extend({
         routes: {
+            'home': 'home',
             'overlays/': 'listOverlays',
             'overlays/new': 'newOverlay',
             'overlay/:overlay_id/export': 'exportOverlay',
@@ -13,7 +14,12 @@ $(function($) {
         },
 
         root: function() {
-            this.navigate('overlays/', {trigger: true});
+            this.navigate('home', {trigger: true});
+        },
+
+        home: function() {
+            console.log('Routed to Home.');
+            new app.views.HomeView().render();
         },
 
         listOverlays: function() {

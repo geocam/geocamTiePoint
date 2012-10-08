@@ -27,8 +27,11 @@ $(function($) {
             if (! this._renderedTemplate) {
                 this._renderedTemplate = Handlebars.compile(this.template);
             }
+            /*
             assert(this.context || this.model.toJSON,
                    'Could note find a a context for the template.');
+            */
+            if (! this.context && ! this.model ) { this.context = {}; }
             var context;
             if (this.context) {
                 context = _.isFunction(this.context) ? this.context() : this.context;
@@ -45,9 +48,17 @@ $(function($) {
         }
     });
 
-    app.views.AppView = app.views.View.extend({
-        template: '<div id="navbar"></div>' +
-            '<div id="mapfasten-splitpane"></div>'
+    app.views.NavbarView = app.views.View.extend({
+        template: '<div id="navbar"></div>',
+    });
+
+    app.views.HomeView = app.views.View.extend({
+        template:   '<div style="max-width: 800px">'+
+                    '<p>MapFasten helps you quickly align an image or PDF with a map, '+
+                    'creating a shareable map overlay that you can display in the Google Maps'+
+                    'API or in KML and combine with other layers.</p>'+
+                    '<p><a class="welcomeEntry" href="#overlays/">Let\'s get started &gt;&gt;</a></p>'+
+                    '</div>',
     });
 
     app.views.ListOverlaysView = app.views.View.extend({
@@ -56,7 +67,7 @@ $(function($) {
             '{{debug}}' +
             '<table id="overlay_list">' +
             '{{#each overlays.models }}<tr>' +
-            '<td><a href="#overlay/{{id}}">{{get "name"}}</a></td>' +
+            '<td>{{#if attributes.alignedTilesUrl}}<a href="#overlay/{{id}}">{{/if}}{{get "name"}}{{#if attributes.alignedTilesUrl}}</a>{{/if}}</td>' +
             '<td><a id="edit_{{id}}" class="edit" href="#overlay/{{id}}/edit" >[edit]</a></td>' +
             '<td><a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.overlays.get({{id}}).destroy()">[delete]</a></td>' +
             '</tr>{{/each}}' +
