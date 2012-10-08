@@ -12,17 +12,17 @@ urlpatterns = patterns(
     'geocamTiePoint.views',
 
     ## New Workflow ##
-    url(r'^overlays/$', 'backbone',
-        {}, 'geocamTiePoint_backbone_overlays'),
+    url(r'^$', 'backbone',
+        {}, 'geocamTiePoint_backbone'),
 
     url(r'^overlays/new.json$', 'overlayNewJSON',
         {}, 'geocamTiePoint_overlayNew_JSON'),
 
     ## Urls to make current pages work with new workflow ##
-    url(r'^overlays/list.html$', lambda request: redirect('geocamTiePoint_backbone_overlays'),
+    url(r'^overlays/list.html$', lambda request: redirect(reverse('geocamTiePoint_backbone')+'#overlays/'),
         {}, 'geocamTiePoint_overlayIndex'),
 
-    url(r'^overlays/new.html$', lambda request: redirect(reverse('geocamTiePoint_backbone_overlays')+'#overlays/new'),
+    url(r'^overlays/new.html$', lambda request: redirect(reverse('geocamTiePoint_backbone')+'#overlays/new'),
         {}, 'geocamTiePoint_overlayNew'),
 
     ## Old Client ##
