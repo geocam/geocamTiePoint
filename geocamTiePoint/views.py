@@ -168,65 +168,6 @@ def overlayNewJSON(request):
         return HttpResponseNotAllowed(('POST'))
 
 @transaction.commit_on_success
-def overlayNewJSON(request):
-    if request.method == 'POST':
-        form = forms.NewImageDataForm(request.POST, request.FILES)
-        if form.is_valid():
-            # create and save new empty overlay so we can refer to it
-            # this causes a ValueError if the user isn't logged in
-            overlay = models.Overlay(author=request.user)
-            overlay.save()
-
-            # save imageData
-            image = None
-            imageRef = form.cleaned_data['image']
-            imageData = models.ImageData(contentType=imageRef.content_type,
-                                         overlay=overlay)
-            if imageRef.content_type in PDF_MIME_TYPES:
-                # convert PDF to raster image
-                pngData = pdf.convertPdf(imageRef.file.read())
-                imageData.image.save('dummy.png', ContentFile(pngData), save=False)
-                imageData.contentType = 'image/png'
-            else:
-                bits = imageRef.file.read()
-                image = PIL.Image.open(StringIO(bits))
-                if image.mode != 'RGBA':
-                    # add alpha channel to image for better
-                    # transparency handling later
-                    image = image.convert('RGBA')
-                    out = StringIO()
-                    image.save(out, format='png')
-                    convertedBits = out.getvalue()
-                    logging.info('converted image to RGBA, output length %s bytes'
-                                 % len(bits))
-                    imageData.image.save('dummy.png', ContentFile(convertedBits),
-                                         save=False)
-                    imageData.contentType = 'image/png'
-                else:
-                    imageData.image.save('dummy.png', ContentFile(bits), save=False)
-                    imageData.contentType = imageRef.content_type
-            imageData.save()
-
-            if image is None:
-                image = PIL.Image.open(imageData.image.file)
-
-            # fill in overlay info
-            overlay.name = imageRef.name
-            overlay.imageData = imageData
-            overlay.extras.points = []
-            overlay.extras.imageSize = image.size
-            overlay.save()
-
-            # generate initial quad tree
-            overlay.generateUnalignedQuadTree()
-
-            # respond with json
-            data = {'status': 'success', 'id': overlay.key}
-            return HttpResponse(json.dumps(data))
-    else:
-        return HttpResponseNotAllowed(('POST'))
-
-@transaction.commit_on_success
 def overlayNew(request):
     if request.method == 'POST':
         form = forms.NewImageDataForm(request.POST, request.FILES)
