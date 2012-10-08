@@ -6,7 +6,8 @@ $(function($) {
             'overlays/': 'listOverlays',
             'overlays/new': 'newOverlay',
             'overlay/:overlay_id/export': 'exportOverlay',
-            'overlay/:overlay_id': 'showOverlay',
+            'overlay/:overlay_id': 'viewOverlay',
+            'overlay/:overlay_id/edit': 'editOverlay',
             'overlay/:overlay_id/delete': 'deleteOverlay',
             '': 'root'
         },
@@ -21,8 +22,14 @@ $(function($) {
             view.render();
         },
 
-        showOverlay: function(overlay_id) {
-            console.log('Routed to showOverlay for ' + overlay_id);
+        viewOverlay: function(overlay_id) {
+            console.log('Routed to viewOverlay for ' + overlay_id);
+            var view = new app.views.MapView({id: overlay_id, readonly: true});
+            view.render();
+        },
+
+        editOverlay: function(overlay_id) {
+            console.log('Routed to editOverlay for ' + overlay_id);
             var view = new app.views.SplitOverlayView({id: overlay_id});
             view.render();
         },

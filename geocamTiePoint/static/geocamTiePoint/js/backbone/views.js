@@ -54,11 +54,13 @@ $(function($) {
         template: '<h1>Choose an overlay:</h1>' +
             '<a href="#overlays/new">New Overlay</a>' +
             '{{debug}}' +
-            '<ul id="overlay_list">' +
-            '{{#each overlays.models }}' +
-            '<li><a href="#overlay/{{id}}">{{get "name"}}</a> <a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.overlays.get({{id}}).destroy()">[delete]</a></li>' +
-            '{{/each}}' +
-            '</ul>',
+            '<table id="overlay_list">' +
+            '{{#each overlays.models }}<tr>' +
+            '<td><a href="#overlay/{{id}}">{{get "name"}}</a></td>' +
+            '<td><a id="edit_{{id}}" class="edit" href="#overlay/{{id}}/edit" >[edit]</a></td>' +
+            '<td><a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.overlays.get({{id}}).destroy()">[delete]</a></td>' +
+            '</tr>{{/each}}' +
+            '</table>',
 
         initialize: function() {
            app.views.View.prototype.initialize.apply(this, arguments);
@@ -300,7 +302,7 @@ $(function($) {
         template: '<div id="map_canvas"></div>',
         overlay_enabled: true,
 
-        initialize: function() {
+        initialize: function(options) {
             app.views.OverlayGoogleMapsView.prototype.initialize.apply(this, arguments);
             if (this.id && !this.model) {
                 this.model = app.overlays.get(this.id);
@@ -341,7 +343,9 @@ $(function($) {
             }
             //google.maps.event.addListener(gmap, 'click', handleMapClick);
             this.gmap = gmap;
-            this.drawMarkers();
+            if ( ! this.options.readonly ) {
+                this.drawMarkers();
+            }
             this.trigger('gmap_loaded');
             //this.initZoomHotkey();
 
@@ -646,7 +650,7 @@ $(function($) {
                 var overlay = new app.models.Overlay({key: json.id});
                 app.overlays.add(overlay);
                 overlay.fetch({ 'success': function() {
-                    app.router.navigate('overlay/'+json['id'], {trigger: true});
+                    app.router.navigate('overlay/'+json['id']+'/edit', {trigger: true});
                 } });
             }
         }
