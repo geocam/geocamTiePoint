@@ -33,6 +33,7 @@ $(function($) {
         },
 
         getImageTileUrl: function(coord, zoom) {
+            assert( this.get('unalignedTilesUrl'), "Overlay is missing an unalignedTilesUrl property.  Likely it does not have an unalignedQuadTree set on the backend.");
             var normalizedCoord = getNormalizedCoord(coord, zoom);
             if (!normalizedCoord) { return null; }
             var url = fillTemplate(this.get('unalignedTilesUrl'), {
