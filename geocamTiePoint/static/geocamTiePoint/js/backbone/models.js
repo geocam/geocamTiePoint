@@ -108,6 +108,7 @@ $(function($) {
         computeTransform: function() {
             // only operate on points that have all four values.
             var points = _.filter(this.get('points'), function(coords){return _.all(coords, _.identity);});
+            if ( points.length <2 ) return false; // a minimum of two tiepoints are required to compute the transform
             this.set('transform', 
                 points ? geocamTiePoint.transform.getTransform(points).toDict() : {type: '', matrix: []}
             );
