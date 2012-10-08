@@ -300,6 +300,7 @@ class Overlay(models.Model):
         qt.save()
 
         self.unalignedQuadTree = qt
+        self.save()
 
         return qt
 
