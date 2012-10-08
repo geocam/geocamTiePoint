@@ -27,6 +27,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.decorators import login_required
 
 from geocamTiePoint import models, forms, settings
 from geocamTiePoint.models import Overlay, QuadTree
@@ -73,6 +74,7 @@ def ember(request):
         return HttpResponseNotAllowed(['GET'])
 
 
+@login_required
 def backbone(request):
     initial_overlays = Overlay.objects.order_by('pk')
     if request.method == 'GET':
