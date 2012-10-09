@@ -27,6 +27,7 @@ $(function($) {
             if (! this._renderedTemplate) {
                 this._renderedTemplate = Handlebars.compile(this.template);
             }
+
             /*
             assert(this.context || this.model.toJSON,
                    'Could note find a a context for the template.');
@@ -764,5 +765,4 @@ $(function($) {
         },
 
     }); //end ExportOverlayView
-
 }); // end jQuery ready handler
