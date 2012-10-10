@@ -23,6 +23,7 @@ input#locationSearch {
 .vsplitbar,.splitter-bar-vertical{
     width: 12px;
     background: #aaa;
+    cursor: col-resize;
 }
 
 #split_container {

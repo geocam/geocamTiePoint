@@ -419,17 +419,26 @@ $(function($) {
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         template: 
-            '<div id="workflow_controls">' +
-                '<button id="save">Save</button>'+
-                '<button id="undo" onclick="undo()">Undo</button>'+
-                '<button id="redo" onclick="redo()">Redo</button>'+
-                '<button id="export">Export</button>'+
+            '<div id="workflow_controls" class="btn-toolbar">' +
+                '<div class="btn-group">'+
+                    '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
+                    '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
+                '</div>'+
+                '<div class="btn-group">'+
+                    '<button class="btn" id="save">Save</button>'+
+                    '<button class="btn" id="export">Export</button>'+
+                '</div>'+
             '</div>' +
-            '<input type="search" id="locationSearch" placeholder="Jump to a location"></input>' +
-            '<div id="zoom_controls">' +
-                '<button id="zoom_100">100%</button>' +
-                '<button id="zoom_fit">Fit Overlay</button>' +
-                '<input id="show_overlay" type="checkbox" checked="true"/><label for="show_overlay">Show Overlay</label>' +
+            '<div id="zoom_toolbar" class="btn-toolbar">' +
+                '<span class="input-prepend">'+
+                    '<span class="add-on">Jump to</span>'+
+                    '<input type="text" id="locationSearch" placeholder="location"></input>' +
+                '</span>' +
+                '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
+                    '<button class="btn" id="zoom_100">100%</button>' +
+                    '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
+                '</div>' +
+                '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
             '</div>' +
             '<div id="split_container">' +
                 '<div id="split_left"></div>' +
