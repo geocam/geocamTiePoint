@@ -42,9 +42,6 @@ window.csrf_token = "{% csrf_token %}";
     <script type="text/javascript">
         $(function($){
 
-            //Temporarily suppress the navbar links until we have time to viewify them
-            $('#navBar span').remove();
-
             window.settings = {{settings|safe}};
 
             app.overlays = app.overlays || new app.models.OverlayCollection;
@@ -53,6 +50,10 @@ window.csrf_token = "{% csrf_token %}";
             var overlay_bootstrap = {{ initial_overlays_json|safe }};
             app.overlays.reset(overlay_bootstrap);
             {% endif %}
+
+            app.navbar = new app.views.NavbarView({el: $('#navbar').addClass('navbar')});
+            app.navbar.render();
+
             app.router.start(); // initializes the app view based on url fragment.
         });
     </script>
@@ -60,7 +61,8 @@ window.csrf_token = "{% csrf_token %}";
 {% endblock scripts %}
 
 {% block header %}
-    {{ block.super }}
+{%comment%}{{block.super}}{%endcomment%}
+<div id="navbar" class="navbar"></div>
 {% endblock header %}
 
 {% block contents %}

@@ -1,3 +1,12 @@
+#navlist {
+    padding-left: 0px;
+}
+
+.nav_pad_vertical {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
 #backbone_app_container {
     height: 100%;
     width: 100%;
