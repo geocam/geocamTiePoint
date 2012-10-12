@@ -10,6 +10,7 @@
 #backbone_app_container {
     height: 100%;
     width: 100%;
+    margin-left: 2px;
 }
 
 #image_canvas {
@@ -43,4 +44,8 @@ input#locationSearch {
 
 #split_left, #split_right, #map_canvas, #image_canvas {
     height: 100%;
+}
+
+#new_overlay_view > form > input {
+    display: block;
 }

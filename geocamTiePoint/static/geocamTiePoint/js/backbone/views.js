@@ -619,7 +619,21 @@ $(function($) {
 
     app.views.NewOverlayView = app.views.View.extend({
 
-        template: '<form encytype="multipart/form-data" id="newOverlayForm">Image: <input type="file" name="file" id="newOverlayFile" /><br><input type="button" value="Submit" id="newOverlayFormSubmitButton" />'+window.csrf_token+'</form>',
+        template: 
+            '<div id="new_overlay_view">'+
+                '<form encytype="multipart/form-data" id="newOverlayForm">'+
+                    '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
+                    '<input class="btn" type="button" value="Submit" id="newOverlayFormSubmitButton" />'+
+                    window.csrf_token +
+                '</form>'+
+                '<h3>OR</h3>'+
+                '<form id="urlForm">'+
+                    '<label>Paste Url</label>'+
+                    '<input type="text" id="imageUrl" style="width: 98%"/>'+
+                    '<input class="btn" type="button" id="submitUrl" value="Submit"/>'+
+                    window.csrf_token +
+                '</form>'+
+            '</div>',
 
         initialize: function() {
                app.views.View.prototype.initialize.apply(this, arguments);
@@ -628,6 +642,10 @@ $(function($) {
 
         afterRender: function() {
             this.$('input#newOverlayFormSubmitButton').click(this.submitForm);
+            that = this;
+            this.$('#urlForm input#submitUrl').click(function(){
+                $.post('/overlays/new.json', that.$('urlForm').serialize(), that.submitSuccess);
+            });
         },
 
         getCookie: function(name) {
@@ -652,30 +670,30 @@ $(function($) {
         submitForm: function() {
             var data = new FormData();
             $.each($('input#newOverlayFile')[0].files, function(i, file) {
-            data.append('image', file);
+                data.append('image', file);
             });
                 var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
             $.ajax({
-            url: '/overlays/new.json',
-                    crossDomain: false,
-                    beforeSend: function(xhr, settings) {
-                        if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
-                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                        }
-                    },
-            data: data,
-            cache: false,
-            contentType: false,
-            processData: false,
-            type: 'POST',
-            success: app.views.NewOverlayView.prototype.submitSuccess
+                url: '/overlays/new.json',
+                        crossDomain: false,
+                        beforeSend: function(xhr, settings) {
+                            if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
+                                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                            }
+                        },
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'POST',
+                success: app.views.NewOverlayView.prototype.submitSuccess
             });
         },
 
         submitSuccess: function(data) {
             console.log("got data back");
                 try {
-                var json = JSON.parse(data);
+                    var json = JSON.parse(data);
                 } catch (error) {
                     console.log('Failed to parse response as JSON: ' + error.message);
                     return;
