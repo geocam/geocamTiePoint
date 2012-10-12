@@ -651,36 +651,51 @@ $(function($) {
         },
 
         submitForm: function() {
+	    $('input#newOverlayFormSubmitButton')[0].value = "Working...";
+	    $('input#newOverlayFormSubmitButton')[0].disabled = true;
+	    setTimeout(function(){
+		if ($('input#newOverlayFormSubmitButton')[0].value == "Working...")
+		    $('input#newOverlayFormSubmitButton')[0].disabled = false;
+		}, 10000);
             var data = new FormData();
             $.each($('input#newOverlayFile')[0].files, function(i, file) {
             data.append('image', file);
             });
                 var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
             $.ajax({
-            url: '/overlays/new.json',
-                    crossDomain: false,
-                    beforeSend: function(xhr, settings) {
-                        if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
-                            xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                        }
-                    },
-            data: data,
-            cache: false,
-            contentType: false,
-            processData: false,
-            type: 'POST',
-            success: app.views.NewOverlayView.prototype.submitSuccess
+		url: '/overlays/new.json',
+                crossDomain: false,
+                beforeSend: function(xhr, settings) {
+                    if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+		data: data,
+		cache: false,
+		contentType: false,
+		processData: false,
+		type: 'POST',
+		success: app.views.NewOverlayView.prototype.submitSuccess,
+		error: app.views.NewOverlayView.prototype.submitError
             });
         },
 
+	submitError: function() {
+	    console.log("Error occured when trying to submit new overlay");
+	    $('input#newOverlayFormSubmitButton')[0].disabled = false;
+	    $('input#newOverlayFormSubmitButton')[0].value = "Submit";
+	},
+
         submitSuccess: function(data) {
             console.log("got data back");
-                try {
+	    $('input#newOverlayFormSubmitButton')[0].disabled = false;
+	    $('input#newOverlayFormSubmitButton')[0].value = "Submit";
+            try {
                 var json = JSON.parse(data);
-                } catch (error) {
-                    console.log('Failed to parse response as JSON: ' + error.message);
-                    return;
-                }
+            } catch (error) {
+                console.log('Failed to parse response as JSON: ' + error.message);
+                return;
+            }
             if (json['status'] == 'success') {
                 var overlay = new app.models.Overlay({key: json.id});
                 app.overlays.add(overlay);
