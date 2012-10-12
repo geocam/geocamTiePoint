@@ -412,6 +412,17 @@ $(function($) {
         return getTransform0(toPts, fromPts);
     }
 
+    function deserializeTransform(transformJSON) {
+        var classmap = {
+            'projective': ProjectiveTransform,
+            'quadratic': QuadraticTransform,
+            'quadratic2': QuadraticTransform2,
+        }
+        if (! transformJSON in classmap) throw "Unexpected transform type";
+        var transformClass = classmap[transformJSON.type];
+        return new transformClass( matrixFromNestedList(transformJSON.matrix) )
+    }
+
     /**********************************************************************
      * exports
      **********************************************************************/
@@ -421,4 +432,5 @@ $(function($) {
     ns.getTransform = getTransform;
     ns.splitPoints = splitPoints;
     ns.forwardPoints = forwardPoints;
+    ns.deserializeTransform = deserializeTransform;
 });

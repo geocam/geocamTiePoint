@@ -83,3 +83,13 @@ function getNormalizedCoord(coord, zoom) {
 
     return {x: x, y: y};
 }
+
+function forwardTransformLatLon(transform, latlon) {
+    var pixelcoords = latLonToPixel(latlon);
+    pixelcoords[0] = pixelcoords.x;
+    pixelcoords[1] = pixelcoords.y;
+    var transformedMeters = transform.forward(pixelcoords);
+    transformedMeters.x = transformedMeters[0];
+    transformedMeters.y = transformedMeters[1];
+    return metersToLatLon(transformedMeters);
+}

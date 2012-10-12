@@ -120,6 +120,24 @@ $(function($) {
 
     };
 
+
+    maputils.fitMapToBounds = function(map, bounds) {
+        // Source: https://gist.github.com/1255671
+        map.fitBounds(bounds);   // does the job asynchronously
+        google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
+            var newSpan = map.getBounds().toSpan();              // the span of the map set by Google fitBounds (always larger by what we ask)
+            var askedSpan = bounds.toSpan();                     // the span of what we asked for
+            var latRatio = (newSpan.lat()/askedSpan.lat()) - 1;  // the % of increase on the latitude
+            var lngRatio = (newSpan.lng()/askedSpan.lng()) - 1;  // the % of increase on the longitude
+            // if the % of increase is too big (> to a threshold) we zoom in
+            if (Math.min(latRatio, lngRatio) > 0.46) {
+            // 0.46 is the threshold value for zoming in. It has been established empirically by trying different values.
+            this.setZoom(map.getZoom() + 1);
+        }
+      });
+    }
+    
+
 });
 
 

@@ -480,13 +480,11 @@ $(function($) {
 
         zoomMaximum: function() {
             var offset = 8;
-            //var tileSize = 256;
-            var imageZoom = this.imageView.model.maxZoom();
-            //var mapZoom = Math.ceil(Math.log( Math.max.apply({},
-            //  this.model.get('imageSize') ) / TILE_SIZE, 2)) + offset;
-            var mapZoom = imageZoom + offset;
+            //var imageZoom = this.imageView.model.maxZoom();
+            var imageZoom = this.imageView.gmap.mapTypes.get('image-map').maxZoom;
+            google.maps.event.addListenerOnce(this.imageView.gmap, 'bounds_changed', _.bind(this.matchImageZoom, this));
             this.imageView.gmap.setZoom(imageZoom);
-            this.mapView.gmap.setZoom(mapZoom);
+
             var isSelected = function(marker) {
                 return marker.get('selected');
             };
@@ -501,6 +499,16 @@ $(function($) {
         zoomFit: function() {
             this.imageView.gmap.fitBounds(this.model.imageBounds());
             this.mapView.gmap.fitBounds(this.model.mapBounds());
+        },
+
+        matchImageZoom: function() {
+            // transform the bounds of the image view into map space and zoom/pan the map view to fit.
+            var transform = geocamTiePoint.transform.deserializeTransform(this.model.get('transform'));
+            var imageBounds = this.imageView.gmap.getBounds();
+            var mapBounds = new google.maps.LatLngBounds();
+            mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getSouthWest()) );
+            mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getNorthEast()) )
+            maputils.fitMapToBounds(this.mapView.gmap, mapBounds);
         },
 
         initZoomButtons: function() {
@@ -770,7 +778,6 @@ $(function($) {
         startSpinner: function(){
             thisView = this;
             this.model.on('export_ready', function onExportReady(){
-                debugger;
                 this.model.off(null, onExportReady, null);
                 if ( app.currentView === thisView ) this.render();
             }, this);
