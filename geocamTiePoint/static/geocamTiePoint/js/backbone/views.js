@@ -51,9 +51,10 @@ $(function($) {
 
     app.views.NavbarView = app.views.View.extend({
         template:   '<div id="navbar" class="navbar-inner">'+
-                        '<ul id="navlist" class="nav">'+
-                            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
-                            '<li class="nav_pad_vertical"><a href="#overlays/">List<br/>Overlays</a></li>'+
+            '<ul id="navlist" class="nav">'+
+            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
+            '<li class="nav_pad_vertical"><a href="#overlays/">List<br/>Overlays</a></li>'+
+	    '<li class="nav_pad_vertical"><a href="/accounts/logout/">Logout</a></li>'+
                         '</ul>'+
                     '</div>',
     });
