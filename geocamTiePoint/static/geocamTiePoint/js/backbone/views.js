@@ -51,9 +51,10 @@ $(function($) {
 
     app.views.NavbarView = app.views.View.extend({
         template:   '<div id="navbar" class="navbar-inner">'+
-                        '<ul id="navlist" class="nav">'+
-                            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
-                            '<li class="nav_pad_vertical"><a href="#overlays/">List<br/>Overlays</a></li>'+
+            '<ul id="navlist" class="nav">'+
+            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
+            '<li class="nav_pad_vertical"><a href="#overlays/">List<br/>Overlays</a></li>'+
+	    '<li class="nav_pad_vertical"><a href="/accounts/logout/">Logout</a></li>'+
                         '</ul>'+
                     '</div>',
     });
@@ -668,30 +669,45 @@ $(function($) {
         },
 
         submitForm: function() {
-            var data = new FormData();
-            $.each($('input#newOverlayFile')[0].files, function(i, file) {
-                data.append('image', file);
-            });
-                var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
-            $.ajax({
-                url: '/overlays/new.json',
-                        crossDomain: false,
-                        beforeSend: function(xhr, settings) {
-                            if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
-                                xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                            }
-                        },
-                data: data,
-                cache: false,
-                contentType: false,
-                processData: false,
-                type: 'POST',
-                success: app.views.NewOverlayView.prototype.submitSuccess
-            });
+            $('input#newOverlayFormSubmitButton')[0].value = "Working...";
+            $('input#newOverlayFormSubmitButton')[0].disabled = true;
+            setTimeout(function(){
+            if ($('input#newOverlayFormSubmitButton')[0].value == "Working...")
+                $('input#newOverlayFormSubmitButton')[0].disabled = false;
+            }, 10000);
+                var data = new FormData();
+                $.each($('input#newOverlayFile')[0].files, function(i, file) {
+                    data.append('image', file);
+                });
+                    var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
+                $.ajax({
+                    url: '/overlays/new.json',
+                            crossDomain: false,
+                            beforeSend: function(xhr, settings) {
+                                if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
+                                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                                }
+                            },
+                    data: data,
+                    cache: false,
+                    contentType: false,
+                    processData: false,
+                    type: 'POST',
+                    success: app.views.NewOverlayView.prototype.submitSuccess,
+                    error: app.views.NewOverlayView.prototype.submitError
+                });
+        },
+
+        submitError: function() {
+            console.log("Error occured when trying to submit new overlay");
+            $('input#newOverlayFormSubmitButton')[0].disabled = false;
+            $('input#newOverlayFormSubmitButton')[0].value = "Submit";
         },
 
         submitSuccess: function(data) {
             console.log("got data back");
+            $('input#newOverlayFormSubmitButton')[0].disabled = false;
+            $('input#newOverlayFormSubmitButton')[0].value = "Submit";
                 try {
                     var json = JSON.parse(data);
                 } catch (error) {
