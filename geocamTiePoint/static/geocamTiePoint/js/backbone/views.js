@@ -275,7 +275,7 @@ $(function($) {
             //var gmap = app.gmap = new google.maps.Map(this.el, {
                     zoom: MIN_ZOOM_OFFSET,
                     streetViewControl: false,
-                    backgroundColor: 'rgb(0, 0, 0)',
+                    backgroundColor: 'rgb(128, 128, 128)',
                     mapTypeControl: false
             });
             var gmap = app.gmap;
@@ -427,26 +427,26 @@ $(function($) {
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         template: 
+            '<div id="location" class="btn-toolbar">' +
+                '<span class="input-prepend">'+
+                    '<span class="add-on">Go to</span>'+
+                    '<input type="text" id="locationSearch" placeholder="Location"></input>' +
+                '</span>' +
+            '</div>'+
             '<div id="workflow_controls" class="btn-toolbar">' +
                 '<div class="btn-group">'+
                     '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
                     '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
                 '</div>'+
-                '<div class="btn-group">'+
-                    '<button class="btn" id="save">Save</button>'+
-                    '<button class="btn" id="export">Export</button>'+
-                '</div>'+
-            '</div>' +
-            '<div id="zoom_toolbar" class="btn-toolbar">' +
-                '<span class="input-prepend">'+
-                    '<span class="add-on">Jump to</span>'+
-                    '<input type="text" id="locationSearch" placeholder="location"></input>' +
-                '</span>' +
                 '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
                     '<button class="btn" id="zoom_100">100%</button>' +
                     '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
                 '</div>' +
                 '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
+                '<div id="save-export" class="btn-group">'+
+                    '<button class="btn" id="save">Save</button>'+
+                    '<button class="btn" id="export">Export</button>'+
+                '</div>'+
             '</div>' +
             '<div id="split_container">' +
                 '<div id="split_left"></div>' +

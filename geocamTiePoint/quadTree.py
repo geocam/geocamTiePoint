@@ -36,6 +36,7 @@ ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
 BENCHMARK_WARP_STEPS = False
 BLACK = (0, 0, 0)
+GRAY = (128, 128, 128)
 
 
 class ZoomTooBig(Exception):
@@ -187,7 +188,7 @@ def setBackgroundColor(image, backgroundColor):
 
 def getImageDataJpg(image):
     out = StringIO()
-    image = setBackgroundColor(image, BLACK)
+    image = setBackgroundColor(image, GRAY)
     image.save(out, format='jpeg')
     return (out.getvalue(), 'image/jpeg')
 
