@@ -7,10 +7,13 @@
     padding-bottom: 10px;
 }
 
+.navbar-text {
+    text-decoration: underline;
+}
+
 #backbone_app_container {
-    height: 100%;
-    width: 100%;
-    margin-left: 2px;
+      height: 100%;
+      margin: auto 30px;
 }
 
 #image_canvas {

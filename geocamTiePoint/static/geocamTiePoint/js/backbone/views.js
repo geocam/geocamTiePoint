@@ -50,13 +50,14 @@ $(function($) {
     });
 
     app.views.NavbarView = app.views.View.extend({
-        template:   '<div id="navbar" class="navbar-inner">'+
-            '<ul id="navlist" class="nav">'+
-            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
-            '<li class="nav_pad_vertical"><a href="#overlays/">List<br/>Overlays</a></li>'+
-	    '<li class="nav_pad_vertical"><a href="/accounts/logout/">Logout</a></li>'+
-                        '</ul>'+
-                    '</div>',
+        template:   
+            '<div class="navbar-inner">'+
+                '<ul id="navlist" class="nav">'+
+                    '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
+                    '<li class="nav_pad_vertical navbar-text"><a href="#overlays/">List Overlays</a></li>'+
+                '</ul>'+
+                '<p class="pull-right navbar-text" style="float:right"><a href="/accounts/logout/">Logout</a></p>'+
+            '</div>',
     });
 
     app.views.HomeView = app.views.View.extend({
@@ -69,8 +70,9 @@ $(function($) {
     });
 
     app.views.ListOverlaysView = app.views.View.extend({
-        template: '<h1>Choose an overlay:</h1>' +
-            '<a href="#overlays/new">New Overlay</a>' +
+        template: 
+            '<a class="btn btn-primary" href="#overlays/new">New Overlay</a>' +
+            '<h1>Choose an overlay:</h1>' +
             '{{debug}}' +
             '<table id="overlay_list">' +
             '{{#each overlays.models }}<tr>' +
