@@ -9,6 +9,7 @@ import json
 import logging
 import time
 import rfc822
+import urllib2
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -18,7 +19,7 @@ import PIL.Image
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
-from django.http import HttpResponseNotAllowed, Http404
+from django.http import HttpResponseNotAllowed, Http404, HttpResponseBadRequest
 from django.template import RequestContext
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -113,6 +114,7 @@ def overlayDelete(request, key):
 @transaction.commit_on_success
 def overlayNewJSON(request):
     if request.method == 'POST':
+        class dummf_ref(object): pass
         form = forms.NewImageDataForm(request.POST, request.FILES)
         if form.is_valid():
             # create and save new empty overlay so we can refer to it
@@ -120,11 +122,36 @@ def overlayNewJSON(request):
             overlay = models.Overlay(author=request.user)
             overlay.save()
 
-            # save imageData
+            # test to see if there is an image file
+            # file takes precedence over image url
             image = None
             imageRef = form.cleaned_data['image']
+            if not imageRef:
+                # no image, procede to check for url
+                if not form.cleaned_data['imageUrl']:
+                    # what did the user even do
+                    return HttpResponseBadRequest()
+                # we have a url, try to download it
+                try:
+                    response = urllib2.urlopen(form.cleaned_data['imageUrl'])
+                except urllib2.HTTPError as e:
+                    return HttpResponseBadRequest()
+                if response.code != 200 or\
+                   'content-type' not in response.headers or\
+                   response.headers['content-type'].split('/')[0] != "image" or\
+                   response.headers['content-type'] not in PDF_MIME_TYPES:
+                    # we didn't recieve an image,
+                    # or we did and the server didn't say so.
+                    # either way we're not going to deal with it
+                    return HttpResponseBadRequest()
+                # quick hack that lets us not touch other code
+                imageRef = dummy_ref()
+                imageRef.content_type = response.headers['content-type']
+                imageRef.file = response
+
             imageData = models.ImageData(contentType=imageRef.content_type,
                                          overlay=overlay)
+
             if imageRef.content_type in PDF_MIME_TYPES:
                 # convert PDF to raster image
                 pngData = pdf.convertPdf(imageRef.file.read())

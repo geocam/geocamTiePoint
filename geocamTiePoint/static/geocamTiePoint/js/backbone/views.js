@@ -7,10 +7,10 @@ $(function($) {
     app.container_id = '#backbone_app_container';
 
     /*
-    * Handlebars helper that allows us to access
-    * model instance attributes from within a template.
-    * attr must be passed in as a (quoted) string literal from the template.
-    */
+     * Handlebars helper that allows us to access
+     * model instance attributes from within a template.
+     * attr must be passed in as a (quoted) string literal from the template.
+     */
     Handlebars.registerHelper('get', function(attr) {
         return this.get(attr);
     });
@@ -29,8 +29,8 @@ $(function($) {
             }
 
             /*
-            assert(this.context || this.model.toJSON,
-                   'Could note find a a context for the template.');
+              assert(this.context || this.model.toJSON,
+              'Could note find a a context for the template.');
             */
             if (! this.context && ! this.model ) { this.context = {}; }
             var context;
@@ -51,27 +51,27 @@ $(function($) {
 
     app.views.NavbarView = app.views.View.extend({
         template:   
-            '<div class="navbar-inner">'+
-                '<ul id="navlist" class="nav">'+
-                    '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
-                    '<li class="nav_pad_vertical navbar-text"><a href="#overlays/">List Overlays</a></li>'+
-                '</ul>'+
-                '<p class="pull-right navbar-text" style="float:right"><a href="/accounts/logout/">Logout</a></p>'+
+        '<div class="navbar-inner">'+
+            '<ul id="navlist" class="nav">'+
+            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
+            '<li class="nav_pad_vertical navbar-text"><a href="#overlays/">List Overlays</a></li>'+
+            '</ul>'+
+            '<p class="pull-right navbar-text" style="float:right"><a href="/accounts/logout/">Logout</a></p>'+
             '</div>',
     });
 
     app.views.HomeView = app.views.View.extend({
         template:   '<div style="max-width: 800px">'+
-                    '<p>MapFasten helps you quickly align an image or PDF with a map, '+
-                    'creating a shareable map overlay that you can display in the Google Maps'+
-                    'API or in KML and combine with other layers.</p>'+
-                    '<p><a class="welcomeEntry" href="#overlays/">Let\'s get started &gt;&gt;</a></p>'+
-                    '</div>',
+            '<p>MapFasten helps you quickly align an image or PDF with a map, '+
+            'creating a shareable map overlay that you can display in the Google Maps'+
+            'API or in KML and combine with other layers.</p>'+
+            '<p><a class="welcomeEntry" href="#overlays/">Let\'s get started &gt;&gt;</a></p>'+
+            '</div>',
     });
 
     app.views.ListOverlaysView = app.views.View.extend({
         template: 
-            '<a class="btn btn-primary" href="#overlays/new">New Overlay</a>' +
+        '<a class="btn btn-primary" href="#overlays/new">New Overlay</a>' +
             '<h1>Choose an overlay:</h1>' +
             '{{debug}}' +
             '<table id="overlay_list">' +
@@ -83,30 +83,30 @@ $(function($) {
             '</table>',
 
         initialize: function() {
-           app.views.View.prototype.initialize.apply(this, arguments);
-           this.context = { overlays: app.overlays };
-           app.overlays.on('remove', function(){this.render();}, this);
+            app.views.View.prototype.initialize.apply(this, arguments);
+            this.context = { overlays: app.overlays };
+            app.overlays.on('remove', function(){this.render();}, this);
         },
 
         /*
-        afterRender: function(){
-            this.$('#overlay_list li a.delete').each(function(idx, a){
-                a.click(function(evt){
-                    var overlay_id = parseInt(this.id.split('_').pop());
-                    app.overlys.get(overlay_id).destroy();
-                });
-            });
-        },
+          afterRender: function(){
+          this.$('#overlay_list li a.delete').each(function(idx, a){
+          a.click(function(evt){
+          var overlay_id = parseInt(this.id.split('_').pop());
+          app.overlys.get(overlay_id).destroy();
+          });
+          });
+          },
         */
 
     });
 
 
     /*
-    * OverlayView: id-accepting base class for views that deal with a
-    * single Overlay.
-    * Base class for both OverlayGoogleMapsView and SplitOverlayView
-    */
+     * OverlayView: id-accepting base class for views that deal with a
+     * single Overlay.
+     * Base class for both OverlayGoogleMapsView and SplitOverlayView
+     */
     app.views.OverlayView = app.views.View.extend({
         initialize: function(options) {
             app.views.View.prototype.initialize.apply(this, arguments);
@@ -130,7 +130,7 @@ $(function($) {
      * OverlayGoogleMapsView: 
      * Base class for ImageQtreeView and MapView
      * Implements Google Maps and Marker initialization & management
-    */
+     */
     app.views.OverlayGoogleMapsView = app.views.OverlayView.extend({
         
         initialize: function(options) {
@@ -172,19 +172,19 @@ $(function($) {
         },
 
         handleClick: function(event) {
-                if (!_.isUndefined(window.draggingG) && draggingG) return;
-                assert(!_.isUndefined(window.actionPerformed), "Missing global actionPerformed().  Check for undo.js");
-                actionPerformed();
-                var latLng = event.latLng;
-                var coord = latLonToPixel(latLng);
-                var index = this.markers.length;
+            if (!_.isUndefined(window.draggingG) && draggingG) return;
+            assert(!_.isUndefined(window.actionPerformed), "Missing global actionPerformed().  Check for undo.js");
+            actionPerformed();
+            var latLng = event.latLng;
+            var coord = latLonToPixel(latLng);
+            var index = this.markers.length;
 
-                var marker = maputils.createLabeledMarker(latLng, ''+(index+1), this.gmap);
-                this.initMarkerDragHandlers(marker);
+            var marker = maputils.createLabeledMarker(latLng, ''+(index+1), this.gmap);
+            this.initMarkerDragHandlers(marker);
 
-                this.markers.push(marker);
-                this.updateTiepointFromMarker(index, marker);
-                //imageCoordsG.push(coord);
+            this.markers.push(marker);
+            this.updateTiepointFromMarker(index, marker);
+            //imageCoordsG.push(coord);
         },
 
         initGmapUIHandlers: function(){
@@ -272,11 +272,11 @@ $(function($) {
 
         afterRender: function() {
             app.gmap = new google.maps.Map(this.$('#image_canvas')[0], {
-            //var gmap = app.gmap = new google.maps.Map(this.el, {
-                    zoom: MIN_ZOOM_OFFSET,
-                    streetViewControl: false,
-                    backgroundColor: 'rgb(128, 128, 128)',
-                    mapTypeControl: false
+		//var gmap = app.gmap = new google.maps.Map(this.el, {
+                zoom: MIN_ZOOM_OFFSET,
+                streetViewControl: false,
+                backgroundColor: 'rgb(128, 128, 128)',
+                mapTypeControl: false
             });
             var gmap = app.gmap;
 
@@ -427,30 +427,30 @@ $(function($) {
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         template: 
-            '<div id="location" class="btn-toolbar">' +
-                '<span class="input-prepend">'+
-                    '<span class="add-on">Go to</span>'+
-                    '<input type="text" id="locationSearch" placeholder="Location"></input>' +
-                '</span>' +
+        '<div id="location" class="btn-toolbar">' +
+            '<span class="input-prepend">'+
+            '<span class="add-on">Go to</span>'+
+            '<input type="text" id="locationSearch" placeholder="Location"></input>' +
+            '</span>' +
             '</div>'+
             '<div id="workflow_controls" class="btn-toolbar">' +
-                '<div class="btn-group">'+
-                    '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
-                    '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
-                '</div>'+
-                '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
-                    '<button class="btn" id="zoom_100">100%</button>' +
-                    '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
-                '</div>' +
-                '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
-                '<div id="save-export" class="btn-group">'+
-                    '<button class="btn" id="save">Save</button>'+
-                    '<button class="btn" id="export">Export</button>'+
-                '</div>'+
+            '<div class="btn-group">'+
+            '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
+            '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
+            '</div>'+
+            '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
+            '<button class="btn" id="zoom_100">100%</button>' +
+            '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
+            '</div>' +
+            '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
+            '<div id="save-export" class="btn-group">'+
+            '<button class="btn" id="save">Save</button>'+
+            '<button class="btn" id="export">Export</button>'+
+            '</div>'+
             '</div>' +
             '<div id="split_container">' +
-                '<div id="split_left"></div>' +
-                '<div id="split_right"></div>' +
+            '<div id="split_left"></div>' +
+            '<div id="split_right"></div>' +
             '</div>',
 
         afterRender: function() {
@@ -478,7 +478,7 @@ $(function($) {
             this.initWorkflowControls();
             this.initMarkerSelectHandlers();
             this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
-        
+            
         },
 
         zoomMaximum: function() {
@@ -605,13 +605,13 @@ $(function($) {
                 _.each(view.markers, function(marker, index) {
                     selectHandlers.push(
                         google.maps.event.addListener(
-                             marker, 'mousedown', function() {
-                                 _.each(views, function(_view) {
-                                     _.each(_view.markers, function(_marker, _index) {
-                                         _marker.set('selected', _index === index);
-                                     });
-                                 });
-                             }
+                            marker, 'mousedown', function() {
+                                _.each(views, function(_view) {
+                                    _.each(_view.markers, function(_marker, _index) {
+                                        _marker.set('selected', _index === index);
+                                    });
+                                });
+                            }
                         )
                     );
                 });
@@ -623,32 +623,26 @@ $(function($) {
     app.views.NewOverlayView = app.views.View.extend({
 
         template: 
-            '<div id="new_overlay_view">'+
-                '<form encytype="multipart/form-data" id="newOverlayForm">'+
-                    '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
-                    '<input class="btn" type="button" value="Submit" id="newOverlayFormSubmitButton" />'+
-                    window.csrf_token +
-                '</form>'+
-                '<h3>OR</h3>'+
-                '<form id="urlForm">'+
-                    '<label>Paste Url</label>'+
-                    '<input type="text" id="imageUrl" style="width: 98%"/>'+
-                    '<input class="btn" type="button" id="submitUrl" value="Submit"/>'+
-                    window.csrf_token +
-                '</form>'+
+        '<div id="new_overlay_view">'+
+            '<form encytype="multipart/form-data" id="newOverlayForm">'+
+            '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
+	    '<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
+            '<input class="btn" type="button" value="Submit" id="newOverlayFormSubmitButton" />'+
+            window.csrf_token +
+            '</form>'+
             '</div>',
 
         initialize: function() {
-               app.views.View.prototype.initialize.apply(this, arguments);
-               this.context = { overlays: app.overlays.toJSON() };
-            },
+            app.views.View.prototype.initialize.apply(this, arguments);
+            this.context = { overlays: app.overlays.toJSON() };
+        },
 
         afterRender: function() {
             this.$('input#newOverlayFormSubmitButton').click(this.submitForm);
             that = this;
-            this.$('#urlForm input#submitUrl').click(function(){
-                $.post('/overlays/new.json', that.$('urlForm').serialize(), that.submitSuccess);
-            });
+            /*this.$('#urlForm input#submitUrl').click(function(){
+              $.post('/overlays/new.json', that.$('urlForm').serialize(), that.submitSuccess);
+              });*/
         },
 
         getCookie: function(name) {
@@ -674,30 +668,31 @@ $(function($) {
             $('input#newOverlayFormSubmitButton')[0].value = "Working...";
             $('input#newOverlayFormSubmitButton')[0].disabled = true;
             setTimeout(function(){
-            if ($('input#newOverlayFormSubmitButton')[0].value == "Working...")
-                $('input#newOverlayFormSubmitButton')[0].disabled = false;
+		if ($('input#newOverlayFormSubmitButton')[0].value == "Working...")
+                    $('input#newOverlayFormSubmitButton')[0].disabled = false;
             }, 10000);
-                var data = new FormData();
-                $.each($('input#newOverlayFile')[0].files, function(i, file) {
-                    data.append('image', file);
-                });
-                    var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
-                $.ajax({
-                    url: '/overlays/new.json',
-                            crossDomain: false,
-                            beforeSend: function(xhr, settings) {
-                                if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
-                                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                                }
-                            },
-                    data: data,
-                    cache: false,
-                    contentType: false,
-                    processData: false,
-                    type: 'POST',
-                    success: app.views.NewOverlayView.prototype.submitSuccess,
-                    error: app.views.NewOverlayView.prototype.submitError
-                });
+            var data = new FormData();
+            $.each($('input#newOverlayFile')[0].files, function(i, file) {
+                data.append('image', file);
+            });
+	    data.append('imageUrl', $('input#imageUrl')[0].value);
+            var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
+            $.ajax({
+                url: '/overlays/new.json',
+                crossDomain: false,
+                beforeSend: function(xhr, settings) {
+                    if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                },
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'POST',
+                success: app.views.NewOverlayView.prototype.submitSuccess,
+                error: app.views.NewOverlayView.prototype.submitError
+            });
         },
 
         submitError: function() {
@@ -710,12 +705,12 @@ $(function($) {
             console.log("got data back");
             $('input#newOverlayFormSubmitButton')[0].disabled = false;
             $('input#newOverlayFormSubmitButton')[0].value = "Submit";
-                try {
-                    var json = JSON.parse(data);
-                } catch (error) {
-                    console.log('Failed to parse response as JSON: ' + error.message);
-                    return;
-                }
+            try {
+                var json = JSON.parse(data);
+            } catch (error) {
+                console.log('Failed to parse response as JSON: ' + error.message);
+                return;
+            }
             if (json['status'] == 'success') {
                 var overlay = new app.models.Overlay({key: json.id});
                 app.overlays.add(overlay);
@@ -776,22 +771,22 @@ $(function($) {
         },
 
         template:   '<h1>Export Map</h1>'+
-                    '<h2><a href="#overlay/{{key}}">{{name}}</a><h2>'+
-                    '{{#if exportUrl}}'+
-                        '<p>Your exported tarball is ready.</p>' +
-                        '<div id="download_link">'+
-                            '<a href="{{exportUrl}}">Click to Download</a>'+
-                        '</div>'+
-                    '{{else}}'+
-                        '<div id="export_controls">' +
-                            '{{#if alignedTilesUrl}}' +
-                                '<span id="export_button"><button id="create_archive">Create Archive</button></span>' +
-                                '<span id="exportError" style="color:red"></span>' +
-                            '{{else}}' +
-                                '<p>Add at least 2 tiepoint pairs before exporting the aligned image.</p>' +
-                            '{{/if}}' +
-                        '</div>' +
-                    '{{/if}}',
+            '<h2><a href="#overlay/{{key}}">{{name}}</a><h2>'+
+            '{{#if exportUrl}}'+
+            '<p>Your exported tarball is ready.</p>' +
+            '<div id="download_link">'+
+            '<a href="{{exportUrl}}">Click to Download</a>'+
+            '</div>'+
+            '{{else}}'+
+            '<div id="export_controls">' +
+            '{{#if alignedTilesUrl}}' +
+            '<span id="export_button"><button id="create_archive">Create Archive</button></span>' +
+            '<span id="exportError" style="color:red"></span>' +
+            '{{else}}' +
+            '<p>Add at least 2 tiepoint pairs before exporting the aligned image.</p>' +
+            '{{/if}}' +
+            '</div>' +
+            '{{/if}}',
 
         afterRender: function(){
             this.$('#create_archive').click( _.bind(this.requestExport, this) );
@@ -805,7 +800,7 @@ $(function($) {
             this.$('#create_archive').attr('disabled', true);
             this.model.startExport({
                 error: function(){
-                 $('#exportError').html('Error during export: ' + error);
+                    $('#exportError').html('Error during export: ' + error);
                 },
             });
             this.startSpinner();
