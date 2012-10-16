@@ -383,12 +383,13 @@ $(function($) {
         },
 
         initAlignedImageQtree: function() {
+            var DEFAULT_OPACITY = 40;
             if( this.overlay_enabled && !this.alignedImageVisible ) {
                 this.alignedImageVisible = true;
                 var mapType = new maputils.AlignedImageMapType(this.model);
-                var initialOpacity = 60;
                 this.gmap.overlayMapTypes.insertAt(0, mapType);
-                maputils.createOpacityControl(this.gmap, mapType, initialOpacity);
+                if (_.isUndefined(this.model.overlayOpacity)) this.model.overlayOpacity = DEFAULT_OPACITY;
+                maputils.createOpacityControl(this.gmap, mapType, this.model);
             }
         },
 

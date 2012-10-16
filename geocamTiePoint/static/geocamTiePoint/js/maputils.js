@@ -142,7 +142,7 @@ $(function($) {
 
 
 //set up a transparency slider
-maputils.createOpacityControl = function(map, mapType, opacity) {
+maputils.createOpacityControl = function(map, mapType, overlay) {
     var OPACITY_MAX_PIXELS = 57;
     var sliderImageUrl = '/static/geocamTiePoint/images/opacity-slider3d6.png';
 
@@ -187,6 +187,7 @@ maputils.createOpacityControl = function(map, mapType, opacity) {
         setOpacity(mapType, x);
     });
 
+    var opacity = overlay.overlayOpacity;
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(opacityDiv);
     var initialValue = OPACITY_MAX_PIXELS / (100 / opacity);
     opacityCtrlKnob.setValueX(initialValue);
@@ -200,6 +201,7 @@ maputils.createOpacityControl = function(map, mapType, opacity) {
         if (opacityPercent > 100) opacityPercent = 100;
 
         //console.log("opacity: " + opacityPercent);
+        overlay.overlayOpacity = opacityPercent;
         mapType.setOpacity(opacityPercent / 100.0);
     }
 
