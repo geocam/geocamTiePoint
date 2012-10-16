@@ -105,6 +105,13 @@ $(function($) {
             this.trigger('change:points');  // Manually trigger this, because the value of model.points (an array reference) hasn't actually changed.
         },
 
+        deleteTiepoint: function(index) {
+            points = this.get('points');
+            points.splice(index, 1);
+            this.set('points', points);
+            this.trigger('change:points');
+        },
+
         computeTransform: function() {
             // only operate on points that have all four values.
             var points = _.filter(this.get('points'), function(coords){return _.all(coords, _.identity);});

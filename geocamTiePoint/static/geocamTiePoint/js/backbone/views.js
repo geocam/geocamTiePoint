@@ -177,6 +177,17 @@ $(function($) {
             });
         },
 
+        getSelectedMarkerIndex: function() {
+            var selected_idx = -1;
+            _.each(this.markers, function(marker, i){
+                if (marker.get('selected')) {
+                    selected_idx = i;
+                    return true;
+                };
+            });
+            return selected_idx;
+        },
+
         handleClick: function(event) {
             if (!_.isUndefined(window.draggingG) && draggingG) return;
             assert(!_.isUndefined(window.actionPerformed), "Missing global actionPerformed().  Check for undo.js");
@@ -444,6 +455,7 @@ $(function($) {
             '<div class="btn-group">'+
             '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
             '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
+            '<button class="btn" id="delete">Delete</button>'+
             '</div>'+
             '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
             '<button class="btn" id="zoom_100">100%</button>' +
@@ -595,6 +607,21 @@ $(function($) {
                     splitView.mapView.overlay_enabled = false;
                     splitView.mapView.destroyAlignedImageQtree();
                 }
+            });
+
+            $('button#delete').click(function(){
+                var views = [splitView.mapView, splitView.imageView];
+                var selected = _.map(views, function(v){ return v.getSelectedMarkerIndex(); });
+                selected = _.filter(selected, function(s) {return s >= 0});
+                if (selected.length === 0) {
+                    return false;
+                } else if ( selected.length === 2 ) {
+                    assert(selected[0]===selected[1], "Selected markers do not match.");
+                }
+                selected = selected[0];
+                overlay.deleteTiepoint(selected);
+                _.each(views, function(v){v.selectMarker(null)});
+                overlay.trigger('redraw_markers');
             });
         },
 
