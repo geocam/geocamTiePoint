@@ -188,6 +188,7 @@ class QuadTree(models.Model):
 
 class Overlay(models.Model):
     key = models.AutoField(primary_key=True, unique=True)
+    # author: user who owns this overlay in the MapFasten system
     author = models.ForeignKey(User, null=True, blank=True)
     lastModifiedTime = models.DateTimeField()
     name = models.CharField(max_length=50)
@@ -203,6 +204,19 @@ class Overlay(models.Model):
                                         related_name='alignedOverlays',
                                         on_delete=models.SET_NULL)
     isPublic = models.BooleanField(default=False)
+    coverage = models.CharField(max_length=255, blank=True,
+                                verbose_name='Name of region covered by the overlay')
+
+    # creator: name of person or organization who should get the credit
+    # for producing the overlay
+    creator = models.CharField(max_length=255, blank=True)
+    sourceDate = models.CharField(max_length=255, blank=True,
+                                  verbose_name='Source image creation date')
+    rights = models.CharField(max_length=255, blank=True,
+                              verbose_name='Copyright information')
+    license = models.URLField(verify_exists=False, blank=True,
+                              verbose_name='License',
+                              choices=settings.GEOCAM_TIE_POINT_LICENSE_CHOICES)
 
     # extras: a special JSON-format field that holds additional
     # schema-free fields in the overlay model. Members of the field can
