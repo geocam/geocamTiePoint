@@ -418,9 +418,13 @@ $(function($) {
             'quadratic': QuadraticTransform,
             'quadratic2': QuadraticTransform2,
         }
-        if (! transformJSON in classmap) throw "Unexpected transform type";
+        if (! transformJSON.type in classmap) throw "Unexpected transform type";
         var transformClass = classmap[transformJSON.type];
-        return new transformClass( matrixFromNestedList(transformJSON.matrix) )
+        if ( transformClass === QuadraticTransform2 ) {
+            return new transformClass( matrixFromNestedList(transformJSON.matrix), transformJSON.quadraticTerms);
+        } else {
+            return new transformClass( matrixFromNestedList(transformJSON.matrix) );
+        }
     }
 
     /**********************************************************************

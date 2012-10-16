@@ -171,6 +171,12 @@ $(function($) {
             assert(false, "Override me in a subclass!");
         },
 
+        selectMarker: function(idx) {
+            _.each(this.markers, function(marker, i) {
+                marker.set('selected', i === idx);
+            });
+        },
+
         handleClick: function(event) {
             if (!_.isUndefined(window.draggingG) && draggingG) return;
             assert(!_.isUndefined(window.actionPerformed), "Missing global actionPerformed().  Check for undo.js");
@@ -184,7 +190,7 @@ $(function($) {
 
             this.markers.push(marker);
             this.updateTiepointFromMarker(index, marker);
-            //imageCoordsG.push(coord);
+            this.selectMarker(index);
         },
 
         initGmapUIHandlers: function(){
