@@ -183,7 +183,11 @@ $(function($) {
 
     app.OverlayCollection = Backbone.Collection.extend({
         model: app.models.Overlay,
-        url: '/overlays.json'
+        url: '/overlays.json',
+        comparator: function(overlay) {
+            // Sort by modified time, descending
+            return -1 * Date.parse( overlay.get('lastModifiedTime') );
+        },
     });
 
     app.overlays = new app.OverlayCollection();
