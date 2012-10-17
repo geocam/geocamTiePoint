@@ -177,19 +177,27 @@ class QuadTree(models.Model):
             return quadTree.SimpleQuadTreeGenerator(self.id,
                                                     image)
 
+    @staticmethod
+    def getSimpleViewHtml(viewHtmlPath, tileRootUrl, metaJson, slug):
+        return render_to_string('geocamTiePoint/simple-view.html',
+                                {'name': metaJson['name'],
+                                 'slug': slug,
+                                 'viewHtmlPath': viewHtmlPath,
+                                 'tileRootUrl': tileRootUrl,
+                                 'bounds': metaJson['bounds'],
+                                 'tileUrlTemplate': '%s/[ZOOM]/[X]/[Y].png' % slug,
+                                 'tileSize': 256})
+
     def generateExport(self, exportName, metaJson, slug):
         gen = self.getGeneratorWithCache(self.id)
         writer = quadTree.TarWriter(exportName)
         gen.writeQuadTree(writer, slug)
         writer.writeData('meta.json', dumps(metaJson))
 
-        html = render_to_string('geocamTiePoint/simple-view.html',
-                                {'name': metaJson['name'],
-                                 'slug': slug,
-                                 'bounds': metaJson['bounds'],
-                                 'tileUrlTemplate': '%s/[ZOOM]/[X]/[Y].png' % slug,
-                                 'tileSize': 256})
-        writer.writeData('view.html', html)
+        viewHtmlPath = 'view.html'
+        tileRootUrl = './%s' % slug
+        html = self.getSimpleViewHtml(viewHtmlPath, tileRootUrl, metaJson, slug)
+        writer.writeData(viewHtmlPath, html)
 
         self.exportZipName = '%s.tar.gz' % exportName
         self.exportZip.save(self.exportZipName,

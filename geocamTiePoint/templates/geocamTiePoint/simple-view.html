@@ -4,7 +4,11 @@ html, body, #map_canvas {
     padding: 0;
     height: 100%;
 }
+#map_canvas {
+    height: 95%;
+}
 </style>
+<div><a href="#" onclick="window.location = 'view-source:' + window.location; return false;">View Source</a></div>
 <div id="map_canvas"></div>
 
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
@@ -24,7 +28,7 @@ function findOverlay(map, name) {
 
 function addOverlay_{{ slug }}(map) {
     // edit tileRootUrl if you move the tiles
-    var tileRootUrl = './{{ slug }}';
+    var tileRootUrl = '{{ tileRootUrl }}';
 
     var overlayOptions = {
         name: '{{ name }}',
