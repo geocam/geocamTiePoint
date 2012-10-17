@@ -164,8 +164,15 @@ $(function($) {
             model.on('export_ready', function(){this.exportPending = false;}, this);
             $.post(request_url, '', function(){
                 model.fetch({ success: function(){
+                    /*
+                      need to discuss how to detect when export is
+                      complete.  note that a successful 200 return from
+                      a generate export request does *not* indicate the
+                      export is complete.
+
                     model.trigger('export_ready'); 
                     if (options.success) options.success();
+                    */
                 } });
             }, 'json')
             .error(function(xhr, status, error){
@@ -175,9 +182,13 @@ $(function($) {
             this.pollUntilExportComplete(model);
         },
 
-        pollUntilExportComplete: function pollForExportComplete (model, timeout){
+        pollUntilExportComplete: function pollForExportComplete(model, timeout){
             if (!model.exportPending) return false;
             this.fetch();
+            if (this.get('exportUrl')) {
+                model.trigger('export_ready');
+                return false;
+            }
             //var timeout = timeout ? 1.5 * timeout : 1000;
             var timeout = 10000;
             console.log("polling overlay: " + timeout);
