@@ -25,7 +25,7 @@
 
 {% block scripts %}
 {{ block.super }}
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}external/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}geocamTiePoint/js/export.js"></script>
 {% endblock scripts %}
 
