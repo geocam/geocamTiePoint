@@ -75,6 +75,23 @@ $(function($) {
         return [toPts, fromPts];
     }
 
+    function vectorBetweenFirstTwoPoints(pts) {
+        var x0 = pts.values[0][0];
+        var y0 = pts.values[1][0];
+        var x1 = pts.values[0][1];
+        var y1 = pts.values[1][1];
+        return [x1 - x0, y1 - y0];
+    }
+
+    function norm(v) {
+        return Math.sqrt(v[0] * v[0] +
+                         v[1] * v[1]);
+    }
+
+    function angle(v) {
+        return Math.atan2(v[1], v[0]);
+    }
+
     /**********************************************************************
      * Transform
      **********************************************************************/
@@ -83,7 +100,7 @@ $(function($) {
 
     Transform.fit = function(cls, toPts, fromPts) {
         var params0 = cls.getInitParams(toPts, fromPts);
-        //console.log(params0);
+        // console.log('fit: params0: ' + JSON.stringify(params0));
         var params = (leastSquares
                       (toPts.flatten(),
                        function(params) {
@@ -92,6 +109,7 @@ $(function($) {
                                    .flatten());
                        },
                        params0));
+        //console.log('fit: params: ' + JSON.stringify(params));
         return params;
     };
 
@@ -194,7 +212,7 @@ $(function($) {
                                           [0, 0, 1]]);
         var scaleMatrix = new Matrix(3, 3,
                                      [[scale, 0, 0],
-                                      [0, scale, 0],
+                                      [0, -scale, 0],
                                       [0, 0, 1]]);
         var rotateMatrix = new Matrix(3, 3,
                                       [[Math.cos(theta), -Math.sin(theta), 0],
@@ -207,12 +225,14 @@ $(function($) {
     };
 
     RotateScaleTranslateTransform.getInitParams = function(toPts, fromPts) {
-        var p = AffineTransform.fit(AffineTransform, toPts, fromPts);
+        var centroidDiff = toPts.meanColumn().subtract(fromPts.meanColumn());
+        var tx = centroidDiff.values[0][0];
+        var ty = centroidDiff.values[1][0];
 
-        var tx = p[2];
-        var ty = p[5];
-        var scale = (p[0] * p[4] - p[1] * p[3]);
-        var theta = Math.atan2(-p[1], p[0]);
+        var toVec = vectorBetweenFirstTwoPoints(toPts);
+        var fromVec = vectorBetweenFirstTwoPoints(fromPts);
+        var scale = norm(toVec) / norm(fromVec);
+        var theta = angle(toVec) - angle(fromVec);
 
         return [tx, ty, scale, theta];
     };
