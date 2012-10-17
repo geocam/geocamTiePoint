@@ -298,6 +298,9 @@ $(function($) {
             });
             var gmap = app.gmap;
 
+            // disable 45-degree imagery
+            gmap.setTilt(0);
+
             // initialize viewport to contain image
             var imageSize = this.model.get('imageSize');
             var w = imageSize[0];
@@ -362,6 +365,9 @@ $(function($) {
             var gmap = new google.maps.Map(this.$('#map_canvas')[0],
                                            mapOptions);
             //var gmap = new google.maps.Map(this.el, mapOptions);
+
+            // disable 45-degree imagery
+            gmap.setTilt(0);
 
             var overlay = this.model.toJSON();
 
