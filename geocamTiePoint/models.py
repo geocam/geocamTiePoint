@@ -24,6 +24,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 
 from geocamUtil import anyjson as json
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
@@ -176,11 +177,20 @@ class QuadTree(models.Model):
             return quadTree.SimpleQuadTreeGenerator(self.id,
                                                     image)
 
-    def generateExport(self, exportName, metaJson):
+    def generateExport(self, exportName, metaJson, slug):
         gen = self.getGeneratorWithCache(self.id)
         writer = quadTree.TarWriter(exportName)
-        gen.writeQuadTree(writer)
+        gen.writeQuadTree(writer, slug)
         writer.writeData('meta.json', dumps(metaJson))
+
+        html = render_to_string('geocamTiePoint/simple-view.html',
+                                {'name': metaJson['name'],
+                                 'slug': slug,
+                                 'bounds': metaJson['bounds'],
+                                 'tileUrlTemplate': '%s/[ZOOM]/[X]/[Y].png' % slug,
+                                 'tileSize': 256})
+        writer.writeData('view.html', html)
+
         self.exportZipName = '%s.tar.gz' % exportName
         self.exportZip.save(self.exportZipName,
                             ContentFile(writer.getData()))
@@ -215,7 +225,7 @@ class Overlay(models.Model):
     rights = models.CharField(max_length=255, blank=True,
                               verbose_name='Copyright information')
     license = models.URLField(verify_exists=False, blank=True,
-                              verbose_name='License',
+                              verbose_name='License permitting reuse (optional)',
                               choices=settings.GEOCAM_TIE_POINT_LICENSE_CHOICES)
 
     # extras: a special JSON-format field that holds additional
@@ -302,11 +312,13 @@ class Overlay(models.Model):
         self.lastModifiedTime = datetime.datetime.utcnow()
         super(Overlay, self).save(*args, **kwargs)
 
+    def getSlug(self):
+        return re.sub('[^\w]', '_', os.path.splitext(self.name)[0])
+
     def getExportName(self):
-        shortName = re.sub('[^\w]', '_', os.path.splitext(self.name)[0])
         now = datetime.datetime.utcnow()
         return ('mapfasten-%s-%s'
-                % (shortName,
+                % (self.getSlug(),
                    now.strftime('%Y-%m-%d-%H%M%S-UTC')))
 
     def generateUnalignedQuadTree(self):
@@ -333,7 +345,8 @@ class Overlay(models.Model):
     def generateExport(self):
         (self.alignedQuadTree.generateExport
          (self.getExportName(),
-          self.getJsonDict()))
+          self.getJsonDict(),
+          self.getSlug()))
         return self.alignedQuadTree.exportZip
 
     def updateAlignment(self):

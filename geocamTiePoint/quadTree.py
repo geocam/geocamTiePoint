@@ -360,13 +360,13 @@ class AbstractQuadTreeGenerator(object):
             cache.set(key, data)
         return data
 
-    def writeTile(self, writer, zoom, x, y):
+    def writeTile(self, writer, slug, zoom, x, y):
         bits, contentType = self.getTileDataWithCache(zoom, x, y)
 
         if BENCHMARK_WARP_STEPS:
             saveStart = time.time()
         ext = contentTypeToExtension(contentType)
-        writer.writeData('%s/%s/%s%s' % (zoom, x, y, ext),
+        writer.writeData('%s/%s/%s/%s%s' % (slug, zoom, x, y, ext),
                          bits)
         if BENCHMARK_WARP_STEPS:
             print 'saveTime:', time.time() - saveStart
@@ -400,7 +400,7 @@ class SimpleQuadTreeGenerator(AbstractQuadTreeGenerator):
             self.zoomedImage[zoom] = result
         return result
 
-    def writeQuadTree(self, writer):
+    def writeQuadTree(self, writer, slug):
         for zoom in xrange(self.maxZoom, -1, -1):
             nx = int(math.ceil(self.imageSize[0] / TILE_SIZE))
             ny = int(math.ceil(self.imageSize[1] / TILE_SIZE))
@@ -408,7 +408,7 @@ class SimpleQuadTreeGenerator(AbstractQuadTreeGenerator):
                 for y in xrange(ny):
                     zoom0 = zoom + ZOOM_OFFSET
                     try:
-                        self.writeTile(writer, zoom0, x, y)
+                        self.writeTile(writer, slug, zoom0, x, y)
                     except OutOfBounds:
                         # no surprise if some tiles are empty around the edges
                         pass
@@ -522,7 +522,7 @@ class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
             self.tileBounds[zoom] = result
         return result
 
-    def writeQuadTree(self, writer):
+    def writeQuadTree(self, writer, slug):
         print >> sys.stderr, 'warping...'
         totalTiles = 0
         startTime = time.time()
@@ -542,7 +542,7 @@ class WarpedQuadTreeGenerator(AbstractQuadTreeGenerator):
             for x in xrange(int(xmin), int(xmax) + 1):
                 for y in xrange(int(ymin), int(ymax) + 1):
                     try:
-                        self.writeTile(writer, zoom, x, y)
+                        self.writeTile(writer, slug, zoom, x, y)
                     except OutOfBounds:
                         # no surprise if some tiles are empty around the edges
                         pass

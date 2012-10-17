@@ -1,0 +1,72 @@
+<style>
+html, body, #map_canvas {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+</style>
+<div id="map_canvas"></div>
+
+<script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+<script>
+
+var map;
+
+function findOverlay(map, name) {
+    for (var i=0; i < map.overlayMapTypes.getLength(); i++) {
+        var overlayType = map.overlayMapTypes.getAt(i);
+        if (overlayType.name == name) {
+            return [i, overlayType];
+        }
+    }
+    throw 'overlay not found';
+}
+
+function addOverlay_{{ slug }}(map) {
+    // edit tileRootUrl if you move the tiles
+    var tileRootUrl = './{{ slug }}';
+
+    var overlayOptions = {
+        name: '{{ name }}',
+        getTileUrl: function(coord, zoom) {
+            return (tileRootUrl + '/' +
+                    zoom + '/' +
+                    coord.x + '/' +
+                    coord.y + '.png');
+        },
+        tileSize: new google.maps.Size({{ tileSize }}, {{ tileSize }})
+    };
+    var overlayType = new google.maps.ImageMapType(overlayOptions);
+    map.overlayMapTypes.insertAt(0, overlayType);
+}
+
+function zoomToOverlay_{{ slug }}(map) {
+    var sw = new google.maps.LatLng({{ bounds.south }}, {{ bounds.west }});
+    var ne = new google.maps.LatLng({{ bounds.north }}, {{ bounds.east }});
+    map.fitBounds(new google.maps.LatLngBounds(sw, ne));
+}
+
+// opacity in range 0..1; 0.5 = 50% opaque
+function setOverlayOpacity_{{ slug }}(map, opacity) {
+    var overlayType = findOverlay(map, '{{ name }}')[1];
+    overlayType.setOpacity(opacity);
+}
+
+function removeOverlay_{{ slug }}(map) {
+    var idx = findOverlay(map, '{{ name }}')[0];
+    map.overlayMapTypes.setAt(idx, null);
+}
+
+function initialize() {
+    map = new google.maps.Map(document.getElementById('map_canvas'), {
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+    });
+    addOverlay_{{ slug }}(map);
+    zoomToOverlay_{{ slug }}(map);
+    // setOverlayOpacity_{{ slug }}(map, 0.5);
+    // removeOverlay_{{ slug }}(map);
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+</script>
