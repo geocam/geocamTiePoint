@@ -33,7 +33,19 @@ function setStateJson(stateJson) {
 }
 
 function pushState(stack) {
-    stack.push(getStateJson());
+    var json = getStateJson();
+
+    var isNew;
+    if (undoStackG.length < 1) {
+        isNew = true;
+    } else {
+        var prev = undoStackG[undoStackG.length - 1];
+        isNew = (prev != json);
+    }
+    if (isNew) {
+        stack.push(json);
+    }
+    return isNew;
 }
 
 function popState(stack) {
@@ -58,6 +70,5 @@ function actionPerformed() {
             undoStackG.push(redoStackG.pop());
         }
     }
-    pushState(undoStackG);
+    return pushState(undoStackG);
 }
-
