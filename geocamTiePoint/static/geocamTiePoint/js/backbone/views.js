@@ -293,7 +293,7 @@ $(function($) {
 		//var gmap = app.gmap = new google.maps.Map(this.el, {
                 zoom: MIN_ZOOM_OFFSET,
                 streetViewControl: false,
-                backgroundColor: 'rgb(128, 128, 128)',
+                backgroundColor: 'rgb(192, 192, 192)',
                 mapTypeControl: false
             });
             var gmap = app.gmap;

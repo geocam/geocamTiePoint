@@ -36,7 +36,7 @@ ORIGIN_SHIFT = 2 * math.pi * (6378137 / 2.)
 ZOOM_OFFSET = 3
 BENCHMARK_WARP_STEPS = False
 BLACK = (0, 0, 0)
-GRAY = (128, 128, 128)
+GRAY = (192, 192, 192)
 
 
 class ZoomTooBig(Exception):
