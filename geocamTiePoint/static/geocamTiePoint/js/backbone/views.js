@@ -448,30 +448,30 @@ $(function($) {
         template: 
         '<div id="location" class="btn-toolbar">' +
             '<span class="input-prepend">'+
-            '<span class="add-on">Go to</span>'+
-            '<input type="text" id="locationSearch" placeholder="Location"></input>' +
+                '<span class="add-on">Go to</span>'+
+                '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
-            '</div>'+
-            '<div id="workflow_controls" class="btn-toolbar">' +
+        '</div>'+
+        '<div id="workflow_controls" class="btn-toolbar">' +
             '<div class="btn-group">'+
-            '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
-            '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
-            '<button class="btn" id="delete" disabled=true>Delete</button>'+
+                '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
+                '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
+                '<button class="btn" id="delete" disabled=true>Delete</button>'+
             '</div>'+
             '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
-            '<button class="btn" id="zoom_100">100%</button>' +
-            '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
+                '<button class="btn" id="zoom_100">100%</button>' +
+                '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
             '</div>' +
-            '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
+                '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
             '<div id="save-export" class="btn-group">'+
-            '<button class="btn" id="save">Save</button>'+
-            '<button class="btn" id="export">Export</button>'+
+                '<button class="btn" id="save">Save</button>'+
+                '<button class="btn" id="export">Export</button>'+
             '</div>'+
-            '</div>' +
-            '<div id="split_container">' +
+        '</div>' +
+        '<div id="split_container">' +
             '<div id="split_left"></div>' +
             '<div id="split_right"></div>' +
-            '</div>',
+        '</div>',
 
         afterRender: function() {
             this.imageView = new app.views.ImageQtreeView({
