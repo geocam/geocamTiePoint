@@ -175,6 +175,7 @@ $(function($) {
             _.each(this.markers, function(marker, i) {
                 marker.set('selected', i === idx);
             });
+            app.currentView.trigger('change_selection');
         },
 
         getSelectedMarkerIndex: function() {
@@ -201,7 +202,7 @@ $(function($) {
 
             this.markers.push(marker);
             this.updateTiepointFromMarker(index, marker);
-            this.selectMarker(index);
+            app.currentView.selectMarker(index);
         },
 
         initGmapUIHandlers: function(){
@@ -455,7 +456,7 @@ $(function($) {
             '<div class="btn-group">'+
             '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
             '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
-            '<button class="btn" id="delete">Delete</button>'+
+            '<button class="btn" id="delete" disabled=true>Delete</button>'+
             '</div>'+
             '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
             '<button class="btn" id="zoom_100">100%</button>' +
@@ -609,6 +610,11 @@ $(function($) {
                 }
             });
 
+            this.on('change_selection', function(){
+                var selectedMarkers = this.selectedMarkers();
+                var markerSelected = _.any(selectedMarkers, function(i){ return i > -1 });
+                $('button#delete').attr('disabled', !markerSelected);
+            });
             $('button#delete').click(function(){
                 var views = [splitView.mapView, splitView.imageView];
                 var selected = _.map(views, function(v){ return v.getSelectedMarkerIndex(); });
@@ -633,6 +639,7 @@ $(function($) {
                 google.maps.event.removeListener(selectHandlers.pop())
             }
 
+            var splitView = this;
             var views = [this.imageView, this.mapView];
             /* Select one pair of markers at a time */
             _.each(views, function(view) {
@@ -640,17 +647,25 @@ $(function($) {
                     selectHandlers.push(
                         google.maps.event.addListener(
                             marker, 'mousedown', function() {
-                                _.each(views, function(_view) {
-                                    _.each(_view.markers, function(_marker, _index) {
-                                        _marker.set('selected', _index === index);
-                                    });
-                                });
+                                splitView.selectMarker(index);
                             }
                         )
                     );
                 });
             });
-        }
+        },
+
+        selectedMarkers: function() {
+            var views = [this.mapView, this.imageView];
+            return _.map(views, function(v) { return v.getSelectedMarkerIndex() });
+        },
+
+        selectMarker: function(index) {
+            var views = [this.mapView, this.imageView];
+            _.each(views, function(view){
+                view.selectMarker(index);
+            });
+        },
 
     }); // end SplitOverlayView
 
