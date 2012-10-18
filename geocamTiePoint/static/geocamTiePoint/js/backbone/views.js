@@ -53,7 +53,7 @@ $(function($) {
         template:   
         '<div class="navbar-inner">'+
             '<ul id="navlist" class="nav">'+
-            '<li><a href="#"><img src="http://localhost:8000/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
+            '<li><a href="#"><img src="/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
             '<li class="nav_pad_vertical navbar-text"><a href="#overlays/">List Overlays</a></li>'+
             '</ul>'+
             '<p class="pull-right navbar-text" style="float:right"><a href="/accounts/logout/">Logout</a></p>'+
