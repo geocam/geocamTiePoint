@@ -78,14 +78,37 @@ $(function($) {
             '{{#each overlays.models }}<tr>' +
             '<td>{{#if attributes.alignedTilesUrl}}<a href="#overlay/{{id}}">{{/if}}{{get "name"}}{{#if attributes.alignedTilesUrl}}</a>{{/if}}</td>' +
             '<td><a id="edit_{{id}}" class="edit" href="#overlay/{{id}}/edit" >[edit]</a></td>' +
-            '<td><a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.overlays.get({{id}}).destroy()">[delete]</a></td>' +
+            '<td><a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.currentView.deleteOverlay({{id}})">[delete]</a></td>' +
             '</tr>{{/each}}' +
-            '</table>',
+            '</table>'+
+            '<div class="modal hide" id="confirmDelete" aria-hidden="true">'+
+                '<div class="modal-body">'+
+                    '<p>Delete this overlay?</p>'+
+                '</div>'+
+                '<div class="modal-footer">'+
+                    '<button class="btn" onClick="$(\'#confirmDelete\').modal(\'hide\');">No!</button>'+
+                    '<button id="deleteYesBtn" class="btn btn-primary">Yes</button>'+
+                '</div>'+
+            '</div>',
 
         initialize: function() {
             app.views.View.prototype.initialize.apply(this, arguments);
             this.context = { overlays: app.overlays };
             app.overlays.on('remove', function(){this.render();}, this);
+        },
+
+        deleteOverlay: function(overlay_id) {
+            var dialog = this.$('#confirmDelete');
+            function deleteSpecificOverlay(){
+                dialog.modal('hide');
+                app.overlays.get(overlay_id).destroy();
+            }
+            dialog.on('click','#deleteYesBtn', deleteSpecificOverlay);
+            dialog.on('hidden', function(){
+                dialog.off('click','#deleteYesBtn', deleteSpecificOverlay);
+                return true;
+            });
+            dialog.modal('show');
         },
 
         /*
@@ -685,7 +708,7 @@ $(function($) {
         '<div id="new_overlay_view">'+
             '<form encytype="multipart/form-data" id="newOverlayForm">'+
             '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
-	    //'<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
+	        '<div style="display:none"><label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/></div>'+
             '<input class="btn" type="button" value="Submit" id="newOverlayFormSubmitButton" />'+
             window.csrf_token +
             '</form>'+
@@ -724,10 +747,11 @@ $(function($) {
         },
 
         submitForm: function() {
-            $('input#newOverlayFormSubmitButton')[0].value = "Working...";
-            $('input#newOverlayFormSubmitButton')[0].disabled = true;
+            var button = $('input#newOverlayFormSubmitButton');
+            button[0].value = "Working...";
+            button[0].disabled = true;
             setTimeout(function(){
-		if ($('input#newOverlayFormSubmitButton')[0].value == "Working...")
+		if (button[0].value == "Working...")
                     $('input#newOverlayFormSubmitButton')[0].disabled = false;
             }, 10000);
             var data = new FormData();
