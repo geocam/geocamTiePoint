@@ -197,6 +197,7 @@ class QuadTree(models.Model):
         viewHtmlPath = 'view.html'
         tileRootUrl = './%s' % slug
         html = self.getSimpleViewHtml(viewHtmlPath, tileRootUrl, metaJson, slug)
+        logging.debug('html: len=%s head=%s', len(html), repr(html[:10]))
         writer.writeData(viewHtmlPath, html)
 
         self.exportZipName = '%s.tar.gz' % exportName

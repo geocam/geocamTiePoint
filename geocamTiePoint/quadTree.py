@@ -290,6 +290,8 @@ class TarWriter(object):
 
     def writeData(self, path, data):
         assert not self.closed
+        if isinstance(data, unicode):
+            data = data.encode('utf-8')
         tinfo = getFileTarInfo(os.path.join(self.dirName, path),
                                data)
         self.tar.addfile(tinfo, fileobj=StringIO(data))
