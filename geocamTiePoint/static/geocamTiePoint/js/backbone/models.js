@@ -44,6 +44,14 @@ $(function($) {
             return url;
         },
 
+        parse: function(resp, xhr) {
+            // Ensure server-side state never overwrites local points value
+            if ( this.has('points') && 'points' in resp ) {
+                delete resp.points;
+            }
+            return resp;
+        },
+
         getAlignedImageTileUrl: function(coord, zoom) {
             var normalizedCoord = getNormalizedCoord(coord, zoom);
             if (!normalizedCoord) {return null;}
@@ -136,22 +144,14 @@ $(function($) {
             options = options || {};
             var model = this;
             var warpUrl = this.url().replace('.json', '/warp');
+            model.trigger('before_warp');
             saveOptions = {
                 error: options.error || function(){},
                 success: function() {
-                    model.trigger('before_warp');
-                    var jqXHR = $.post(warpUrl);
-                    jqXHR.success(function(){
-                        model.fetch({
-                            success: function(){
-                                if (options.success) options.success(); 
-                                model.trigger('warp_success');
-                            }
-                        });
-                    });
-                    if (options.error) { jqXHR.error(options.error); }
+                    if (options.success) options.success(); 
+                    model.trigger('warp_success');
                 },
-            };
+            }
             this.save({}, saveOptions);
         },
 

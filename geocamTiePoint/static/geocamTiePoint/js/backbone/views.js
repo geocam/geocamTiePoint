@@ -395,8 +395,9 @@ $(function($) {
 
             /* Events and init for the  qtree overlay */
             this.model.on('change:points', function(){
-                var stateChanged = actionPerformed();
-                if (stateChanged) {
+                if ( _.isUndefined(this.previousPoints) || ! _.isEqual(this.previousPoints, this.model.get('points')) ) {
+                    // Serialize and deserialize to create a deep copy.
+                    this.previousPoints = JSON.parse( JSON.stringify( this.model.get('points') ) );
                     this.destroyAlignedImageQtree();
                     if (this.model.get('points').length > 2) this.model.warp();
                 }
