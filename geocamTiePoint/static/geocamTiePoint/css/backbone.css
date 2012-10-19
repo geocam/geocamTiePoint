@@ -1,5 +1,6 @@
 body{
     background-color: #FAFAFA;
+    overflow-y: hidden;
 }
 
 #navlist {
@@ -60,4 +61,3 @@ input#locationSearch {
 #new_overlay_view > form > input {
     display: block;
 }
-

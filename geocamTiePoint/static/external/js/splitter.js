@@ -321,6 +321,14 @@ var splitterCounter = 0;
 				// Custom events bubble in jQuery 1.3; avoid recursion
                 e.stopPropagation();
 				if ( e.target != this ) return;
+
+                // Hack to fix vertical overlflow problems
+                function fitWindowHeight(blockElem) {
+                    blockElem.height( $(window).height() - blockElem.offset().top );
+                }
+                fitWindowHeight(splitter);
+                //fitWindowHeight($('#contents'));
+
 				// Determine new width/height of splitter container
 				splitter._DF = splitter[0][opts.pxFixed] - splitter._PBF;
 				splitter._DA = splitter[0][opts.pxSplit] - splitter._PBA;

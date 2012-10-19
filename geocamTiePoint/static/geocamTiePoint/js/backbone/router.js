@@ -75,4 +75,10 @@ $(function($) {
     window.setState = function(state) {
         if (app.currentView && app.currentView.setState) return app.currentView.setState(state);
     };
+
+    //Keep the content container height in sync with the window
+    $(window).resize(function(e){
+        var container = $('#contents');
+        container.height( $(window).height() - container.offset().top );
+    }).resize();
 });
