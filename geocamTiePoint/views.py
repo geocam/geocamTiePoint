@@ -114,7 +114,6 @@ def overlayDelete(request, key):
 @transaction.commit_on_success
 def overlayNewJSON(request):
     if request.method == 'POST':
-        class dummf_ref(object): pass
         form = forms.NewImageDataForm(request.POST, request.FILES)
         if form.is_valid():
             # create and save new empty overlay so we can refer to it
@@ -126,6 +125,9 @@ def overlayNewJSON(request):
             # file takes precedence over image url
             image = None
             imageRef = form.cleaned_data['image']
+            imageFB = None
+            imageType = None
+            imageName = None
             if not imageRef:
                 # no image, procede to check for url
                 if not form.cleaned_data['imageUrl']:
@@ -144,22 +146,24 @@ def overlayNewJSON(request):
                     # or we did and the server didn't say so.
                     # either way we're not going to deal with it
                     return HttpResponseBadRequest()
-                # quick hack that lets us not touch other code
-                imageRef = dummy_ref()
-                imageRef.content_type = response.headers['content-type']
-                imageRef.file = response
+                imageFB = response
+                imageType = response.headers['content-type']
+                imageName = form.cleaned_data['imageUrl'].split('/')[-1]
+            else:
+                imageFB = imageRef.file
+                imageType = imageRef.content_type
+                imageName = imageRef.name
 
             imageData = models.ImageData(contentType=imageRef.content_type,
                                          overlay=overlay)
 
-            if imageRef.content_type in PDF_MIME_TYPES:
+            if imageType in PDF_MIME_TYPES:
                 # convert PDF to raster image
-                pngData = pdf.convertPdf(imageRef.file.read())
+                pngData = pdf.convertPdf(imageFB.read())
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
-                bits = imageRef.file.read()
-                image = PIL.Image.open(StringIO(bits))
+                image = PIL.Image.open(imageFB)
                 if image.mode != 'RGBA':
                     # add alpha channel to image for better
                     # transparency handling later
@@ -174,14 +178,15 @@ def overlayNewJSON(request):
                     imageData.contentType = 'image/png'
                 else:
                     imageData.image.save('dummy.png', ContentFile(bits), save=False)
-                    imageData.contentType = imageRef.content_type
+                    imageData.contentType = imageType
             imageData.save()
+            imageFB.close()
 
             if image is None:
                 image = PIL.Image.open(imageData.image.file)
 
             # fill in overlay info
-            overlay.name = imageRef.name
+            overlay.name = imageName
             overlay.imageData = imageData
             overlay.extras.points = []
             overlay.extras.imageSize = image.size
