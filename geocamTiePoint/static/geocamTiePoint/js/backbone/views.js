@@ -493,13 +493,14 @@ $(function($) {
                 '<button class="btn" id="delete" disabled=true>Delete</button>'+
             '</div>'+
             '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
-                '<button class="btn" id="zoom_100">100%</button>' +
-                '<button class="btn" id="zoom_fit">Fit Overlay</button>' +
+                '<button class="btn" id="zoom_100">Zoom Max</button>' +
+                '<button class="btn" id="zoom_fit">Zoom Fit</button>' +
             '</div>' +
                 '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
             '<div id="save-export" class="btn-group">'+
-                '<button class="btn" id="save">Save</button>'+
                 '<button class="btn" id="export">Export</button>'+
+                '<button class="btn" id="save">Save</button>'+
+                '<span id="saveStatus" data-saving-text="Saving..." data-saved-text="Saved."></span>'+
             '</div>'+
         '</div>' +
         '<div id="split_container">' +
@@ -628,6 +629,13 @@ $(function($) {
                         _.delay(function(){button.text("save");}, 1000);
                     },
                 });
+            });
+
+            var saveStatus = $('#saveStatus');
+            this.model.on('before_warp', function(){
+                saveStatus.text(saveStatus.data('saving-text'));
+            }).on('warp_success', function(){
+                saveStatus.text(saveStatus.data('saved-text'));
             });
 
             $('button#export').click(function() {
