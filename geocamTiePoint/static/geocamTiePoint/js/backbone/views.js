@@ -709,7 +709,7 @@ $(function($) {
         '<div id="new_overlay_view">'+
             '<form encytype="multipart/form-data" id="newOverlayForm">'+
             '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
-	        '<div style="display:none"><label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/></div>'+
+	    '<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
             '<input class="btn" type="button" value="Submit" id="newOverlayFormSubmitButton" />'+
             window.csrf_token +
             '</form>'+
