@@ -229,7 +229,9 @@ $(function($) {
         },
 
         initGmapUIHandlers: function(){
-            google.maps.event.addListener( this.gmap, 'click', _.bind(this.handleClick, this) );
+                if ( ! this.options.readonly ) {
+                    google.maps.event.addListener( this.gmap, 'click', _.bind(this.handleClick, this) );
+                }
         },
 
         initMarkerDragHandlers: function(marker) {
@@ -408,7 +410,6 @@ $(function($) {
                 // browser doesn't support geolocation
                 maputils.handleNoGeolocation(gmap, false);
             }
-            //google.maps.event.addListener(gmap, 'click', handleMapClick);
             this.gmap = gmap;
             if ( ! this.options.readonly ) {
                 this.drawMarkers();
