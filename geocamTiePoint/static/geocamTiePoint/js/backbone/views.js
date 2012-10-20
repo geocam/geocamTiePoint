@@ -500,7 +500,7 @@ $(function($) {
             '<div id="save-export" class="btn-group">'+
                 '<button class="btn" id="export">Export</button>'+
                 '<button class="btn" id="save">Save</button>'+
-                '<span id="saveStatus" data-saving-text="Saving..." data-saved-text="Saved."></span>'+
+                '<span id="saveStatus" data-saving-text="Saving..." data-saved-text="Saved." data-save-error="SAVE ERROR!"></span>'+
             '</div>'+
         '</div>' +
         '<div id="split_container">' +
@@ -636,6 +636,8 @@ $(function($) {
                 saveStatus.text(saveStatus.data('saving-text'));
             }).on('warp_success', function(){
                 saveStatus.text(saveStatus.data('saved-text'));
+            }).on('warp_error', function(){
+                saveStatus.text(saveStatus.data('save-error'));
             });
 
             $('button#export').click(function() {

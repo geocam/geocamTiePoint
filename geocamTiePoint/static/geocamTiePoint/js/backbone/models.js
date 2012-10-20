@@ -146,7 +146,10 @@ $(function($) {
             var warpUrl = this.url().replace('.json', '/warp');
             model.trigger('before_warp');
             saveOptions = {
-                error: options.error || function(){},
+                error: function(){
+                    if (options.error) options.error();
+                    model.trigger('warp_error');
+                },
                 success: function() {
                     if (options.success) options.success(); 
                     model.trigger('warp_success');
