@@ -50,7 +50,7 @@ $(function($) {
     });
 
     app.views.NavbarView = app.views.View.extend({
-        template:   
+        template:
         '<div class="navbar-inner">'+
             '<ul id="navlist" class="nav">'+
             '<li><a href="#"><img src="/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
@@ -70,7 +70,7 @@ $(function($) {
     });
 
     app.views.ListOverlaysView = app.views.View.extend({
-        template: 
+        template:
         '<a class="btn btn-primary" href="#overlays/new">New Overlay</a>' +
             '<h1>Choose an overlay:</h1>' +
             '{{debug}}' +
@@ -150,12 +150,12 @@ $(function($) {
 
 
     /*
-     * OverlayGoogleMapsView: 
+     * OverlayGoogleMapsView:
      * Base class for ImageQtreeView and MapView
      * Implements Google Maps and Marker initialization & management
      */
     app.views.OverlayGoogleMapsView = app.views.OverlayView.extend({
-        
+
         initialize: function(options) {
             app.views.OverlayView.prototype.initialize.apply(this, arguments);
             this.markers = [];
@@ -236,8 +236,8 @@ $(function($) {
 
         initMarkerDragHandlers: function(marker) {
             var view = this;
-            google.maps.event.addListener(marker, 'dragstart', function(evt){ 
-                window.draggingG = true; 
+            google.maps.event.addListener(marker, 'dragstart', function(evt){
+                window.draggingG = true;
                 view.trigger('dragstart');
             });
             google.maps.event.addListener(marker, 'dragend', _.bind(function(event) {
@@ -427,7 +427,7 @@ $(function($) {
                 }
             }, this);
             this.on('dragstart', this.destroyAlignedImageQtree, this);
-            this.model.on('add_point', this.destroyAlignedImageQtree, this); 
+            this.model.on('add_point', this.destroyAlignedImageQtree, this);
             this.model.on('warp_success', this.refreshAlignedImageQtree, this);
             if ( this.model.get('transform') && this.model.get('transform').type ) {
                 this.initAlignedImageQtree();
@@ -479,7 +479,7 @@ $(function($) {
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
-        template: 
+        template:
         '<div id="location" class="btn-toolbar">' +
             '<span class="input-prepend">'+
                 '<span class="add-on">Go to</span>'+
@@ -533,7 +533,7 @@ $(function($) {
             this.initWorkflowControls();
             this.initMarkerSelectHandlers();
             this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
-            
+
         },
 
         zoomMaximum: function() {
@@ -648,7 +648,7 @@ $(function($) {
                 if (this.checked) {
                     splitView.mapView.overlay_enabled = true;
                     splitView.mapView.initAlignedImageQtree();
-                } else{ 
+                } else{
                     splitView.mapView.overlay_enabled = false;
                     splitView.mapView.destroyAlignedImageQtree();
                 }
@@ -715,7 +715,7 @@ $(function($) {
 
     app.views.NewOverlayView = app.views.View.extend({
 
-        template: 
+        template:
         '<div id="new_overlay_view">'+
             '<form encytype="multipart/form-data" id="newOverlayForm">'+
             '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
@@ -815,7 +815,7 @@ $(function($) {
         }
     }); // end NewOverlayView
 
-    app.views.DeleteOverlayView = app.views.View.extend({ 
+    app.views.DeleteOverlayView = app.views.View.extend({
 
         template: '<form id="deleteOverlayForm"><h4>Are you sure you want to delete overlay {{name}}?</h4><br><input type="button" value="Delete" id="deleteOverlayFormSubmitButton" /><input type="button" value="Cancel" id="deleteOverlayFormCancelButton" />',
 
