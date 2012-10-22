@@ -909,6 +909,7 @@ $(function($) {
             }, this);
             this.$('#create_archive').attr('disabled', true);
             this.$('#export_button').html('<img src="/static/geocamTiePoint/images/loading.gif">' +
+                                          '&nbsp;' +
                                           'Creating export archive (this could take a few minutes)...');
         },
 
