@@ -161,7 +161,7 @@ $(function($) {
         startExport: function(options) {
             //this.unset('exportUrl');
             assert(! this.get('exportUrl'), "Model has an exportUrl already.");
-            var request_url = this.get('url').replace('.json', '/generateExport');
+            var request_url = this.get('url').replace('.json', '/generateExport/');
             this.exportPending = true;
             var model = this;
             model.on('export_ready', function(){this.exportPending = false;}, this);

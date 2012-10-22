@@ -881,10 +881,12 @@ $(function($) {
             '{{else}}'+
             '<div id="export_controls">' +
             '{{#if alignedTilesUrl}}' +
+            '<div id="export_container">' +
             '<span id="export_button"><button id="create_archive">' +
             'Create Export Archive (this could take a few minutes)' +
             '</button></span>' +
             '<span id="exportError" style="color:red"></span>' +
+            '</div>' +
             '{{else}}' +
             '<p>Add at least 2 tiepoint pairs before exporting the aligned image.</p>' +
             '{{/if}}' +

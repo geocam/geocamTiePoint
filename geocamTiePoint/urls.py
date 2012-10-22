@@ -38,12 +38,12 @@ urlpatterns = patterns(
     url(r'^overlay/(?P<key>\d+)/warp$', 'overlayIdWarp',
         {}, 'geocamTiePoint_overlayIdWarp'),
 
-    url(r'^overlay/(?P<key>\d+)/generateExport$', 'overlayGenerateExport',
+    url(r'^overlay/(?P<key>\d+)/generateExport/$', 'overlayGenerateExport',
         {}, 'geocamTiePoint_overlayGenerateExport'),
 
     # duplicate url that starts with 'backend' so we can set 'login: admin'
     # on the backend version of the view.
-    url(r'^backend/overlay/(?P<key>\d+)/generateExport$', 'overlayGenerateExport',
+    url(r'^backend/overlay/(?P<key>\d+)/generateExport/$', 'overlayGenerateExport',
         {}, 'geocamTiePoint_overlayGenerateExportBackend'),
 
     url(r'^overlay/(?P<key>\d+)/export\.html$', 'overlayExportInterface',

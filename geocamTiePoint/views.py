@@ -471,7 +471,13 @@ def uiDemo(request, key):
 
 @csrf_exempt
 def overlayGenerateExport(request, key):
-    if request.method == 'POST':
+    if request.method == 'GET':
+        return (HttpResponse
+                ('<form action="." method="post">'
+                 + '<input type="submit" name="submit"'
+                 + ' value="Create Export Archive"/>'
+                 + '</form>'))
+    elif request.method == 'POST':
         if settings.USING_APP_ENGINE:
             onFrontEndInstance = (backends.get_backend() == None)
             if onFrontEndInstance:
@@ -486,7 +492,7 @@ def overlayGenerateExport(request, key):
         return HttpResponse('{"result": "ok"}',
                             content_type='application/json')
     else:
-        return HttpResponseNotAllowed(['POST'])
+        return HttpResponseNotAllowed(['GET', 'POST'])
 
 
 def overlayExportInterface(request, key):
