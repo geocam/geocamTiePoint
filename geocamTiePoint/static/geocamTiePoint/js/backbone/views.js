@@ -864,17 +864,18 @@ $(function($) {
             _.bindAll(this);
         },
 
-        template:   '<h1>Export Map</h1>'+
-            '<h2><a href="#overlay/{{key}}">{{name}}</a><h2>'+
+        template:   '<h1>Export Overlay {{name}}</h1>'+
+            '<p>&nbsp;</p>' +
             '{{#if exportUrl}}'+
-            '<p>Your exported tarball is ready.</p>' +
             '<div id="download_link">'+
-            '<a href="{{exportUrl}}">Click to Download</a>'+
+            '<a href="{{exportUrl}}">Download Exported Archive</a>'+
             '</div>'+
             '{{else}}'+
             '<div id="export_controls">' +
             '{{#if alignedTilesUrl}}' +
-            '<span id="export_button"><button id="create_archive">Create Archive</button></span>' +
+            '<span id="export_button"><button id="create_archive">' +
+            'Create Export Archive (this could take a few minutes)' +
+            '</button></span>' +
             '<span id="exportError" style="color:red"></span>' +
             '{{else}}' +
             '<p>Add at least 2 tiepoint pairs before exporting the aligned image.</p>' +
@@ -907,7 +908,8 @@ $(function($) {
                 if ( app.currentView === thisView ) this.render();
             }, this);
             this.$('#create_archive').attr('disabled', true);
-            this.$('#export_button').html('<img src="/static/geocamTiePoint/images/loading.gif">');
+            this.$('#export_button').html('<img src="/static/geocamTiePoint/images/loading.gif">' +
+                                          'Creating export archive (this could take a few minutes)...');
         },
 
     }); //end ExportOverlayView

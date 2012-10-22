@@ -167,14 +167,13 @@ $(function($) {
             model.on('export_ready', function(){this.exportPending = false;}, this);
             $.post(request_url, '', function(){
                 model.fetch({ success: function(){
-                    /*
-                      need to discuss how to detect when export is
-                      complete.  note that a successful 200 return from
-                      a generate export request does *not* indicate the
-                      export is complete.
-
-                    model.trigger('export_ready');
-                    if (options.success) options.success();
+                    /* on app engine our request to generate an export
+                       gets an immediate response from the server
+                       because the actual work is done in the background
+                       on a backend instance. thus we'll ignore the
+                       server response and detect completion by polling
+                       the meta-data url until we see an exportUrl field
+                       appear.
                     */
                 } });
             }, 'json')
@@ -192,8 +191,8 @@ $(function($) {
                 model.trigger('export_ready');
                 return false;
             }
-            //var timeout = timeout ? 1.5 * timeout : 1000;
-            var timeout = 10000;
+            // exponential backoff on polling
+            var timeout = timeout ? 1.5 * timeout : 1000;
             console.log("polling overlay: " + timeout);
             this.pollTimer = setTimeout(_.bind(pollForExportComplete, this), timeout, model, timeout);
         },
