@@ -124,7 +124,7 @@ $(function($) {
             // only operate on points that have all four values.
             var points = _.filter(this.get('points'), function(coords){return _.all(coords, _.identity);});
             if ( points.length <2 ) return false; // a minimum of two tiepoints are required to compute the transform
-            this.set('transform', 
+            this.set('transform',
                 points ? geocamTiePoint.transform.getTransform(points).toDict() : {type: '', matrix: []}
             );
         },
@@ -151,7 +151,7 @@ $(function($) {
                     model.trigger('warp_error');
                 },
                 success: function() {
-                    if (options.success) options.success(); 
+                    if (options.success) options.success();
                     model.trigger('warp_success');
                 },
             }
@@ -173,7 +173,7 @@ $(function($) {
                       a generate export request does *not* indicate the
                       export is complete.
 
-                    model.trigger('export_ready'); 
+                    model.trigger('export_ready');
                     if (options.success) options.success();
                     */
                 } });
