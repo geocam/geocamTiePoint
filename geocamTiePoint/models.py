@@ -183,7 +183,7 @@ class QuadTree(models.Model):
                                 {'name': metaJson['name'],
                                  'slug': slug,
                                  'tileRootUrl': tileRootUrl,
-                                 'bounds': metaJson['bounds'],
+                                 'bounds': dumps(metaJson['bounds']),
                                  'tileUrlTemplate': '%s/[ZOOM]/[X]/[Y].png' % slug,
                                  'tileSize': 256})
 

@@ -7,75 +7,129 @@ html, body, #map_canvas {
     height: 100%;
 }
 #map_canvas {
-    height: 80%;
+    height: 90%;
 }
 </style>
 </head>
-<h1>MapFasten: {{ name }}</h1>
 <div>
   <a href="#" onclick="window.location = 'view-source:' + window.location; return false;">View Source</a>
-  - You can copy and paste the JavaScript from this page into your own Google Maps API Map to display your overlay
+  - Copy and paste the JavaScript from this page into your own Google Maps API Map to display your overlay
+</div>
+<div>
+  <b>MapFasten: {{ name }}</b>&nbsp;
+  <label for="opacity_{{ slug }}">
+    Opacity
+  </label>
+  <select id="opacity_{{ slug }}">
+    <option value="0">Hide</option>
+    <option value="0.25">25%</option>
+    <option value="0.5">50%</option>
+    <option value="0.75">75%</option>
+    <option value="1" selected>100%</option>
+  </select>
+  <button id="zoom_{{ slug }}">Zoom To Overlay Bounds</button>
 </div>
 <div id="map_canvas"></div>
 
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script>
 
-var map;
+function MapFastenOverlay(name, slug, tileRootUrl, bounds) {
+    this.name = name;
+    this.tileRootUrl = tileRootUrl;
+    var sw = new google.maps.LatLng(bounds.south, bounds.west);
+    var ne = new google.maps.LatLng(bounds.north, bounds.east);
+    this.bounds = new google.maps.LatLngBounds(sw, ne);
 
-function findOverlay(map, name) {
+    this.updateOpacity = this.updateOpacity.bind(this);
+    this.zoom = this.zoom.bind(this);
+
+    this.opacitySelector = document.getElementById('opacity_' + slug);
+    this.opacitySelector.addEventListener("change", this.updateOpacity);
+
+    var zoomButton = document.getElementById('zoom_' + slug);
+    zoomButton.addEventListener("click", this.zoom);
+
+    this.added = false;
+    this.opacity = null;
+}
+
+MapFastenOverlay.prototype.find = function() {
     for (var i=0; i < map.overlayMapTypes.getLength(); i++) {
         var overlayType = map.overlayMapTypes.getAt(i);
-        if (overlayType.name == name) {
+        if (overlayType.name == this.name) {
             return [i, overlayType];
         }
     }
     throw 'overlay not found';
-}
-
-function addOverlay_{{ slug }}(map) {
-    // edit tileRootUrl if you move the tiles
-    var tileRootUrl = '{{ tileRootUrl }}';
-
-    var overlayOptions = {
-        name: '{{ name }}',
-        getTileUrl: function(coord, zoom) {
-            return (tileRootUrl + '/' +
-                    zoom + '/' +
-                    coord.x + '/' +
-                    coord.y + '.png');
-        },
-        tileSize: new google.maps.Size({{ tileSize }}, {{ tileSize }})
-    };
-    var overlayType = new google.maps.ImageMapType(overlayOptions);
-    map.overlayMapTypes.insertAt(0, overlayType);
-}
-
-function zoomToOverlay_{{ slug }}(map) {
-    var sw = new google.maps.LatLng({{ bounds.south }}, {{ bounds.west }});
-    var ne = new google.maps.LatLng({{ bounds.north }}, {{ bounds.east }});
-    map.fitBounds(new google.maps.LatLngBounds(sw, ne));
-}
+};
 
 // opacity in range 0..1; 0.5 = 50% opaque
-function setOverlayOpacity_{{ slug }}(map, opacity) {
-    var overlayType = findOverlay(map, '{{ name }}')[1];
-    overlayType.setOpacity(opacity);
-}
+MapFastenOverlay.prototype.setOpacity = function(opacity) {
+    // remove if needed
+    if (this.added && opacity == 0) {
+        var idx = this.find()[0];
+        map.overlayMapTypes.setAt(idx, null);
 
-function removeOverlay_{{ slug }}(map) {
-    var idx = findOverlay(map, '{{ name }}')[0];
-    map.overlayMapTypes.setAt(idx, null);
-}
+        this.added = false;
+        this.opacity = null;
+        return;
+    }
+
+    // add if needed
+    if (!this.added && opacity != 0) {
+        var self = this;
+        var overlayOptions = {
+            name: this.name,
+            getTileUrl: function(coord, zoom) {
+                return (self.tileRootUrl + '/' +
+                        zoom + '/' +
+                        coord.x + '/' +
+                        coord.y + '.png');
+            },
+            tileSize: new google.maps.Size({{ tileSize }}, {{ tileSize }})
+        };
+        var overlayType = new google.maps.ImageMapType(overlayOptions);
+        map.overlayMapTypes.insertAt(0, overlayType);
+
+        this.added = true;
+        this.opacity = 1;
+    }
+
+    // adjust opacity if needed
+    if (opacity != this.opacity) {
+        var overlayType = this.find()[1];
+        overlayType.setOpacity(opacity);
+        this.opacity = opacity;
+    }
+};
+
+MapFastenOverlay.prototype.updateOpacity = function() {
+    var idx = this.opacitySelector.selectedIndex;
+    var value = this.opacitySelector.options[idx].value;
+    this.setOpacity(parseFloat(value));
+};
+
+MapFastenOverlay.prototype.zoom = function() {
+    map.fitBounds(this.bounds);
+};
+
+/**********************************************************************/
+
+var map;
+var overlay_{{ slug }};
 
 function initialize() {
     map = new google.maps.Map(document.getElementById('map_canvas'), {
         mapTypeId: google.maps.MapTypeId.ROADMAP
     });
-    addOverlay_{{ slug }}(map);
-    zoomToOverlay_{{ slug }}(map);
-    // setOverlayOpacity_{{ slug }}(map, 0.5);
-    // removeOverlay_{{ slug }}(map);
+
+    overlay_{{ slug }} = new MapFastenOverlay('{{ name }}', '{{ slug }}',
+                                              '{{ tileRootUrl }}',
+                                              {{ bounds|safe }});
+
+    overlay_{{ slug }}.setOpacity(1);
+    overlay_{{ slug }}.zoom();
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
