@@ -322,7 +322,7 @@ $(function($) {
                 zoom: MIN_ZOOM_OFFSET,
                 streetViewControl: false,
                 backgroundColor: 'rgb(192, 192, 192)',
-                mapTypeControl: false
+                mapTypeControl: false,
             });
             var gmap = app.gmap;
 

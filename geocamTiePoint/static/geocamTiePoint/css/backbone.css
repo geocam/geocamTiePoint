@@ -3,6 +3,11 @@ body{
     overflow-y: hidden;
 }
 
+img {
+    /*fix a problem introduced by bootstraps global styles*/
+    max-width: none;
+}
+
 #navlist {
     padding-left: 0px;
 }
@@ -73,6 +78,8 @@ input#locationSearch {
 #download_link a, #simple_viewer a {
     font-size: 1.5em;
     font-weight: bold;
+}
+
 .floatright{
     float: right;
 }
