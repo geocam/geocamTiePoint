@@ -111,10 +111,28 @@ def overlayDelete(request, key):
         overlay.delete()
         return HttpResponseRedirect(reverse('geocamTiePoint_overlayIndex'))
 
+
+def validOverlayContentType(contentType):
+    if contentType in PDF_MIME_TYPES:
+        # this will change to False when pdf conversion goes away
+        return True
+    if contentType.startswith('image/'):
+        return True
+    return False
+
+
+class FieldFileLike(object):
+    """
+    Given a file-like object, vaguely simulate a Django FieldFile.
+    """
+    def __init__(self, file, content_type):
+        self.file = file
+        self.content_type = content_type
+
+
 @transaction.commit_on_success
 def overlayNewJSON(request):
     if request.method == 'POST':
-        class dummf_ref(object): pass
         form = forms.NewImageDataForm(request.POST, request.FILES)
         if form.is_valid():
             # create and save new empty overlay so we can refer to it
@@ -127,7 +145,7 @@ def overlayNewJSON(request):
             image = None
             imageRef = form.cleaned_data['image']
             if not imageRef:
-                # no image, procede to check for url
+                # no image, proceed to check for url
                 if not form.cleaned_data['imageUrl']:
                     # what did the user even do
                     return HttpResponseBadRequest()
@@ -136,18 +154,14 @@ def overlayNewJSON(request):
                     response = urllib2.urlopen(form.cleaned_data['imageUrl'])
                 except urllib2.HTTPError as e:
                     return HttpResponseBadRequest()
-                if response.code != 200 or\
-                   'content-type' not in response.headers or\
-                   response.headers['content-type'].split('/')[0] != "image" or\
-                   response.headers['content-type'] not in PDF_MIME_TYPES:
-                    # we didn't recieve an image,
+                if (response.code != 200
+                    or not validOverlayContentType(response.headers.get('content-type'))):
+                    # we didn't receive an image,
                     # or we did and the server didn't say so.
                     # either way we're not going to deal with it
                     return HttpResponseBadRequest()
-                # quick hack that lets us not touch other code
-                imageRef = dummy_ref()
-                imageRef.content_type = response.headers['content-type']
-                imageRef.file = response
+                imageRef = FieldFileLike(response,
+                                         response.headers['content-type'])
 
             imageData = models.ImageData(contentType=imageRef.content_type,
                                          overlay=overlay)
@@ -196,8 +210,12 @@ def overlayNewJSON(request):
     else:
         return HttpResponseNotAllowed(('POST'))
 
+
 @transaction.commit_on_success
 def overlayNew(request):
+    """
+    Superseded by overlayNewJSON in backbone version!
+    """
     if request.method == 'POST':
         form = forms.NewImageDataForm(request.POST, request.FILES)
         if form.is_valid():
