@@ -80,6 +80,34 @@ input#locationSearch {
     font-weight: bold;
 }
 
-.floatright{
+.floatleft {
+    float: left;
+}
+
+.floatright {
     float: right;
+}
+
+#location {
+    margin-top: -10px;
+}
+
+#location .input-prepend {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+}
+
+.alert .floatleft {
+    margin-right: 1em;
+}
+
+.alert {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    margin-left: 2em;
+    color: #000;
+    font-weight: bold;
+    background-color: #ff9;
 }

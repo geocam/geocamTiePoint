@@ -488,15 +488,18 @@ $(function($) {
                 '<span class="add-on">Go to</span>'+
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
-        '</div>'+
         '{{#unless alignedTilesUrl}}'+
-            '<div class="alert" style="max-width:540pt">'+
-                '<span>Choose corresponding tiepoints to align your image to the map.</span>'+
-                    '<button id="helpBtn" class="btn btn-mini floatright">More Help</button>'+
-                    '<button class="btn btn-mini floatright" data-dismiss="alert">Dismiss</button></p>'+
-            '</div>'+
+            '<span class="alert" style="">'+
+                '<span class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
+                '<button id="promptHelp" class="btn btn-mini floatright">More Help</button>'+
+                '<button class="btn btn-mini floatright" data-dismiss="alert">Dismiss</button>'+
+            '</span>'+
         '{{/unless}}'+
+        '</div>'+
         '<div id="workflow_controls" class="btn-toolbar">' +
+            '<div class="btn-group">'+
+                '<button class="btn" id="help"">Help</button>'+
+            '</div>'+
             '<div class="btn-group">'+
                 '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
                 '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
@@ -532,7 +535,7 @@ $(function($) {
         '</div>',
 
         afterRender: function() {
-            $('#helpBtn').click(function(){ $('#helpText').modal('show'); });
+            $('#promptHelp').click(function(){ $('#helpText').modal('show'); });
             $('#helpCloseBtn').click(function(){ $('#helpText').modal('hide'); });
             this.imageView = new app.views.ImageQtreeView({
                 el: '#split_right',
@@ -554,7 +557,7 @@ $(function($) {
                 });
             });
             maputils.locationSearchBar('#locationSearch', this.mapView.gmap);
-            this.initZoomButtons();
+            this.initButtons();
             this.initWorkflowControls();
             this.initMarkerSelectHandlers();
             this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
@@ -594,7 +597,7 @@ $(function($) {
             maputils.fitMapToBounds(this.mapView.gmap, mapBounds);
         },
 
-        initZoomButtons: function() {
+        initButtons: function() {
             var view = this;
             var zoomed = null;
             this.$('button#zoom_100').click(function() {
@@ -615,6 +618,10 @@ $(function($) {
                         view.zoomFit();
                     }
                 }
+            });
+
+            this.$('button#help').click(function(){
+                $('#helpText').modal('show');
             });
         },
 
