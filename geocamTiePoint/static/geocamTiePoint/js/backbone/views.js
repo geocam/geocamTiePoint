@@ -489,6 +489,13 @@ $(function($) {
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
         '</div>'+
+        '{{#unless alignedTilesUrl}}'+
+            '<div class="alert" style="max-width:540pt">'+
+                '<span>Choose corresponding tiepoints to align your image to the map.</span>'+
+                    '<button id="helpBtn" class="btn btn-mini floatright">More Help</button>'+
+                    '<button class="btn btn-mini floatright" data-dismiss="alert">Dismiss</button></p>'+
+            '</div>'+
+        '{{/unless}}'+
         '<div id="workflow_controls" class="btn-toolbar">' +
             '<div class="btn-group">'+
                 '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
@@ -509,9 +516,24 @@ $(function($) {
         '<div id="split_container">' +
             '<div id="split_left"></div>' +
             '<div id="split_right"></div>' +
+        '</div>'+
+        '<div id="helpText" class="modal hide">'+
+            '<div class="modal-header">'+
+                '<h3>Editing Overlays</h3>'+
+            '</div>'+
+            '<div class="modal-body">'+
+                '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fringilla, lorem vitae tincidunt sagittis, dolor purus pretium mi, id interdum magna enim in ligula. Nulla facilisi. Suspendisse potenti. Quisque eu enim faucibus felis euismod convallis vel ac orci. Suspendisse et commodo leo. Etiam a ligula arcu, ut vulputate ligula. Vestibulum posuere orci eu purus interdum tincidunt at ut augue. Proin sed nulla massa, sit amet condimentum neque. Etiam quis sapien velit. Nulla convallis aliquet nulla ut laoreet. Morbi at lacus velit. Ut at libero purus, eu malesuada metus. Nam egestas, erat non ultrices scelerisque, massa nulla placerat orci, ac iaculis eros lectus a quam. Mauris sit amet ante eu urna dignissim placerat eu eget elit. Curabitur vitae cursus dolor.</p>'+
+
+                '<p>Integer ac nibh nibh, feugiat porta magna. Nam commodo neque a velit sollicitudin mollis. Quisque id porttitor urna. Etiam sed est sit amet felis blandit pretium quis et dolor. Duis at nunc velit, at ultricies sem. Aliquam erat volutpat. Suspendisse potenti. Fusce rhoncus fringilla turpis ac commodo. Phasellus pellentesque consequat quam eget tempor. Mauris egestas mollis lacus a placerat. Vestibulum vehicula eros eget metus vulputate sit amet vehicula enim tempor. Cras fringilla magna dolor, sed porta odio. In vitae placerat lorem. Nulla eros erat, auctor ac aliquet vel, tincidunt in velit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Maecenas nisi eros, ornare nec elementum vel, eleifend ut velit.</p>'+
+            '</div>'+
+            '<div class="modal-footer">'+
+                '<button id="helpCloseBtn">Okay</button>'+
+            '</div>'+
         '</div>',
 
         afterRender: function() {
+            $('#helpBtn').click(function(){ $('#helpText').modal('show'); });
+            $('#helpCloseBtn').click(function(){ $('#helpText').modal('hide'); });
             this.imageView = new app.views.ImageQtreeView({
                 el: '#split_right',
                 model: this.model

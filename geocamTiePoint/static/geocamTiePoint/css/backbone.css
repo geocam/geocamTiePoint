@@ -67,11 +67,12 @@ input#locationSearch {
     margin-left: 0.2em;
 }
 
-#download_link, #simple_viewer, #export_container {
     padding-top: 1em;
 }
 
 #download_link a, #simple_viewer a {
     font-size: 1.5em;
     font-weight: bold;
+.floatright{
+    float: right;
 }
