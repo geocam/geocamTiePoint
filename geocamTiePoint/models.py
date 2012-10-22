@@ -178,11 +178,10 @@ class QuadTree(models.Model):
                                                     image)
 
     @staticmethod
-    def getSimpleViewHtml(viewHtmlPath, tileRootUrl, metaJson, slug):
+    def getSimpleViewHtml(tileRootUrl, metaJson, slug):
         return render_to_string('geocamTiePoint/simple-view.html',
                                 {'name': metaJson['name'],
                                  'slug': slug,
-                                 'viewHtmlPath': viewHtmlPath,
                                  'tileRootUrl': tileRootUrl,
                                  'bounds': metaJson['bounds'],
                                  'tileUrlTemplate': '%s/[ZOOM]/[X]/[Y].png' % slug,
@@ -222,7 +221,7 @@ class Overlay(models.Model):
     alignedQuadTree = models.ForeignKey(QuadTree, null=True, blank=True,
                                         related_name='alignedOverlays',
                                         on_delete=models.SET_NULL)
-    isPublic = models.BooleanField(default=False)
+    isPublic = models.BooleanField(default=settings.GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT)
     coverage = models.CharField(max_length=255, blank=True,
                                 verbose_name='Name of region covered by the overlay')
 
@@ -247,6 +246,17 @@ class Overlay(models.Model):
     exportFields = ('key', 'lastModifiedTime', 'name', 'description', 'imageSourceUrl')
     importFields = ('name', 'description', 'imageSourceUrl')
     importExtrasFields = ('points', 'transform')
+
+    def getAlignedTilesUrl(self):
+        if self.isPublic:
+            urlName = 'geocamTiePoint_publicTile'
+        else:
+            urlName = 'geocamTiePoint_tile'
+        return reverse(urlName,
+                       args=[str(self.alignedQuadTree.id),
+                             '[ZOOM]',
+                             '[X]',
+                             '[Y].png'])
 
     def getJsonDict(self):
         # export all schema-free subfields of extras
@@ -274,15 +284,8 @@ class Overlay(models.Model):
                                                         '[Y].jpg'])
             result['unalignedTilesZoomOffset'] = quadTree.ZOOM_OFFSET
         if self.alignedQuadTree is not None:
-            if self.isPublic:
-                urlName = 'geocamTiePoint_publicTile'
-            else:
-                urlName = 'geocamTiePoint_tile'
-            result['alignedTilesUrl'] = reverse(urlName,
-                                                args=[str(self.alignedQuadTree.id),
-                                                      '[ZOOM]',
-                                                      '[X]',
-                                                      '[Y].png'])
+            result['alignedTilesUrl'] = self.getAlignedTilesUrl()
+
             # note: when exportZip has not been set, its value is not
             # None but <FieldFile: None>, which is False in bool() context
             if self.alignedQuadTree.exportZip:
@@ -362,3 +365,11 @@ class Overlay(models.Model):
         toPts, fromPts = transform.splitPoints(self.extras.points)
         tform = transform.getTransform(toPts, fromPts)
         self.extras.transform = tform.getJsonDict()
+
+    def getSimpleAlignedOverlayViewer(self, request):
+        alignedTilesPath = re.sub(r'/\[ZOOM\].*$', '', self.getAlignedTilesUrl())
+        alignedTilesRootUrl = request.build_absolute_uri(alignedTilesPath)
+        return (self.alignedQuadTree
+                .getSimpleViewHtml(alignedTilesRootUrl,
+                                   self.getJsonDict(),
+                                   self.getSlug()))

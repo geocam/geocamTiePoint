@@ -52,3 +52,8 @@ GEOCAM_TIE_POINT_LICENSE_CHOICES = (
      'Creative Commons CC-BY-NC-ND'),
 
     )
+
+# controls the default setting of the isPublic field on overlays.
+# aligned tiles from public overlays can be viewed by any non-logged-in
+# user, even though the app is in private beta.
+GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT = True

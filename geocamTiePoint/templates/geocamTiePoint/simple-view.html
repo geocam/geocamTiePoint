@@ -1,3 +1,5 @@
+<head>
+<title>MapFasten: {{ name }}</title>
 <style>
 html, body, #map_canvas {
     margin: 0;
@@ -5,10 +7,15 @@ html, body, #map_canvas {
     height: 100%;
 }
 #map_canvas {
-    height: 95%;
+    height: 80%;
 }
 </style>
-<div><a href="#" onclick="window.location = 'view-source:' + window.location; return false;">View Source</a></div>
+</head>
+<h1>MapFasten: {{ name }}</h1>
+<div>
+  <a href="#" onclick="window.location = 'view-source:' + window.location; return false;">View Source</a>
+  - You can copy and paste the JavaScript from this page into your own Google Maps API Map to display your overlay
+</div>
 <div id="map_canvas"></div>
 
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>

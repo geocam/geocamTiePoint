@@ -14,6 +14,9 @@ $(function($) {
     Handlebars.registerHelper('get', function(attr) {
         return this.get(attr);
     });
+    Handlebars.registerHelper('nospecials', function(s) {
+        return s.replace(/[^\w]/g, '_');
+    });
 
     app.views.View = Backbone.View.extend({
         // views will render here unless another element is specified on instantiation.
@@ -865,7 +868,12 @@ $(function($) {
         },
 
         template:   '<h1>Export Overlay {{name}}</h1>'+
-            '<p>&nbsp;</p>' +
+            '{{#if alignedTilesUrl}}' +
+            '<div id="simple_viewer">' +
+            '<a href="/overlay/{{key}}/simpleViewer_{{nospecials name}}.html" target="simpleViewer">' +
+            'View example code for displaying your overlay in any Google Maps API map' +
+            '</a></div>' +
+            '{{/if}}' +
             '{{#if exportUrl}}'+
             '<div id="download_link">'+
             '<a href="{{exportUrl}}">Download Exported Archive</a>'+

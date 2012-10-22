@@ -137,7 +137,8 @@ def overlayNewJSON(request):
         if form.is_valid():
             # create and save new empty overlay so we can refer to it
             # this causes a ValueError if the user isn't logged in
-            overlay = models.Overlay(author=request.user)
+            overlay = models.Overlay(author=request.user,
+                                     isPublic=settings.GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT)
             overlay.save()
 
             # test to see if there is an image file
@@ -221,7 +222,8 @@ def overlayNew(request):
         if form.is_valid():
             # create and save new empty overlay so we can refer to it
             # this causes a ValueError if the user isn't logged in
-            overlay = models.Overlay(author=request.user)
+            overlay = models.Overlay(author=request.user,
+                                     isPublic=settings.GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT)
             overlay.save()
 
             # save imageData
@@ -521,3 +523,11 @@ def garbageCollect(request, dryRun='1'):
         return HttpResponse('{"result": "ok"}', content_type='application/json')
     else:
         return HttpResponseNotAllowed(['GET', 'POST'])
+
+
+def simpleAlignedOverlayViewer(request, key, slug=None):
+    if request.method == 'GET':
+        overlay = get_object_or_404(Overlay, key=key)
+        return HttpResponse(overlay.getSimpleAlignedOverlayViewer(request))
+    else:
+        return HttpResponseNotAllowed(['GET'])
