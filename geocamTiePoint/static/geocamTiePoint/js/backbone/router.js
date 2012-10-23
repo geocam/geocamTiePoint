@@ -28,14 +28,25 @@ $(function($) {
             view.render();
         },
 
+        reloadToFixMapIfNeeded: function () {
+            // HACK: force reload to avoid problems the second time we
+            // render a map in the same tab
+            this.numMapViews++;
+            if (this.numMapViews > 1) {
+                location.reload();
+            }
+        },
+
         viewOverlay: function(overlay_id) {
             console.log('Routed to viewOverlay for ' + overlay_id);
+            this.reloadToFixMapIfNeeded();
             var view = new app.views.MapView({id: overlay_id, readonly: true});
             view.render();
         },
 
         editOverlay: function(overlay_id) {
             console.log('Routed to editOverlay for ' + overlay_id);
+            this.reloadToFixMapIfNeeded();
             var view = new app.views.SplitOverlayView({id: overlay_id});
             view.render();
         },
@@ -59,6 +70,7 @@ $(function($) {
         },
 
         start: function() {
+            this.numMapViews = 0;
             Backbone.history.start();
         }
     });
@@ -66,7 +78,7 @@ $(function($) {
     app.router = new AppRouter();
     //app.router.start();
 
-    /* 
+    /*
      * Support for undo/redo global functions
     */
     window.getState = function() {
