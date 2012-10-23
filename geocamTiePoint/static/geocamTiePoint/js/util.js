@@ -45,3 +45,9 @@ if (window.Handlebars != undefined) {
     });
 }
 
+function flicker(f1, f2, msecs, n) {
+    for (var i = 0; i < n; i++) {
+        setTimeout(f1, 2 * i * msecs);
+        setTimeout(f2, (2 * i + 1) * msecs);
+    }
+}

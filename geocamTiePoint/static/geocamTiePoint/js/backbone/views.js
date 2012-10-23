@@ -480,7 +480,42 @@ $(function($) {
 
     }); // end MapView
 
+    var lorem = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fringilla, lorem vitae tincidunt sagittis, dolor purus pretium mi, id interdum magna enim in ligula. Nulla facilisi. Suspendisse potenti. Quisque eu enim faucibus felis euismod convallis vel ac orci. Suspendisse et commodo leo. Etiam a ligula arcu, ut vulputate ligula. Vestibulum posuere orci eu purus interdum tincidunt at ut augue. Proin sed nulla massa, sit amet condimentum neque. Etiam quis sapien velit. Nulla convallis aliquet nulla ut laoreet. Morbi at lacus velit. Ut at libero purus, eu malesuada metus. Nam egestas, erat non ultrices scelerisque, massa nulla placerat orci, ac iaculis eros lectus a quam. Mauris sit amet ante eu urna dignissim placerat eu eget elit. Curabitur vitae cursus dolor.</p>'+
+
+                '<p>Integer ac nibh nibh, feugiat porta magna. Nam commodo neque a velit sollicitudin mollis. Quisque id porttitor urna. Etiam sed est sit amet felis blandit pretium quis et dolor. Duis at nunc velit, at ultricies sem. Aliquam erat volutpat. Suspendisse potenti. Fusce rhoncus fringilla turpis ac commodo. Phasellus pellentesque consequat quam eget tempor. Mauris egestas mollis lacus a placerat. Vestibulum vehicula eros eget metus vulputate sit amet vehicula enim tempor. Cras fringilla magna dolor, sed porta odio. In vitae placerat lorem. Nulla eros erat, auctor ac aliquet vel, tincidunt in velit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Maecenas nisi eros, ornare nec elementum vel, eleifend ut velit.</p>';
+
     app.views.SplitOverlayView = app.views.OverlayView.extend({
+
+        helpSteps: [
+            ['Use "Go To Location" to zoom the map to the neighborhood of your overlay',
+             lorem,
+             function () {
+                 this.$('#locationSearch').focus();
+                 flicker(
+                     function () {
+                         this.$('#locationSearch').css('background-color', '#ffc');
+                     },
+                     function () {
+                         this.$('#locationSearch').css('background-color', '#fff');
+                     },
+                     1000, 3);
+             }],
+            ['Click matching landmarks on both sides to add tiepoints and align your overlay.',
+             lorem],
+            ['Use "Export" to see options for viewing your overlay in maps outside this site',
+             lorem,
+             function () {
+                 this.$('#export').focus();
+                 flicker(
+                     function() {
+                         this.$('#export').addClass('btn-primary');
+                     },
+                     function() {
+                         this.$('#export').removeClass('btn-primary');
+                     },
+                     500, 3);
+             }]
+        ],
 
         template:
         '<div id="location" class="btn-toolbar">' +
@@ -488,13 +523,13 @@ $(function($) {
                 '<span class="add-on">Go to</span>'+
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
-        '{{#unless alignedTilesUrl}}'+
             '<span class="alert">'+
-                '<span class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
-                '<button id="promptHelp" class="btn btn-mini">More Help</button>'+
-                '<button class="btn btn-mini floatright" data-dismiss="alert">Dismiss [x]</button>'+
+                '<span id="userPromptText" class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
+                '<button id="promptPrevStep" class="btn btn-mini">&lt;&lt;</button>'+
+                '<button id="promptNextStep" class="btn btn-mini">&gt;&gt;</button>'+
+                '<button id="promptHelp" class="btn btn-mini">details</button>'+
+                '<button class="btn btn-mini floatright" data-dismiss="alert">x</button>'+
             '</span>'+
-        '{{/unless}}'+
         '</div>'+
         '<div id="workflow_controls" class="btn-toolbar">' +
             '<div class="btn-group">'+
@@ -524,15 +559,21 @@ $(function($) {
             '<div class="modal-header">'+
                 '<h3>Editing Overlays</h3>'+
             '</div>'+
-            '<div class="modal-body">'+
-                '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fringilla, lorem vitae tincidunt sagittis, dolor purus pretium mi, id interdum magna enim in ligula. Nulla facilisi. Suspendisse potenti. Quisque eu enim faucibus felis euismod convallis vel ac orci. Suspendisse et commodo leo. Etiam a ligula arcu, ut vulputate ligula. Vestibulum posuere orci eu purus interdum tincidunt at ut augue. Proin sed nulla massa, sit amet condimentum neque. Etiam quis sapien velit. Nulla convallis aliquet nulla ut laoreet. Morbi at lacus velit. Ut at libero purus, eu malesuada metus. Nam egestas, erat non ultrices scelerisque, massa nulla placerat orci, ac iaculis eros lectus a quam. Mauris sit amet ante eu urna dignissim placerat eu eget elit. Curabitur vitae cursus dolor.</p>'+
-
-                '<p>Integer ac nibh nibh, feugiat porta magna. Nam commodo neque a velit sollicitudin mollis. Quisque id porttitor urna. Etiam sed est sit amet felis blandit pretium quis et dolor. Duis at nunc velit, at ultricies sem. Aliquam erat volutpat. Suspendisse potenti. Fusce rhoncus fringilla turpis ac commodo. Phasellus pellentesque consequat quam eget tempor. Mauris egestas mollis lacus a placerat. Vestibulum vehicula eros eget metus vulputate sit amet vehicula enim tempor. Cras fringilla magna dolor, sed porta odio. In vitae placerat lorem. Nulla eros erat, auctor ac aliquet vel, tincidunt in velit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Maecenas nisi eros, ornare nec elementum vel, eleifend ut velit.</p>'+
-            '</div>'+
+            '<div id="modalBody" class="modal-body"></div>'+
             '<div class="modal-footer">'+
                 '<button id="helpCloseBtn">Okay</button>'+
             '</div>'+
         '</div>',
+
+        beforeRender: function() {
+            if (this.helpIndex == null) {
+                if (this.model.get('alignedTilesUrl')) {
+                    this.helpIndex = 1;
+                } else {
+                    this.helpIndex = 0;
+                }
+            }
+        },
 
         afterRender: function() {
             $('#promptHelp').click(function(){ $('#helpText').modal('show'); });
@@ -562,6 +603,38 @@ $(function($) {
             this.initMarkerSelectHandlers();
             this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
 
+            this.renderHelp();
+        },
+
+        renderHelp: function() {
+            var helpData = this.helpSteps[this.helpIndex];
+            this.$('#userPromptText').html(helpData[0]);
+            this.$('#modalBody').html(helpData[1]);
+            var helpFunc = helpData[2];
+            if (helpFunc) {
+                _.bind(helpFunc, this)();
+            }
+
+            if (this.helpIndex == 0) {
+                this.$('button#promptPrevStep').attr('disabled', 'disabled');
+            } else {
+                this.$('button#promptPrevStep').removeAttr('disabled');
+            }
+            if (this.helpIndex == this.helpSteps.length - 1) {
+                this.$('button#promptNextStep').attr('disabled', 'disabled');
+            } else {
+                this.$('button#promptNextStep').removeAttr('disabled');
+            }
+        },
+
+        prevHelpStep: function() {
+            this.helpIndex--;
+            this.renderHelp();
+        },
+
+        nextHelpStep: function() {
+            this.helpIndex++;
+            this.renderHelp();
         },
 
         zoomMaximum: function() {
@@ -623,6 +696,8 @@ $(function($) {
             this.$('button#help').click(function(){
                 $('#helpText').modal('show');
             });
+            this.$('button#promptPrevStep').click(_.bind(this.prevHelpStep, this));
+            this.$('button#promptNextStep').click(_.bind(this.nextHelpStep, this));
         },
 
         initWorkflowControls: function() {
