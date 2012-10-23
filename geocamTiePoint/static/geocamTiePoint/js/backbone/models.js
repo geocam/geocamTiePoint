@@ -140,10 +140,9 @@ $(function($) {
         },
 
         warp: function(options) {
-            // Save the overlay, then trigger a server-side warp.
+            // Save the overlay, which triggers a server-side warp.
             options = options || {};
             var model = this;
-            var warpUrl = this.url().replace('.json', '/warp');
             model.trigger('before_warp');
             saveOptions = {
                 error: function(){
