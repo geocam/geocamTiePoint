@@ -489,10 +489,10 @@ $(function($) {
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
         '{{#unless alignedTilesUrl}}'+
-            '<span class="alert" style="">'+
+            '<span class="alert">'+
                 '<span class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
-                '<button id="promptHelp" class="btn btn-mini floatright">More Help</button>'+
-                '<button class="btn btn-mini floatright" data-dismiss="alert">Dismiss</button>'+
+                '<button id="promptHelp" class="btn btn-mini">More Help</button>'+
+                '<button class="btn btn-mini floatright" data-dismiss="alert">Dismiss [x]</button>'+
             '</span>'+
         '{{/unless}}'+
         '</div>'+
