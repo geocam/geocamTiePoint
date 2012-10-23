@@ -114,6 +114,8 @@ $(function($) {
         },
 
         deleteTiepoint: function(index) {
+            actionPerformed();
+
             points = this.get('points');
             points.splice(index, 1);
             this.set('points', points);

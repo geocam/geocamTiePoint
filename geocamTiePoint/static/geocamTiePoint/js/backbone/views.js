@@ -604,6 +604,7 @@ $(function($) {
             this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
 
             this.renderHelp();
+            enableUndoButtons();
         },
 
         renderHelp: function() {

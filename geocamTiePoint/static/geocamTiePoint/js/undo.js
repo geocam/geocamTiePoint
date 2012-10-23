@@ -52,16 +52,47 @@ function popState(stack) {
     setStateJson(stack.pop());
 }
 
+/*
+function lengthTrace(stack) {
+    var result = [];
+    $.each(stack, function (i, rec) {
+        result.push(JSON.parse(rec).points.length);
+    });
+    return result;
+}
+
+function debugUndo() {
+    console.log('debugUndo:');
+    console.log('  undo stack: ' + lengthTrace(undoStackG));
+    console.log('  redo stack: ' + lengthTrace(redoStackG));
+}
+*/
+
 function undo() {
     if (undoStackG.length < 1) return;
     pushState(redoStackG);
     popState(undoStackG);
+    enableUndoButtons();
 }
 
 function redo() {
     if (redoStackG.length < 1) return;
     pushState(undoStackG);
     popState(redoStackG);
+    enableUndoButtons();
+}
+
+function enableUndoButtons() {
+    if (undoStackG.length < 1) {
+        $('#undo').attr('disabled', 'disabled');
+    } else {
+        $('#undo').removeAttr('disabled');
+    }
+    if (redoStackG.length < 1) {
+        $('#redo').attr('disabled', 'disabled');
+    } else {
+        $('#redo').removeAttr('disabled');
+    }
 }
 
 function actionPerformed() {
@@ -70,5 +101,8 @@ function actionPerformed() {
             undoStackG.push(redoStackG.pop());
         }
     }
-    return pushState(undoStackG);
+    var result = pushState(undoStackG);
+    enableUndoButtons();
+
+    return result;
 }
