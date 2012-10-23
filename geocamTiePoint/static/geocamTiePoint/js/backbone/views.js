@@ -544,7 +544,7 @@ $(function($) {
                 '<button class="btn" id="zoom_100">Zoom Max</button>' +
                 '<button class="btn" id="zoom_fit">Zoom Fit</button>' +
             '</div>' +
-                '<button class="btn"><label for="show_overlay"><input id="show_overlay" type="checkbox" checked="true"/>Show Overlay</label></button>' +
+                '<button class="btn"><label for="show_preview"><input id="show_preview" type="checkbox" checked="true"/>Show Preview</label></button>' +
             '<div id="save-export" class="btn-group">'+
                 '<button class="btn" id="export">Export</button>'+
                 '<button class="btn" id="save">Save</button>'+
@@ -728,7 +728,7 @@ $(function($) {
                         button.disabled = false;
                         button.text("WARPED");
                         _.delay(function(){button.text(button.data('original-text'));}, 1000);
-                        $('input#show_overlay').attr('checked', true).change();
+                        $('input#show_preview').attr('checked', true).change();
                     },
                     error: function(model, response) {
                         button.disabled = false;
@@ -751,7 +751,7 @@ $(function($) {
                 app.router.navigate('overlay/'+overlay.id+'/export', {trigger: true});
             });
 
-            $('input#show_overlay').change(function(evt){
+            $('input#show_preview').change(function(evt){
                 if (this.checked) {
                     splitView.mapView.overlay_enabled = true;
                     splitView.mapView.initAlignedImageQtree();
