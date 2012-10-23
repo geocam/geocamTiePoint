@@ -487,7 +487,7 @@ $(function($) {
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         helpSteps: [
-            ['Use "Go To Location" to zoom the map to the neighborhood of your overlay',
+            ['Use "Go to Location" to zoom the map to the neighborhood of your overlay',
              lorem,
              function () {
                  this.$('#locationSearch').focus();
@@ -525,10 +525,10 @@ $(function($) {
             '</span>' +
             '<span class="alert">'+
                 '<span id="userPromptText" class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
-                '<button id="promptPrevStep" class="btn btn-mini">&lt;&lt;</button>'+
-                '<button id="promptNextStep" class="btn btn-mini">&gt;&gt;</button>'+
-                '<button id="promptHelp" class="btn btn-mini">details</button>'+
-                '<button class="btn btn-mini floatright" data-dismiss="alert">x</button>'+
+                '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
+                '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
+                //'<button id="promptHelp" class="btn btn-mini">details</button>'+
+                '<a class="btn btn-mini floatright" data-dismiss="alert">x</a>'+
             '</span>'+
         '</div>'+
         '<div id="workflow_controls" class="btn-toolbar">' +
@@ -616,14 +616,14 @@ $(function($) {
             }
 
             if (this.helpIndex == 0) {
-                this.$('button#promptPrevStep').attr('disabled', 'disabled');
+                this.$('#promptPrevStep').attr('disabled', 'disabled');
             } else {
-                this.$('button#promptPrevStep').removeAttr('disabled');
+                this.$('#promptPrevStep').removeAttr('disabled');
             }
             if (this.helpIndex == this.helpSteps.length - 1) {
-                this.$('button#promptNextStep').attr('disabled', 'disabled');
+                this.$('#promptNextStep').attr('disabled', 'disabled');
             } else {
-                this.$('button#promptNextStep').removeAttr('disabled');
+                this.$('#promptNextStep').removeAttr('disabled');
             }
         },
 
@@ -696,8 +696,8 @@ $(function($) {
             this.$('button#help').click(function(){
                 $('#helpText').modal('show');
             });
-            this.$('button#promptPrevStep').click(_.bind(this.prevHelpStep, this));
-            this.$('button#promptNextStep').click(_.bind(this.nextHelpStep, this));
+            this.$('#promptPrevStep').click(_.bind(this.prevHelpStep, this));
+            this.$('#promptNextStep').click(_.bind(this.nextHelpStep, this));
         },
 
         initWorkflowControls: function() {
