@@ -121,6 +121,17 @@ def validOverlayContentType(contentType):
     return False
 
 
+class ErrorJSONResponse(HttpResponse):
+    """
+    Packages up a form error into a JSON response that will be nice to deal with client-side.
+    The errors argument expects a django forms ErrorDict object.
+    If a string is given as the errors argument, the ErrorDict will be emulated.
+    """
+    def __init__(self, errors, *args, **kwargs):
+        if isinstance(errors, basestring):
+            errors = { "__all__": [errors] }
+        super(ErrorJSONResponse, self).__init__(json.dumps(errors), *args, status=400, content_type="application/json", **kwargs)
+
 class FieldFileLike(object):
     """
     Given a file-like object, vaguely simulate a Django FieldFile.
@@ -134,7 +145,9 @@ class FieldFileLike(object):
 def overlayNewJSON(request):
     if request.method == 'POST':
         form = forms.NewImageDataForm(request.POST, request.FILES)
-        if form.is_valid():
+        if not form.is_valid():
+            return ErrorJSONResponse( form.errors )
+        else:
             # create and save new empty overlay so we can refer to it
             # this causes a ValueError if the user isn't logged in
             overlay = models.Overlay(author=request.user,
@@ -152,22 +165,20 @@ def overlayNewJSON(request):
                 # no image, proceed to check for url
                 if not form.cleaned_data['imageUrl']:
                     # what did the user even do
-                    print "No image url in returned form data"
-                    return HttpResponseBadRequest()
+                    return ErrorJSONResponse( "No image url in returned form data" )
                 # we have a url, try to download it
                 try:
                     response = urllib2.urlopen(form.cleaned_data['imageUrl'])
                 except urllib2.HTTPError as e:
-                    print "Server responded with error"
-                    return HttpResponseBadRequest()
-                if (response.code != 200
-                    or not validOverlayContentType(response.headers.get('content-type'))):
+                    return ErrorJSONResponse( "There was a problem fetching the image at this URL." )
+                if response.code != 200:
+                    return ErrorJSONResponse( "There was a problem fetching the image at this URL." )
+                if not validOverlayContentType(response.headers.get('content-type')):
                     # we didn't receive an image,
                     # or we did and the server didn't say so.
                     # either way we're not going to deal with it
-                    print "Didn't get an image"
-                    print response.headers['Content-Type'].split('/')[0]
-                    return HttpResponseBadRequest()
+                    logging.error( "Non-image content-type:" + response.headers['Content-Type'].split('/')[0] )
+                    return ErrorJSONResponse("The file at this URL does not seem to be an image.")
                 imageFB = StringIO(response.read())
                 imageType = response.headers['Content-Type']
                 imageName = form.cleaned_data['imageUrl'].split('/')[-1]
@@ -186,7 +197,11 @@ def overlayNewJSON(request):
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
-                image = PIL.Image.open(imageFB)
+                try:
+                    image = PIL.Image.open(imageFB)
+                except Exception as e:
+                    logging.error( "PIL failed to open image: " + str(e) ) 
+                    return ErrorJSONResponse("There was a problem reading the image.")
                 if image.mode != 'RGBA':
                     # add alpha channel to image for better
                     # transparency handling later
