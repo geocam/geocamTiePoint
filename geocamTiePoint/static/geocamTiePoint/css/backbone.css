@@ -116,3 +116,7 @@ input#locationSearch {
     font-weight: bold;
     background-color: #ff9;
 }
+
+.error{
+    color: red;
+}

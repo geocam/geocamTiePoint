@@ -825,13 +825,18 @@ $(function($) {
 
         template:
         '<div id="new_overlay_view">'+
+            '<h3>Create a New Overlay</h3>'+
             '<form encytype="multipart/form-data" id="newOverlayForm">'+
-            '<label>Upload File</label> <input type="file" name="file" id="newOverlayFile" />'+
-	    '<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
-            '<input class="btn" type="button" value="Submit" id="newOverlayFormSubmitButton" />'+
-            window.csrf_token +
+            '<div id="uploadControlGroup" class="control-group">'+
+                '<label>Local File</label>'+
+                '<input type="file" name="file" id="newOverlayFile" />'+
+                //'<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
+                '<input class="btn" type="button" value="Upload" id="newOverlayFormSubmitButton" />'+
+                window.csrf_token +
+            '</div>'+
             '</form>'+
-            '</div>',
+            '<div id="formErrorContainer"></div>'+
+        '</div>',
 
         initialize: function() {
             app.views.View.prototype.initialize.apply(this, arguments);
@@ -877,7 +882,7 @@ $(function($) {
             $.each($('input#newOverlayFile')[0].files, function(i, file) {
                 data.append('image', file);
             });
-	    data.append('imageUrl', $('input#imageUrl')[0].value);
+	        //data.append('imageUrl', $('input#imageUrl')[0].value);
             var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
             $.ajax({
                 url: '/overlays/new.json',
@@ -897,16 +902,28 @@ $(function($) {
             });
         },
 
-        submitError: function() {
+        submitError: function(xhr, status, errorThrown) {
             console.log("Error occured when trying to submit new overlay");
+            var errors;
+            if (xhr.status == 400) {
+                errors = JSON.parse(xhr.responseText);
+            } else {
+                errors = {'__all__': xhr.errorThrown}; // similar to the Django Forms ErrorDict
+            }
+            var errorDiv = $('#formErrorContainer').html('');
+            var messages = _.flatten( _.values(errors) );  // for now, just flatten all the global and field specific error messages into a list
+            _.each( messages, function(message) {
+                var errorElem = $('<div/>').addClass('error').text(message);
+                errorDiv.append(errorElem);
+            });
             $('input#newOverlayFormSubmitButton')[0].disabled = false;
-            $('input#newOverlayFormSubmitButton')[0].value = "Submit";
+            $('input#newOverlayFormSubmitButton')[0].value = "Upload";
         },
 
         submitSuccess: function(data) {
             console.log("got data back");
             $('input#newOverlayFormSubmitButton')[0].disabled = false;
-            $('input#newOverlayFormSubmitButton')[0].value = "Submit";
+            $('input#newOverlayFormSubmitButton')[0].value = "Upload";
             try {
                 var json = JSON.parse(data);
             } catch (error) {
