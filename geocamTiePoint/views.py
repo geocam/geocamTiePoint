@@ -145,36 +145,48 @@ def overlayNewJSON(request):
             # file takes precedence over image url
             image = None
             imageRef = form.cleaned_data['image']
+            imageFB = None
+            imageType = None
+            imageName = None
             if not imageRef:
                 # no image, proceed to check for url
                 if not form.cleaned_data['imageUrl']:
                     # what did the user even do
+                    print "No image url in returned form data"
                     return HttpResponseBadRequest()
                 # we have a url, try to download it
                 try:
                     response = urllib2.urlopen(form.cleaned_data['imageUrl'])
                 except urllib2.HTTPError as e:
+                    print "Server responded with error"
                     return HttpResponseBadRequest()
                 if (response.code != 200
                     or not validOverlayContentType(response.headers.get('content-type'))):
                     # we didn't receive an image,
                     # or we did and the server didn't say so.
                     # either way we're not going to deal with it
+                    print "Didn't get an image"
+                    print response.headers['Content-Type'].split('/')[0]
                     return HttpResponseBadRequest()
-                imageRef = FieldFileLike(response,
-                                         response.headers['content-type'])
+                imageFB = StringIO(response.read())
+                imageType = response.headers['Content-Type']
+                imageName = form.cleaned_data['imageUrl'].split('/')[-1]
+                response.close()
+            else:
+                imageFB = imageRef.file
+                imageType = imageRef.content_type
+                imageName = imageRef.name
 
-            imageData = models.ImageData(contentType=imageRef.content_type,
+            imageData = models.ImageData(contentType=imageType,
                                          overlay=overlay)
 
-            if imageRef.content_type in PDF_MIME_TYPES:
+            if imageType in PDF_MIME_TYPES:
                 # convert PDF to raster image
-                pngData = pdf.convertPdf(imageRef.file.read())
+                pngData = pdf.convertPdf(imageFB.read())
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
-                bits = imageRef.file.read()
-                image = PIL.Image.open(StringIO(bits))
+                image = PIL.Image.open(imageFB)
                 if image.mode != 'RGBA':
                     # add alpha channel to image for better
                     # transparency handling later
@@ -182,21 +194,20 @@ def overlayNewJSON(request):
                     out = StringIO()
                     image.save(out, format='png')
                     convertedBits = out.getvalue()
-                    logging.info('converted image to RGBA, output length %s bytes'
-                                 % len(bits))
+                    logging.info('converted image to RGBA')
                     imageData.image.save('dummy.png', ContentFile(convertedBits),
                                          save=False)
                     imageData.contentType = 'image/png'
                 else:
                     imageData.image.save('dummy.png', ContentFile(bits), save=False)
-                    imageData.contentType = imageRef.content_type
+                    imageData.contentType = imageType
             imageData.save()
 
             if image is None:
                 image = PIL.Image.open(imageData.image.file)
 
             # fill in overlay info
-            overlay.name = imageRef.name
+            overlay.name = imageName
             overlay.imageData = imageData
             overlay.extras.points = []
             overlay.extras.imageSize = image.size
