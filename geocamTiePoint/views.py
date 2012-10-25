@@ -148,11 +148,6 @@ def overlayNewJSON(request):
         if not form.is_valid():
             return ErrorJSONResponse( form.errors )
         else:
-            # create and save new empty overlay so we can refer to it
-            # this causes a ValueError if the user isn't logged in
-            overlay = models.Overlay(author=request.user,
-                                     isPublic=settings.GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT)
-            overlay.save()
 
             # test to see if there is an image file
             # file takes precedence over image url
@@ -188,8 +183,7 @@ def overlayNewJSON(request):
                 imageType = imageRef.content_type
                 imageName = imageRef.name
 
-            imageData = models.ImageData(contentType=imageType,
-                                         overlay=overlay)
+            imageData = models.ImageData(contentType=imageType)
 
             if imageType in PDF_MIME_TYPES:
                 # convert PDF to raster image
@@ -216,6 +210,13 @@ def overlayNewJSON(request):
                 else:
                     imageData.image.save('dummy.png', ContentFile(bits), save=False)
                     imageData.contentType = imageType
+
+            # create and save new empty overlay so we can refer to it
+            # this causes a ValueError if the user isn't logged in
+            overlay = models.Overlay(author=request.user,
+                                     isPublic=settings.GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT)
+            overlay.save()
+            imageData.overlay = overlay
             imageData.save()
 
             if image is None:
