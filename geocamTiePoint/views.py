@@ -113,7 +113,7 @@ def overlayDelete(request, key):
 
 
 def validOverlayContentType(contentType):
-    if contentType in PDF_MIME_TYPES:
+    if settings.PDF_IMPORT_ENABLED and contentType in PDF_MIME_TYPES:
         # this will change to False when pdf conversion goes away
         return True
     if contentType.startswith('image/'):
@@ -174,6 +174,9 @@ def overlayNewJSON(request):
                     # either way we're not going to deal with it
                     logging.error( "Non-image content-type:" + response.headers['Content-Type'].split('/')[0] )
                     return ErrorJSONResponse("The file at this URL does not seem to be an image.")
+                imageSize = int( response.info().get('content-length') )
+                if imageSize > settings.MAX_IMPORT_FILE_SIZE:
+                    return ErrorJSONResponse("The submitted file is larger than the maximum allowed size.  Maximum size is %d bytes." % settings.MAX_IMPORT_FILE_SIZE)
                 imageFB = StringIO(response.read())
                 imageType = response.headers['Content-Type']
                 imageName = form.cleaned_data['imageUrl'].split('/')[-1]
@@ -182,10 +185,13 @@ def overlayNewJSON(request):
                 imageFB = imageRef.file
                 imageType = imageRef.content_type
                 imageName = imageRef.name
-
+                imageSize = imageRef.size
+                if imageSize > settings.MAX_IMPORT_FILE_SIZE:
+                    return ErrorJSONResponse("The submitted file is larger than the maximum allowed size.  Maximum size is %d bytes." % settings.MAX_IMPORT_FILE_SIZE)
+                
             imageData = models.ImageData(contentType=imageType)
 
-            if imageType in PDF_MIME_TYPES:
+            if settings.PDF_IMPORT_ENABLED and imageType in PDF_MIME_TYPES:
                 # convert PDF to raster image
                 pngData = pdf.convertPdf(imageFB.read())
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
