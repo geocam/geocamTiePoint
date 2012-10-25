@@ -826,15 +826,32 @@ $(function($) {
         template:
         '<div id="new_overlay_view">'+
             '<h3>Create a New Overlay</h3>'+
-            '<form encytype="multipart/form-data" id="newOverlayForm">'+
-            '<div id="uploadControlGroup" class="control-group">'+
-                '<label>Local File</label>'+
-                '<input type="file" name="file" id="newOverlayFile" />'+
-                //'<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
-                '<input class="btn" type="button" value="Upload" id="newOverlayFormSubmitButton" />'+
-                window.csrf_token +
+            '<ul class="nav nav-tabs" id="formTabs">'+
+            '  <li class="active" data-target="#fileUpload"><a href="#fileUpload">Upload</a></li>'+
+            '  <li data-target="#ulrSubmit"><a href="#urlSubmit">URL</a></li>'+
+            '</ul>'+
+            ' '+
+            '<div class="tab-content">'+
+                '<div class="tab-pane active" id="fileUpload">'+
+                    '<form encytype="multipart/form-data" id="overlayUploadForm">'+
+                    '<div id="uploadControlGroup" class="control-group">'+
+                        '<label>Local File</label>'+
+                        '<input type="file" name="file" id="newOverlayFile" />'+
+                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Upload" />'+
+                        window.csrf_token +
+                    '</div>'+
+                    '</form>'+
+                '</div>'+
+                '<div class="tab-pane" id="urlSubmit">'+
+                    '<form encytype="multipart/form-data" id="overlayUrlForm">'+
+                    '<div id="uploadControlGroup" class="control-group">'+
+                        '<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
+                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Submit" />'+
+                        window.csrf_token +
+                    '</div>'+
+                    '</form>'+
+                '</div>'+
             '</div>'+
-            '</form>'+
             '<div id="formErrorContainer"></div>'+
         '</div>',
 
@@ -844,11 +861,16 @@ $(function($) {
         },
 
         afterRender: function() {
-            this.$('input#newOverlayFormSubmitButton').click(this.submitForm);
+            this.$('input.newOverlayFormSubmitButton').click(this.submitForm);
             that = this;
             /*this.$('#urlForm input#submitUrl').click(function(){
               $.post('/overlays/new.json', that.$('urlForm').serialize(), that.submitSuccess);
               });*/
+            $('#formTabs a:first').tab('show');
+            this.$('ul#formTabs a').click( function(e){
+                e.preventDefault();
+                $(this).tab('show');
+            } );
         },
 
         getCookie: function(name) {
@@ -871,18 +893,21 @@ $(function($) {
         },
 
         submitForm: function() {
-            var button = $('input#newOverlayFormSubmitButton');
+            var button = $(this);
+            var form = button.parents('form');
+            button.data('value', button[0].value);
             button[0].value = "Working...";
             button[0].disabled = true;
             setTimeout(function(){
-		if (button[0].value == "Working...")
-                    $('input#newOverlayFormSubmitButton')[0].disabled = false;
+                if (button[0].value == "Working...") button[0].disabled = false;
             }, 10000);
             var data = new FormData();
-            $.each($('input#newOverlayFile')[0].files, function(i, file) {
-                data.append('image', file);
+            form.find('input#newOverlayFile').each(function(i, el){
+                $.each(el.files, function(i, file) {
+                    data.append('image', file);
+                });
             });
-	        //data.append('imageUrl', $('input#imageUrl')[0].value);
+	        if (form.find('input#imageUrl').val()) data.append('imageUrl', form.find('input#imageUrl')[0].value);
             var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
             $.ajax({
                 url: '/overlays/new.json',
@@ -897,13 +922,14 @@ $(function($) {
                 contentType: false,
                 processData: false,
                 type: 'POST',
-                success: app.views.NewOverlayView.prototype.submitSuccess,
-                error: app.views.NewOverlayView.prototype.submitError
+                success: _.bind(app.views.NewOverlayView.prototype.submitSuccess, this),
+                error: _.bind(app.views.NewOverlayView.prototype.submitError, this),
             });
         },
 
         submitError: function(xhr, status, errorThrown) {
             console.log("Error occured when trying to submit new overlay");
+            var button = $(this);
             var errors;
             if (xhr.status == 400) {
                 errors = JSON.parse(xhr.responseText);
@@ -916,14 +942,15 @@ $(function($) {
                 var errorElem = $('<div/>').addClass('error').text(message);
                 errorDiv.append(errorElem);
             });
-            $('input#newOverlayFormSubmitButton')[0].disabled = false;
-            $('input#newOverlayFormSubmitButton')[0].value = "Upload";
+            button[0].value = button.data('value');
+            button[0].disabled = false;
         },
 
         submitSuccess: function(data) {
             console.log("got data back");
-            $('input#newOverlayFormSubmitButton')[0].disabled = false;
-            $('input#newOverlayFormSubmitButton')[0].value = "Upload";
+            var button = $(this);
+            button[0].disabled = false;
+            button[0].value = button.data('value');
             try {
                 var json = JSON.parse(data);
             } catch (error) {
