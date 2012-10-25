@@ -683,7 +683,7 @@ $(function($) {
                 view.zoomFit();
             });
             $(document).keyup(function(e) {
-                console.log('key detect: ' + e.which);
+                //console.log('key detect: ' + e.which);
                 if (e.which === 122 || e.which === 90) { // match z or Z
                     zoomed = !zoomed;
                     if (zoomed) {
