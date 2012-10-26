@@ -487,7 +487,7 @@ $(function($) {
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         helpSteps: [
-            ['Use "Go to Location" to zoom the map to the neighborhood of your overlay',
+            ['Use "Go to Location" to zoom the map to the neighborhood of your overlay.',
              lorem,
              function () {
                  this.$('#locationSearch').focus();
@@ -502,7 +502,7 @@ $(function($) {
              }],
             ['Click matching landmarks on both sides to add tiepoints and align your overlay.',
              lorem],
-            ['Use "Export" to see options for viewing your overlay in maps outside this site',
+            ['Use "Export" to see options for viewing your overlay in maps outside this site.',
              lorem,
              function () {
                  this.$('#export').focus();
@@ -523,12 +523,14 @@ $(function($) {
                 '<span class="add-on">Go to</span>'+
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
-            '<span class="alert">'+
+            '<span class="alert instructions-prompt">'+
+                '<div class="btn-group floatleft" style="margin-right: 10px;">'+
+                    '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
+                    '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
+                '</div>'+
                 '<span id="userPromptText" class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
-                '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
-                '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
+                '<a class="close" data-dismiss="alert">&times;</a>'+
                 //'<button id="promptHelp" class="btn btn-mini">details</button>'+
-                '<a class="btn btn-mini floatright" data-dismiss="alert">x</a>'+
             '</span>'+
         '</div>'+
         '<div id="workflow_controls" class="btn-toolbar">' +

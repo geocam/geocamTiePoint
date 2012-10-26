@@ -87,6 +87,7 @@ input#locationSearch {
 
 .floatleft {
     float: left;
+    margin-right: 1em;
 }
 
 .floatright {
@@ -103,14 +104,11 @@ input#locationSearch {
     margin: 0;
 }
 
-.alert .floatleft {
-    margin-right: 1em;
-}
-
-.alert {
+.instructions-prompt {
     display: inline-block;
     vertical-align: middle;
     margin: 0;
+    margin-right: 1em;
     margin-left: 2em;
     color: #000;
     font-weight: bold;
