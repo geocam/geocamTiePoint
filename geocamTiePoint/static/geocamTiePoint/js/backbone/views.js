@@ -559,6 +559,7 @@ $(function($) {
         '</div>'+
         '<div id="helpText" class="modal hide">'+
             '<div class="modal-header">'+
+                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'+
                 '<h3>Editing Overlays</h3>'+
             '</div>'+
             '<div id="modalBody" class="modal-body"></div>'+
