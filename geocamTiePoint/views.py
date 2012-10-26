@@ -382,7 +382,9 @@ def overlayIdJson(request, key):
 
 @csrf_exempt
 def overlayListJson(request):
-    overlays = Overlay.objects.all()
+    # return only the last 100 overlays for now.  if it gets longer than that, we'll implement paging.
+    overlays = Overlay.objects.order_by('-lastModifiedTime')[:100] 
+        
     return HttpResponse(dumps(list(o.jsonDict for o in overlays)), content_type='application/json')
 
 
