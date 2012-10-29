@@ -502,7 +502,7 @@ $(function($) {
              }],
             ['Click matching landmarks on both sides to add tiepoints and align your overlay.',
              lorem],
-            ['Use "Export" to see options for viewing your overlay in maps outside this site.',
+            ['Use "Share" to see options for viewing your overlay in maps outside this site.',
              lorem,
              function () {
                  this.$('#export').focus();
@@ -548,7 +548,7 @@ $(function($) {
             '</div>' +
                 '<button class="btn"><label for="show_preview"><input id="show_preview" type="checkbox" checked="true"/>Show Preview</label></button>' +
             '<div id="save-export" class="btn-group">'+
-                '<button class="btn" id="export">Export</button>'+
+                '<button class="btn" id="export">Share</button>'+
                 '<button class="btn" id="save">Save</button>'+
                 '<span id="saveStatus" data-saving-text="Saving..." data-saved-text="Saved." data-save-error="SAVE ERROR!"></span>'+
             '</div>'+
@@ -1026,11 +1026,11 @@ $(function($) {
             _.bindAll(this);
         },
 
-        template:   '<h1>Export Overlay {{name}}</h1>'+
+        template:   '<h1>Share Overlay {{name}}</h1>'+
             '{{#if alignedTilesUrl}}' +
             '<div id="simple_viewer">' +
             '<a href="/overlay/{{key}}/simpleViewer_{{nospecials name}}.html" target="simpleViewer">' +
-            'View example code for displaying your overlay in any Google Maps API map' +
+            'View a web page displaying your aligned overlay that you can download and serve from your web site' +
             '</a></div>' +
             '{{/if}}' +
             '{{#if exportUrl}}'+
