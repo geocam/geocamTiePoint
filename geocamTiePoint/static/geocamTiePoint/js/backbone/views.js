@@ -730,8 +730,7 @@ $(function($) {
                 overlay.warp({
                     success: function(model, response) {
                         button.disabled = false;
-                        button.text("WARPED");
-                        _.delay(function(){button.text(button.data('original-text'));}, 1000);
+                        button.text(button.data('original-text'));
                         $('input#show_preview').attr('checked', true).change();
                     },
                     error: function(model, response) {
