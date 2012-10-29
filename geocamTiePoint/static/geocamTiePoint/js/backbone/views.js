@@ -470,6 +470,7 @@ $(function($) {
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
             '<span class="alert instructions-prompt">'+
+                '<strong style="float:left; margin-right:1em;">Tips:</strong>'+
                 '<div class="btn-group floatleft" style="margin-right: 10px;">'+
                     '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
                     '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
