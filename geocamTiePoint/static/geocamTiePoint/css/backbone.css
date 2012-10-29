@@ -118,3 +118,11 @@ input#locationSearch {
 .error{
     color: red;
 }
+
+.navbar .nav li a {
+    padding-bottom: 0px;
+}
+
+p.pull-right.navbar-text {
+    padding-top: 15px;
+}
