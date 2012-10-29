@@ -126,3 +126,7 @@ input#locationSearch {
 p.pull-right.navbar-text {
     padding-top: 15px;
 }
+
+a.btn-primary {
+    color: #ffffff;
+}
