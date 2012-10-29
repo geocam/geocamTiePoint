@@ -439,12 +439,14 @@ $(function($) {
                  this.$('#locationSearch').focus();
                  flicker(
                      function () {
-                         this.$('#locationSearch').css('background-color', '#ffc');
+                         this.$('#locationSearch').css('background-color', '#aaf');
+                         //this.$('#locationSearch').css('border', 'solid 4px blue').css('padding', '-2');
                      },
                      function () {
                          this.$('#locationSearch').css('background-color', '#fff');
+                        // this.$('#locationSearch').css('border', 'none');
                      },
-                     1000, 3);
+                     500, 8);
              }],
             ['Click matching landmarks on both sides to add tiepoints and align your overlay.',
              lorem],
