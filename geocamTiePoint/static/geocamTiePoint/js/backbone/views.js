@@ -323,6 +323,7 @@ $(function($) {
                 streetViewControl: false,
                 backgroundColor: 'rgb(192, 192, 192)',
                 mapTypeControl: false,
+                draggableCursor: 'crosshair'
             });
             var gmap = app.gmap;
 
@@ -387,7 +388,8 @@ $(function($) {
 
             var mapOptions = {
                 zoom: 6,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                draggableCursor: 'crosshair'
             };
 
             var gmap = new google.maps.Map(this.$('#map_canvas')[0],
