@@ -4,12 +4,12 @@
 {{ block.super }}
 <title>MapFasten</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-<link rel="stylesheet" type="text/css" href="/static/mapFasten/css/base.css"></link>
 {% endblock %}
 
 {% block style %}
 {{ block.super }}
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}external/css/bootstrap.min.css"></link>
+<link rel="stylesheet" type="text/css" href="/static/mapFasten/css/base.css"></link>
 <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/css/backbone.css"></link>
 {% endblock style %}
 
