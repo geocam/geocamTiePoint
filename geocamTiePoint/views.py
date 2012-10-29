@@ -67,14 +67,6 @@ def export_settings(export_vars=None):
     return dumps(dict([(k, getattr(settings, k)) for k in export_vars]))
 
 
-def ember(request):
-    if request.method == 'GET':
-        return render_to_response('geocamTiePoint/ember.html', {},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(['GET'])
-
-
 @login_required
 def backbone(request):
     initial_overlays = Overlay.objects.order_by('pk')

@@ -79,9 +79,6 @@ urlpatterns = patterns(
         {}, 'geocamTiePoint_overlayIdImageFileName'),
 
     ## New Client ##
-    url(r'^ember/', 'ember',
-        {}, 'geocamTiePoint_ember'),
-
     url(r'^backbone/', 'backbone',
         {}, 'geocamTiePoint_backbone'),
 
