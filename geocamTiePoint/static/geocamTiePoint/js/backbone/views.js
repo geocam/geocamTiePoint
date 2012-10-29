@@ -252,60 +252,6 @@ $(function($) {
             }, this));
         },
 
-        initZoomHotkey: function() {
-            var zoomFactor = 4;
-            var originalZoom = null;
-            var view = this;
-            var zoomed = false;
-            var mousePosition = null;
-            var mouseDown = null;
-
-            function enhance() {
-                console.log('ENHANCE!');
-                originalZoom = view.gmap.getZoom();
-                var targetZoom = Math.max(originalZoom + zoomFactor,
-                                          view.model.maxZoom());
-                //var targetZoom = view.model.maxZoom();
-                view.gmap.setZoom(targetZoom);
-                view.gmap.panTo(mousePosition);
-            }
-
-            function unenhance() {
-                view.gmap.setZoom(originalZoom);
-            }
-
-            google.maps.event.addListener(view.gmap, 'mousemove', function(e) {
-                mousePosition = e.latLng;
-            });
-
-            google.maps.event.addListener(view.gmap, 'mouseout', function(e) {
-                mousePosition = null;
-            });
-            google.maps.event.addListener(view.gmap, 'mousedown', function(e) {
-                mouseDown = true;
-            });
-            google.maps.event.addListener(view.gmap, 'mouseup', function(e) {
-                mouseDown = false;
-            });
-
-            $(window).keydown(function(e) {
-                //console.log(e.which);
-                if (mousePosition && ! mouseDown &&
-                    e.which === 90 &&  // z key
-                    ! zoomed) {
-                    zoomed = true;
-                    enhance();
-                }
-            });
-
-            $(window).keyup(function(e) {
-                //console.log(e.which);
-                if (zoomed && e.which === 90) { // z key
-                    unenhance();
-                    zoomed = false;
-                }
-            });
-        }
     }); // end OverlayGoogleMapsView base class
 
     app.views.ImageQtreeView = app.views.OverlayGoogleMapsView.extend({
@@ -344,7 +290,6 @@ $(function($) {
             this.gmap = gmap;
             this.drawMarkers();
             this.trigger('gmap_loaded');
-            //this.initZoomHotkey();
         },
 
         drawMarkers: function() {
@@ -420,7 +365,6 @@ $(function($) {
                 this.drawMarkers();
             }
             this.trigger('gmap_loaded');
-            //this.initZoomHotkey();
 
             /* Events and init for the  qtree overlay */
             this.model.on('change:points', function(){
@@ -688,15 +632,35 @@ $(function($) {
                 view.zoomFit();
             });
             $(document).keyup(function(e) {
-                //console.log('key detect: ' + e.which);
-                if (e.which === 122 || e.which === 90) { // match z or Z
-                    zoomed = !zoomed;
-                    if (zoomed) {
-                        view.zoomMaximum();
-                    } else {
-                        view.zoomFit();
-                    }
+                console.log('key detect: ' + e.which);
+                switch (e.which) {
+                    // match z or Z
+                    case 122: 
+                    case 90:  
+                        if ( e.ctrlKey ) { // todo: command-key support for os x
+                            // ctrl-z: undo
+                            undo();
+                            break;
+                        }
+                        zoomed = !zoomed;
+                        if (zoomed) {
+                            view.zoomMaximum();
+                        } else {
+                            view.zoomFit();
+                        }
+                        break;
+                    case 89: // y
+                        if (e.ctrlKey) redo();
+                    case 46: // delete
+                    // TODO: make this work with backspace without triggering the default (prev page) behavior
+                    //case 8: // backspace
+                        $('button#delete').click();
+                        break;
+                    default:
+                        return true;
                 }
+                e.preventDefault();
+                return false;
             });
 
             this.$('button#help').click(function(){
