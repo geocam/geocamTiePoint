@@ -499,7 +499,7 @@ $(function($) {
             '<div id="save-export" class="btn-group">'+
                 '<button class="btn" id="export">Share</button>'+
                 '<button class="btn" id="save">Save</button>'+
-                '<span id="saveStatus" data-saving-text="Saving..." data-saved-text="Saved." data-save-error="SAVE ERROR!"></span>'+
+                '<span id="saveStatus" data-saving-text="Saving..." data-changed-text="Changed since last save" data-saved-text="Saved." data-server-error="Server Error" data-server-unreachable="Server unreachable"></span>'+
             '</div>'+
         '</div>' +
         '<div id="split_container">' +
@@ -695,28 +695,23 @@ $(function($) {
             $('button#save').click( function() {
                 var button = $(this);
                 button.data('original-text', button.text());
-                button.disabled = true;
                 overlay.warp({
                     success: function(model, response) {
-                        button.disabled = false;
-                        button.text(button.data('original-text'));
                         $('input#show_preview').attr('checked', true).change();
-                    },
-                    error: function(model, response) {
-                        button.disabled = false;
-                        button.text("FAILED");
-                        _.delay(function(){button.text("save");}, 1000);
-                    },
+                    }
                 });
             });
 
             var saveStatus = $('#saveStatus');
             this.model.on('before_warp', function(){
-                saveStatus.text(saveStatus.data('saving-text'));
+                //saveStatus.text(saveStatus.data('saving-text'));
+                saveStatus.html('<img src="/static/geocamTiePoint/images/loading.gif">');
             }).on('warp_success', function(){
                 saveStatus.text(saveStatus.data('saved-text'));
-            }).on('warp_error', function(){
-                saveStatus.text(saveStatus.data('save-error'));
+            }).on('warp_server_error', function(){
+                saveStatus.html($('<span class="error">').text(saveStatus.data('server-error')));
+            }).on('warp_server_unreachable', function(){
+                saveStatus.html($('<span class="error">').text(saveStatus.data('server-unreachable')));
             });
 
             $('button#export').click(function() {
