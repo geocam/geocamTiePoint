@@ -823,22 +823,27 @@ $(function($) {
 
     }); // end SplitOverlayView
 
+    // FIX: requirements text hard-coded, should auto-update based on settings
+    var importRequirementsText = '[Size < 2 MB. Acceptable formats: JPEG, PDF, PNG, and others]';
+
     app.views.NewOverlayView = app.views.View.extend({
 
         template:
         '<div id="new_overlay_view">'+
-            '<h3>Create a New Overlay</h3>'+
+            '<h3>Create a New Overlay: Import Overlay Image</h3>'+
             '<ul class="nav nav-tabs" id="formTabs">'+
             '  <li class="active" data-target="#fileUpload"><a href="#fileUpload">Upload</a></li>'+
-            '  <li data-target="#ulrSubmit"><a href="#urlSubmit">URL</a></li>'+
+            '  <li data-target="#urlSubmit"><a href="#urlSubmit">From a URL</a></li>'+
             '</ul>'+
             ' '+
             '<div class="tab-content">'+
                 '<div class="tab-pane active" id="fileUpload">'+
                     '<form encytype="multipart/form-data" id="overlayUploadForm">'+
                     '<div id="uploadControlGroup" class="control-group">'+
-                        '<label>Local File</label>'+
-                        '<input type="file" name="file" id="newOverlayFile" />'+
+                        '<label>Choose an image to upload' +
+                        '<span class="import-requirements">' + importRequirementsText + '</span>' +
+                        '</label>'+
+                        '<div><input type="file" name="file" id="newOverlayFile" /></div>'+
                         '<input class="btn newOverlayFormSubmitButton" type="button" value="Upload" />'+
                         window.csrf_token +
                     '</div>'+
@@ -847,7 +852,10 @@ $(function($) {
                 '<div class="tab-pane" id="urlSubmit">'+
                     '<form encytype="multipart/form-data" id="overlayUrlForm">'+
                     '<div id="uploadControlGroup" class="control-group">'+
-                        '<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
+                        '<label>Image URL' +
+                        '<span class="import-requirements">' + importRequirementsText + '</span>' +
+                        '</label>' +
+                        '<input type="text" id="imageUrl" style="width: 98%"/>'+
                         '<input class="btn newOverlayFormSubmitButton" type="button" value="Submit" />'+
                         window.csrf_token +
                     '</div>'+

@@ -130,3 +130,14 @@ p.pull-right.navbar-text {
 a.btn-primary {
     color: #ffffff;
 }
+
+.import-requirements {
+    padding-left: 15px;
+    font-size: 0.9em;
+    color: #888888;
+    padding-bottom: 10px;
+}
+
+#newOverlayFile {
+    padding-bottom: 10px;
+}
