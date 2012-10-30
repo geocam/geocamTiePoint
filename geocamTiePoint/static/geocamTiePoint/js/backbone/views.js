@@ -64,8 +64,8 @@ $(function($) {
     });
 
     app.views.HomeView = app.views.View.extend({
-        template:   '<div style="max-width: 800px">'+
-            '<p>MapFasten helps you quickly align an image or PDF with a map, '+
+        template:   '<div style="width: 800px; text-align: center;">'+
+            '<p style="text-align: left;">MapFasten helps you quickly align an image or PDF with a map, '+
             'creating a shareable map layer that you can display in maps ' +
             'based on the Google Maps API and combine with other layers.</p>'+
             '<p><a class="btn btn-primary get-started" href="#overlays/">Let\'s get started &gt;&gt;</a></p>' +
