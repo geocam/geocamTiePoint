@@ -67,14 +67,6 @@ def export_settings(export_vars=None):
     return dumps(dict([(k, getattr(settings, k)) for k in export_vars]))
 
 
-def ember(request):
-    if request.method == 'GET':
-        return render_to_response('geocamTiePoint/ember.html', {},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(['GET'])
-
-
 @login_required
 def backbone(request):
     initial_overlays = Overlay.objects.order_by('pk')
@@ -132,6 +124,11 @@ class ErrorJSONResponse(HttpResponse):
             errors = { "__all__": [errors] }
         super(ErrorJSONResponse, self).__init__(json.dumps(errors), *args, status=400, content_type="application/json", **kwargs)
 
+
+def toMegaBytes(bytes):
+    return '%.1d' % (bytes / (1024 * 1024))
+
+
 class FieldFileLike(object):
     """
     Given a file-like object, vaguely simulate a Django FieldFile.
@@ -148,15 +145,25 @@ def overlayNewJSON(request):
         if not form.is_valid():
             return ErrorJSONResponse( form.errors )
         else:
-
-            # test to see if there is an image file
-            # file takes precedence over image url
             image = None
             imageRef = form.cleaned_data['image']
             imageFB = None
             imageType = None
             imageName = None
-            if not imageRef:
+            # test to see if there is an image file
+            if imageRef:
+                # file takes precedence over image url
+                imageFB = imageRef.file
+                imageType = imageRef.content_type
+                imageName = imageRef.name
+                imageSize = imageRef.size
+                # 10% "grace period" on max import file size
+                if imageSize > settings.MAX_IMPORT_FILE_SIZE * 1.1:
+                    return ErrorJSONResponse("Your overlay image is %s MB, larger than the maximum allowed size of %s MB."
+                                             % (toMegaBytes(imageSize),
+                                                toMegaBytes(settings.MAX_IMPORT_FILE_SIZE)))
+
+            else:
                 # no image, proceed to check for url
                 if not form.cleaned_data['imageUrl']:
                     # what did the user even do
@@ -181,26 +188,23 @@ def overlayNewJSON(request):
                 imageType = response.headers['Content-Type']
                 imageName = form.cleaned_data['imageUrl'].split('/')[-1]
                 response.close()
-            else:
-                imageFB = imageRef.file
-                imageType = imageRef.content_type
-                imageName = imageRef.name
-                imageSize = imageRef.size
-                if imageSize > settings.MAX_IMPORT_FILE_SIZE:
-                    return ErrorJSONResponse("The submitted file is larger than the maximum allowed size.  Maximum size is %d bytes." % settings.MAX_IMPORT_FILE_SIZE)
-                
+
             imageData = models.ImageData(contentType=imageType)
 
-            if settings.PDF_IMPORT_ENABLED and imageType in PDF_MIME_TYPES:
+            bits = imageFB.read()
+            if imageType in PDF_MIME_TYPES:
+                if not settings.PDF_IMPORT_ENABLED:
+                    return ErrorJSONResponse("PDF images are no longer supported.")
+
                 # convert PDF to raster image
-                pngData = pdf.convertPdf(imageFB.read())
+                pngData = pdf.convertPdf(bits)
                 imageData.image.save('dummy.png', ContentFile(pngData), save=False)
                 imageData.contentType = 'image/png'
             else:
                 try:
-                    image = PIL.Image.open(imageFB)
+                    image = PIL.Image.open(StringIO(bits))
                 except Exception as e:
-                    logging.error( "PIL failed to open image: " + str(e) ) 
+                    logging.error( "PIL failed to open image: " + str(e) )
                     return ErrorJSONResponse("There was a problem reading the image.")
                 if image.mode != 'RGBA':
                     # add alpha channel to image for better
@@ -383,8 +387,8 @@ def overlayIdJson(request, key):
 @csrf_exempt
 def overlayListJson(request):
     # return only the last 100 overlays for now.  if it gets longer than that, we'll implement paging.
-    overlays = Overlay.objects.order_by('-lastModifiedTime')[:100] 
-        
+    overlays = Overlay.objects.order_by('-lastModifiedTime')[:100]
+
     return HttpResponse(dumps(list(o.jsonDict for o in overlays)), content_type='application/json')
 
 

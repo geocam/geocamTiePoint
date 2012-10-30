@@ -80,26 +80,26 @@ $(function($) {
         return marker;
     };
 
-    maputils.locationSearchBar = function (search_bar, mapG) {
+    maputils.locationSearchBar = function (search_bar, map) {
         // expecting search_bar to either be a selector string or a jquery object.
         var input = _.isString(search_bar) ? $(search_bar)[0] : search_bar[0];
-        var autoComplete = new google.maps.places.Autocomplete(input);
+        var autoComplete = new google.maps.places.SearchBox(input);
 
-        autoComplete.bindTo('bounds', mapG);
+        autoComplete.bindTo('bounds', map);
 
         var infoWindow = new google.maps.InfoWindow();
         var marker = new google.maps.Marker({
-            map: mapG
+            map: map
         });
 
-        google.maps.event.addListener(autoComplete, 'place_changed', function() {
+        google.maps.event.addListener(autoComplete, 'places_changed', function() {
             infoWindow.close();
-            var place = autoComplete.getPlace();
+            var place = autoComplete.getPlaces()[0];
             if (place.geometry.viewport) {
-                mapG.fitBounds(place.geometry.viewport);
+                map.fitBounds(place.geometry.viewport);
             } else {
-                mapG.setCenter(place.geometry.location);
-                mapG.setZoom(17);
+                map.setCenter(place.geometry.location);
+                map.setZoom(17);
             }
 
             var address = '';
@@ -115,7 +115,7 @@ $(function($) {
 
             infoWindow.setContent('<div><strong>' + place.name + '</strong><br>' +
                                   address + '</div>');
-            infoWindow.open(mapG, marker);
+            infoWindow.open(map, marker);
         });
 
     };

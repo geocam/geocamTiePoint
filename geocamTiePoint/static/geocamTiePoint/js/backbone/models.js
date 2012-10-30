@@ -147,11 +147,15 @@ $(function($) {
             var model = this;
             model.trigger('before_warp');
             saveOptions = {
-                error: function(){
+                error: function(model, response){
+                    if ( response.readyState < 4 ) {
+                        model.trigger('warp_server_unreachable');
+                    } else {
+                        model.trigger('warp_server_error');
+                    }
                     if (options.error) options.error();
-                    model.trigger('warp_error');
                 },
-                success: function() {
+                success: function(model, response) {
                     if (options.success) options.success();
                     model.trigger('warp_success');
                 },

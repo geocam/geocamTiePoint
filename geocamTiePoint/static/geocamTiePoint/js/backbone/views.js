@@ -66,8 +66,8 @@ $(function($) {
     app.views.HomeView = app.views.View.extend({
         template:   '<div style="max-width: 800px">'+
             '<p>MapFasten helps you quickly align an image or PDF with a map, '+
-            'creating a shareable map overlay that you can display in the Google Maps'+
-            'API or in KML and combine with other layers.</p>'+
+            'creating a shareable map layer that you can display in maps ' +
+            'based on the Google Maps API and combine with other layers.</p>'+
             '<p><a class="welcomeEntry" href="#overlays/">Let\'s get started &gt;&gt;</a></p>'+
             '</div>',
     });
@@ -252,60 +252,6 @@ $(function($) {
             }, this));
         },
 
-        initZoomHotkey: function() {
-            var zoomFactor = 4;
-            var originalZoom = null;
-            var view = this;
-            var zoomed = false;
-            var mousePosition = null;
-            var mouseDown = null;
-
-            function enhance() {
-                console.log('ENHANCE!');
-                originalZoom = view.gmap.getZoom();
-                var targetZoom = Math.max(originalZoom + zoomFactor,
-                                          view.model.maxZoom());
-                //var targetZoom = view.model.maxZoom();
-                view.gmap.setZoom(targetZoom);
-                view.gmap.panTo(mousePosition);
-            }
-
-            function unenhance() {
-                view.gmap.setZoom(originalZoom);
-            }
-
-            google.maps.event.addListener(view.gmap, 'mousemove', function(e) {
-                mousePosition = e.latLng;
-            });
-
-            google.maps.event.addListener(view.gmap, 'mouseout', function(e) {
-                mousePosition = null;
-            });
-            google.maps.event.addListener(view.gmap, 'mousedown', function(e) {
-                mouseDown = true;
-            });
-            google.maps.event.addListener(view.gmap, 'mouseup', function(e) {
-                mouseDown = false;
-            });
-
-            $(window).keydown(function(e) {
-                //console.log(e.which);
-                if (mousePosition && ! mouseDown &&
-                    e.which === 90 &&  // z key
-                    ! zoomed) {
-                    zoomed = true;
-                    enhance();
-                }
-            });
-
-            $(window).keyup(function(e) {
-                //console.log(e.which);
-                if (zoomed && e.which === 90) { // z key
-                    unenhance();
-                    zoomed = false;
-                }
-            });
-        }
     }); // end OverlayGoogleMapsView base class
 
     app.views.ImageQtreeView = app.views.OverlayGoogleMapsView.extend({
@@ -323,6 +269,7 @@ $(function($) {
                 streetViewControl: false,
                 backgroundColor: 'rgb(192, 192, 192)',
                 mapTypeControl: false,
+                draggableCursor: 'crosshair'
             });
             var gmap = app.gmap;
 
@@ -343,7 +290,6 @@ $(function($) {
             this.gmap = gmap;
             this.drawMarkers();
             this.trigger('gmap_loaded');
-            //this.initZoomHotkey();
         },
 
         drawMarkers: function() {
@@ -387,7 +333,8 @@ $(function($) {
 
             var mapOptions = {
                 zoom: 6,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                draggableCursor: 'crosshair'
             };
 
             var gmap = new google.maps.Map(this.$('#map_canvas')[0],
@@ -418,7 +365,6 @@ $(function($) {
                 this.drawMarkers();
             }
             this.trigger('gmap_loaded');
-            //this.initZoomHotkey();
 
             /* Events and init for the  qtree overlay */
             this.model.on('change:points', function(){
@@ -493,16 +439,18 @@ $(function($) {
                  this.$('#locationSearch').focus();
                  flicker(
                      function () {
-                         this.$('#locationSearch').css('background-color', '#ffc');
+                         this.$('#locationSearch').css('background-color', '#aaf');
+                         //this.$('#locationSearch').css('border', 'solid 4px blue').css('padding', '-2');
                      },
                      function () {
                          this.$('#locationSearch').css('background-color', '#fff');
+                        // this.$('#locationSearch').css('border', 'none');
                      },
-                     1000, 3);
+                     500, 8);
              }],
             ['Click matching landmarks on both sides to add tiepoints and align your overlay.',
              lorem],
-            ['Use "Export" to see options for viewing your overlay in maps outside this site.',
+            ['Use "Share" to see options for viewing your overlay in maps outside this site.',
              lorem,
              function () {
                  this.$('#export').focus();
@@ -524,6 +472,7 @@ $(function($) {
                 '<input type="text" id="locationSearch" placeholder="Location"></input>' +
             '</span>' +
             '<span class="alert instructions-prompt">'+
+                '<strong style="float:left; margin-right:1em;">Tips:</strong>'+
                 '<div class="btn-group floatleft" style="margin-right: 10px;">'+
                     '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
                     '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
@@ -548,9 +497,9 @@ $(function($) {
             '</div>' +
                 '<button class="btn"><label for="show_preview"><input id="show_preview" type="checkbox" checked="true"/>Show Preview</label></button>' +
             '<div id="save-export" class="btn-group">'+
-                '<button class="btn" id="export">Export</button>'+
+                '<button class="btn" id="export">Share</button>'+
                 '<button class="btn" id="save">Save</button>'+
-                '<span id="saveStatus" data-saving-text="Saving..." data-saved-text="Saved." data-save-error="SAVE ERROR!"></span>'+
+                '<span id="saveStatus" data-saving-text="Saving..." data-changed-text="Changed since last save" data-saved-text="Saved." data-server-error="Server Error" data-server-unreachable="Server unreachable"></span>'+
             '</div>'+
         '</div>' +
         '<div id="split_container">' +
@@ -686,15 +635,35 @@ $(function($) {
                 view.zoomFit();
             });
             $(document).keyup(function(e) {
-                //console.log('key detect: ' + e.which);
-                if (e.which === 122 || e.which === 90) { // match z or Z
-                    zoomed = !zoomed;
-                    if (zoomed) {
-                        view.zoomMaximum();
-                    } else {
-                        view.zoomFit();
-                    }
+                console.log('key detect: ' + e.which);
+                switch (e.which) {
+                    // match z or Z
+                    case 122: 
+                    case 90:  
+                        if ( e.ctrlKey ) { // todo: command-key support for os x
+                            // ctrl-z: undo
+                            undo();
+                            break;
+                        }
+                        zoomed = !zoomed;
+                        if (zoomed) {
+                            view.zoomMaximum();
+                        } else {
+                            view.zoomFit();
+                        }
+                        break;
+                    case 89: // y
+                        if (e.ctrlKey) redo();
+                    case 46: // delete
+                    // TODO: make this work with backspace without triggering the default (prev page) behavior
+                    //case 8: // backspace
+                        $('button#delete').click();
+                        break;
+                    default:
+                        return true;
                 }
+                e.preventDefault();
+                return false;
             });
 
             this.$('button#help').click(function(){
@@ -726,29 +695,23 @@ $(function($) {
             $('button#save').click( function() {
                 var button = $(this);
                 button.data('original-text', button.text());
-                button.disabled = true;
                 overlay.warp({
                     success: function(model, response) {
-                        button.disabled = false;
-                        button.text("WARPED");
-                        _.delay(function(){button.text(button.data('original-text'));}, 1000);
                         $('input#show_preview').attr('checked', true).change();
-                    },
-                    error: function(model, response) {
-                        button.disabled = false;
-                        button.text("FAILED");
-                        _.delay(function(){button.text("save");}, 1000);
-                    },
+                    }
                 });
             });
 
             var saveStatus = $('#saveStatus');
             this.model.on('before_warp', function(){
-                saveStatus.text(saveStatus.data('saving-text'));
+                //saveStatus.text(saveStatus.data('saving-text'));
+                saveStatus.html('<img src="/static/geocamTiePoint/images/loading.gif">');
             }).on('warp_success', function(){
                 saveStatus.text(saveStatus.data('saved-text'));
-            }).on('warp_error', function(){
-                saveStatus.text(saveStatus.data('save-error'));
+            }).on('warp_server_error', function(){
+                saveStatus.html($('<span class="error">').text(saveStatus.data('server-error')));
+            }).on('warp_server_unreachable', function(){
+                saveStatus.html($('<span class="error">').text(saveStatus.data('server-unreachable')));
             });
 
             $('button#export').click(function() {
@@ -824,22 +787,27 @@ $(function($) {
 
     }); // end SplitOverlayView
 
+    // FIX: requirements text hard-coded, should auto-update based on settings
+    var importRequirementsText = '[Size < 2 MB. Acceptable formats: JPEG, PDF, PNG, and others]';
+
     app.views.NewOverlayView = app.views.View.extend({
 
         template:
         '<div id="new_overlay_view">'+
-            '<h3>Create a New Overlay</h3>'+
+            '<h3>Create a New Overlay: Import Overlay Image</h3>'+
             '<ul class="nav nav-tabs" id="formTabs">'+
             '  <li class="active" data-target="#fileUpload"><a href="#fileUpload">Upload</a></li>'+
-            '  <li data-target="#ulrSubmit"><a href="#urlSubmit">URL</a></li>'+
+            '  <li data-target="#urlSubmit"><a href="#urlSubmit">From a URL</a></li>'+
             '</ul>'+
             ' '+
             '<div class="tab-content">'+
                 '<div class="tab-pane active" id="fileUpload">'+
                     '<form encytype="multipart/form-data" id="overlayUploadForm">'+
                     '<div id="uploadControlGroup" class="control-group">'+
-                        '<label>Local File</label>'+
-                        '<input type="file" name="file" id="newOverlayFile" />'+
+                        '<label>Choose an image to upload' +
+                        '<span class="import-requirements">' + importRequirementsText + '</span>' +
+                        '</label>'+
+                        '<div><input type="file" name="file" id="newOverlayFile" /></div>'+
                         '<input class="btn newOverlayFormSubmitButton" type="button" value="Upload" />'+
                         window.csrf_token +
                     '</div>'+
@@ -848,7 +816,10 @@ $(function($) {
                 '<div class="tab-pane" id="urlSubmit">'+
                     '<form encytype="multipart/form-data" id="overlayUrlForm">'+
                     '<div id="uploadControlGroup" class="control-group">'+
-                        '<label>Image URL</label> <input type="text" id="imageUrl" style="width: 98%"/>'+
+                        '<label>Image URL' +
+                        '<span class="import-requirements">' + importRequirementsText + '</span>' +
+                        '</label>' +
+                        '<input type="text" id="imageUrl" style="width: 98%"/>'+
                         '<input class="btn newOverlayFormSubmitButton" type="button" value="Submit" />'+
                         window.csrf_token +
                     '</div>'+
@@ -1019,11 +990,11 @@ $(function($) {
             _.bindAll(this);
         },
 
-        template:   '<h1>Export Overlay {{name}}</h1>'+
+        template:   '<h1>Share Overlay {{name}}</h1>'+
             '{{#if alignedTilesUrl}}' +
             '<div id="simple_viewer">' +
             '<a href="/overlay/{{key}}/simpleViewer_{{nospecials name}}.html" target="simpleViewer">' +
-            'View example code for displaying your overlay in any Google Maps API map' +
+            'View a web page displaying your aligned overlay that you can download and serve from your web site' +
             '</a></div>' +
             '{{/if}}' +
             '{{#if exportUrl}}'+
