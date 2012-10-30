@@ -63,3 +63,48 @@ GEOCAM_TIE_POINT_LICENSE_CHOICES = (
 # user, even though the app is in private beta.
 GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT = True
 
+GEOCAM_TIE_POINT_PIPELINE_JS = {
+    'external': {
+        'source_filenames': (
+            'external/js/*.js',
+            ),
+        'output_filename': 'external/external.js',
+        },
+    'geocamTiePoint_js': {
+        'source_filenames': (
+            'geocamTiePoint/js/*.js',
+            ),
+        'output_filename': 'geocamTiePoint/geocamTiePoint_js.js',
+        },
+    'geocamTiePoint_backbone': {
+        'source_filenames': {
+            'geocamTiePoint/js/backbone/*.js',
+            ),
+        'output_filename': 'geocamTiePoint/geocamTiePoint_backbone.js',
+        }
+}
+
+if 'PIPELINE_JS' in dir():
+    PIPELINE_JS.update(GEOCAM_TIE_POINT_PIPELINE_JS)
+else:
+    PIPELINE_JS = GEOCAM_TIE_POINT_PIPELINE_JS
+
+GEOCAM_TIE_POINT_PIPELINE_CSS = {
+    'external': {
+        'source_filenames': (
+            'external/css/*.css',
+            ),
+        'output_filename': 'external/external.css',
+        },
+    'geocamTiePoint_css': {
+        'source_filenames': {
+            'geocamTiePoint/css/*.css',
+            },
+        'output_filename': 'geocamTiePoint/geocamTiePoint_css.css',
+        }
+}
+
+if 'PIPELINE_CSS' in dir():
+    PIPELINE_CSS.update(GEOCAM_TIE_POINT_PIPELINE_CSS)
+else:
+    PIPELINE_CSS = GEOCAM_TIE_POINT_PIPELINE_JS

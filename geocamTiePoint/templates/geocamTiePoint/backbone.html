@@ -1,16 +1,16 @@
 {% extends "base.html" %}
+{% load compressed %}
 
 {% block head %}
 {{ block.super }}
 <title>MapFasten</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-<link rel="stylesheet" type="text/css" href="/static/mapFasten/css/base.css"></link>
 {% endblock %}
 
 {% block style %}
 {{ block.super }}
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}external/css/bootstrap.min.css"></link>
-<link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}geocamTiePoint/css/backbone.css"></link>
+{% compressed_css "external" %}
+{% compressed_css "geocamTiePoint_css" %}
 {% endblock style %}
 
 {% block scripts %}
@@ -19,27 +19,12 @@
 // this line needs to be here otherwise views.js won't get it
 window.csrf_token = "{% csrf_token %}";
 </script>
-<script type="text/javascript" src="/static/external/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
-<script type="text/javascript" src="/static/external/js/markerwithlabel.js"></script>
-<script type="text/javascript" src="/static/external/js/handlebars-1.0.0.beta.6.js"></script>
-<script type="text/javascript" src="/static/external/js/underscore-min.js"></script>
-<script type="text/javascript" src="/static/external/js/splitter.js"></script>
-<script type="text/javascript" src="/static/external/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="/static/external/js/matrix.js"></script>
-<script type="text/javascript" src="/static/external/js/ExtDraggableObject.js"></script>
+{% compressed_js "external" %}
 
-<script type="text/javascript" src="/static/geocamTiePoint/js/util.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/undo.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/coords.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/optimize.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/transform.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/maputils.js"></script>
+{% compressed_js "geocamTiePoint_js" %}
 
-<script type="text/javascript" src="/static/external/js/backbone.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/backbone/models.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/backbone/views.js"></script>
-<script type="text/javascript" src="/static/geocamTiePoint/js/backbone/router.js"></script>
+{% compressed_js "geocamTiePoint_backbone" %}
 
     <script type="text/javascript">
         $(function($){
