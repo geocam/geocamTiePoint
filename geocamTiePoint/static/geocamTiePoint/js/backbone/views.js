@@ -557,6 +557,7 @@ $(function($) {
             this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
 
             this.renderHelp();
+            this.animatePrompt();
             enableUndoButtons();
         },
 
@@ -579,6 +580,25 @@ $(function($) {
             } else {
                 this.$('#promptNextStep').removeAttr('disabled');
             }
+        },
+
+        animatePrompt: function(){
+            var prompt = $('.instructions-prompt');
+            var startProps = {
+                position: 'relative',
+                'z-index': 1000,
+                top: '300px',
+                //left: '130px',
+            };
+            var endProps = {
+                top: '0px',
+                left: '0px',
+            };
+            prompt.css(startProps);
+            prompt.animate(endProps, {
+                duration: 1500,
+                complete: function(){ prompt.css('position', 'static'); },
+            });
         },
 
         prevHelpStep: function() {
