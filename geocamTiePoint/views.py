@@ -63,6 +63,7 @@ def export_settings(export_vars=None):
     if export_vars == None:
         export_vars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
                        'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',
+                       'STATIC_URL',
                        )
     return dumps(dict([(k, getattr(settings, k)) for k in export_vars]))
 

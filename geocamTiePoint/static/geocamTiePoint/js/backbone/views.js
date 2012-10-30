@@ -68,7 +68,8 @@ $(function($) {
             '<p>MapFasten helps you quickly align an image or PDF with a map, '+
             'creating a shareable map layer that you can display in maps ' +
             'based on the Google Maps API and combine with other layers.</p>'+
-            '<p><a class="welcomeEntry" href="#overlays/">Let\'s get started &gt;&gt;</a></p>'+
+            '<p><a class="btn btn-primary get-started" href="#overlays/">Let\'s get started &gt;&gt;</a></p>' +
+            '<img src="' + settings.STATIC_URL + '/mapFasten/icons/mapFastenDiagram.png" width="400" height="297"/>' +
             '</div>',
     });
 
@@ -591,7 +592,6 @@ $(function($) {
         },
 
         zoomMaximum: function() {
-            var offset = 8;
             //var imageZoom = this.imageView.model.maxZoom();
             var imageZoom = this.imageView.gmap.mapTypes.get('image-map').maxZoom;
             google.maps.event.addListenerOnce(this.imageView.gmap, 'bounds_changed', _.bind(this.matchImageZoom, this));

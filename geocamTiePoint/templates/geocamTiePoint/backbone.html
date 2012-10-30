@@ -42,9 +42,9 @@ window.csrf_token = "{% csrf_token %}";
 <script type="text/javascript" src="/static/geocamTiePoint/js/backbone/router.js"></script>
 
     <script type="text/javascript">
-        $(function($){
+        window.settings = {{settings|safe}};
 
-            window.settings = {{settings|safe}};
+        $(function($){
 
             app.overlays = app.overlays || new app.models.OverlayCollection;
             {% if initial_overlays_json %}
