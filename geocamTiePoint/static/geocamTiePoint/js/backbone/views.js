@@ -608,7 +608,7 @@ $(function($) {
             var helpData = this.helpSteps[this.helpIndex];
             this.$('#userPromptText').html(helpData.promptText); 
             //this.$('#modalBody').html(helpData[1]);
-            var videoView = new app.views.HelpVideoView({el: this.$('#modalBody'), videoId: helpData.videoId});
+            var videoView = new app.views.HelpVideoView({el: this.$('#modalBody'), videoId: helpData.videoId, parentView: this});
             videoView.render();
             if (helpData.helpFunc) {
                 _.bind(helpData.helpFunc, this)();
@@ -646,12 +646,12 @@ $(function($) {
         },
 
         prevHelpStep: function() {
-            this.helpIndex--;
+            if (this.helpIndex > 0) this.helpIndex--;
             this.renderHelp();
         },
 
         nextHelpStep: function() {
-            this.helpIndex++;
+            if (this.helpIndex < this.helpSteps.length) this.helpIndex++;
             this.renderHelp();
         },
 
@@ -863,14 +863,21 @@ $(function($) {
     
         template:   '<div id="helpVideo">'+
                         //'<iframe width="560" height="315" src="http://www.youtube-nocookie.com/embed/{{videoId}}" frameborder="0" allowfullscreen></iframe>'+
+                        '<div class="btn-group floatleft" style="margin-right: 10px;">'+
+                            '<a id="helpPrev" class="btn btn-mini" {{#if first}}disabled="true"{{/if}} >&lt;&lt;</a>'+
+                            '<a id="helpNext" class="btn btn-mini" {{#if last}}disabled="true"{{/if}}>&gt;&gt;</a>'+
+                        '</div>'+
                         '<embed id="videoEmbed" width="560" height="315" src="http://www.youtube.com/v/{{videoId}}?version=3&enablejsapi=1"></embed>'+
                         '<div class="videoCaption">{{captionText}}</div>'+
                     '</div>',
 
         initialize: function(options){
+            var parentView = options.parentView;
             this.context = {
               videoId: options.videoId,  
               captionText: options.captionText,
+              first: parentView.helpIndex == 0,
+              last: parentView.helpIndex == ( parentView.helpSteps.length - 1 ),
             };
         },
 
@@ -888,6 +895,8 @@ $(function($) {
             modal.on('shown.video_help', function(){
                 thisview.render();
             });
+            this.$('#helpPrev').click( _.bind(this.options.parentView.prevHelpStep, this.options.parentView) );
+            this.$('#helpNext').click( _.bind(this.options.parentView.nextHelpStep, this.options.parentView) );
         },
     
     });
