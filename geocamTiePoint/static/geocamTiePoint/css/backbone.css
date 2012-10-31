@@ -115,11 +115,6 @@ input#locationSearch {
     background-color: #ff9;
 }
 
-.alert .close{
-    top: -26px;
-    right: -26px;
-}
-
 .error{
     color: red;
 }
