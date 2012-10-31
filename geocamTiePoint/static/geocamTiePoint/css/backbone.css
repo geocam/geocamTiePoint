@@ -115,8 +115,17 @@ input#locationSearch {
     background-color: #ff9;
 }
 
+.alert .close{
+    top: -26px;
+    right: -26px;
+}
+
 .error{
     color: red;
+}
+
+.btn.disabled, .btn[disabled] {
+  color: #888;
 }
 
 .navbar .nav li a {

@@ -463,9 +463,7 @@ $(function($) {
 
     }); // end MapView
 
-    var lorem = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fringilla, lorem vitae tincidunt sagittis, dolor purus pretium mi, id interdum magna enim in ligula. Nulla facilisi. Suspendisse potenti. Quisque eu enim faucibus felis euismod convallis vel ac orci. Suspendisse et commodo leo. Etiam a ligula arcu, ut vulputate ligula. Vestibulum posuere orci eu purus interdum tincidunt at ut augue. Proin sed nulla massa, sit amet condimentum neque. Etiam quis sapien velit. Nulla convallis aliquet nulla ut laoreet. Morbi at lacus velit. Ut at libero purus, eu malesuada metus. Nam egestas, erat non ultrices scelerisque, massa nulla placerat orci, ac iaculis eros lectus a quam. Mauris sit amet ante eu urna dignissim placerat eu eget elit. Curabitur vitae cursus dolor.</p>'+
-
-                '<p>Integer ac nibh nibh, feugiat porta magna. Nam commodo neque a velit sollicitudin mollis. Quisque id porttitor urna. Etiam sed est sit amet felis blandit pretium quis et dolor. Duis at nunc velit, at ultricies sem. Aliquam erat volutpat. Suspendisse potenti. Fusce rhoncus fringilla turpis ac commodo. Phasellus pellentesque consequat quam eget tempor. Mauris egestas mollis lacus a placerat. Vestibulum vehicula eros eget metus vulputate sit amet vehicula enim tempor. Cras fringilla magna dolor, sed porta odio. In vitae placerat lorem. Nulla eros erat, auctor ac aliquet vel, tincidunt in velit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Maecenas nisi eros, ornare nec elementum vel, eleifend ut velit.</p>';
+    var lorem = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fringilla, lorem vitae tincidunt sagittis, dolor purus pretium mi, id interdum magna enim in ligula. Nulla facilisi. Suspendisse potenti. Quisque eu enim faucibus felis euismod convallis vel ac orci. Suspendisse et commodo leo. Etiam a ligula arcu, ut vulputate ligula. Vestibulum posuere orci eu purus interdum tincidunt at ut augue. Proin sed nulla massa, sit amet condimentum neque. Etiam quis sapien velit. Nulla convallis aliquet nulla ut laoreet. Morbi at lacus velit. Ut at libero purus, eu malesuada metus. Nam egestas, erat non ultrices scelerisque, massa nulla placerat orci, ac iaculis eros lectus a quam. Mauris sit amet ante eu urna dignissim placerat eu eget elit. Curabitur vitae cursus dolor.</p>';
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
@@ -493,7 +491,7 @@ $(function($) {
              },
             {
                 promptText: 'Use "Share" to see options for viewing your overlay in maps outside this site.',
-                videoId: '95h45vkpxr8',
+                videoId: 'rgNW5Iaq1Dw',
                 helpFunc: function () {
                      this.$('#export').focus();
                      flicker(
@@ -521,6 +519,7 @@ $(function($) {
                     '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
                 '</div>'+
                 '<span id="userPromptText" class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
+                '<button id="video" class="btn btn-mini">Video</button>'+
                 '<a class="close" data-dismiss="alert">&times;</a>'+
                 //'<button id="promptHelp" class="btn btn-mini">details</button>'+
             '</span>'+
@@ -738,7 +737,7 @@ $(function($) {
                 return false;
             });
 
-            this.$('button#help').click(function(){
+            this.$('button#help, button#video').click(function(){
                 $('#helpText').modal('show');
             });
             this.$('#promptPrevStep').click(_.bind(this.prevHelpStep, this));
