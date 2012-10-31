@@ -289,8 +289,44 @@ $(function($) {
             gmap.mapTypes.set('image-map', maputils.ImageMapType(this.model));
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
-            this.drawMarkers();
-            this.trigger('gmap_loaded');
+            google.maps.event.addListenerOnce(this.gmap, 'idle', _.bind(function(){
+                this.drawMarkers();
+                this.trigger('gmap_loaded');
+                if (this.options.debug) this.debugInstrumentation.apply(this);
+            }, this));
+        },
+
+        debugInstrumentation: function() {
+            var center = this.gmap.getCenter();
+            var coords = []
+            coords.push( [ center.lat(), center.lng() ] )
+            for (var i = -180; i<= 180; i += 10){
+                coords.push([center.lat(), i]);
+            }
+            for (var i=-90; i<=90; i+= 10) {
+                coords.push([i, center.lng()])
+            }
+            var map = this.gmap;
+            _.each(coords, function(coord){
+                var marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(coord[0], coord[1]),
+                    title: coord.toString(),
+                    map: map,
+                });
+            });
+
+            var positionBox = $('<div id="positionBox">'+
+                '<div id="imagePos" "></div>'+
+                '<div id="mapPos" </div>'+
+            '</div>');
+            $('#workflow_controls').before(positionBox);
+            var imagePos = positionBox.find('#imagePos');
+            var mapPos = positionBox.find('#mapPos');
+            var transform = geocamTiePoint.transform.deserializeTransform(this.model.get('transform'));
+            google.maps.event.addListener(map, 'mousemove', function trackMouse(e){
+                imagePos.text('image: '+e.latLng.toString());
+                mapPos.text( 'map: '+forwardTransformLatLon(transform, e.latLng).toString() );
+            });
         },
 
         drawMarkers: function() {
@@ -533,7 +569,8 @@ $(function($) {
             $('#helpCloseBtn').click(function(){ $('#helpText').modal('hide'); });
             this.imageView = new app.views.ImageQtreeView({
                 el: '#split_right',
-                model: this.model
+                model: this.model,
+                debug: false,
             }).render();
             this.mapView = new app.views.MapView({
                 el: '#split_left',
@@ -634,12 +671,20 @@ $(function($) {
         },
 
         matchImageZoom: function() {
+            function logBounds(bounds) {
+                console.log('SW: ' + bounds.getSouthWest().toString());
+                console.log('NE: ' + bounds.getNorthEast().toString());
+            }
             // transform the bounds of the image view into map space and zoom/pan the map view to fit.
             var transform = geocamTiePoint.transform.deserializeTransform(this.model.get('transform'));
             var imageBounds = this.imageView.gmap.getBounds();
             var mapBounds = new google.maps.LatLngBounds();
+            console.log("Image Bounds");
+            logBounds(imageBounds);
             mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getSouthWest()) );
-            mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getNorthEast()) )
+            mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getNorthEast()) );
+            //console.log("Map Bounds");
+            //logBounds(mapBounds);
             maputils.fitMapToBounds(this.mapView.gmap, mapBounds);
         },
 
