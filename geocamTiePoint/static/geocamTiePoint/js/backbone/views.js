@@ -470,36 +470,42 @@ $(function($) {
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         helpSteps: [
-            ['Use "Go to Location" to zoom the map to the neighborhood of your overlay.',
-             lorem,
-             function () {
-                 this.$('#locationSearch').focus();
-                 flicker(
-                     function () {
-                         this.$('#locationSearch').css('background-color', '#aaf');
-                         //this.$('#locationSearch').css('border', 'solid 4px blue').css('padding', '-2');
-                     },
-                     function () {
-                         this.$('#locationSearch').css('background-color', '#fff');
-                        // this.$('#locationSearch').css('border', 'none');
-                     },
-                     500, 8);
-             }],
-            ['Click matching landmarks on both sides to add tiepoints and align your overlay.',
-             lorem],
-            ['Use "Share" to see options for viewing your overlay in maps outside this site.',
-             lorem,
-             function () {
-                 this.$('#export').focus();
-                 flicker(
-                     function() {
-                         this.$('#export').addClass('btn-primary');
-                     },
-                     function() {
-                         this.$('#export').removeClass('btn-primary');
-                     },
-                     500, 3);
-             }]
+            {
+                promptText: 'Use "Go to Location" to zoom the map to the neighborhood of your overlay.',
+                videoId: 'sHp_OGcgckQ',
+                helpFunc: function () {
+                     this.$('#locationSearch').focus();
+                     flicker(
+                         function () {
+                             this.$('#locationSearch').css('background-color', '#aaf');
+                             //this.$('#locationSearch').css('border', 'solid 4px blue').css('padding', '-2');
+                         },
+                         function () {
+                             this.$('#locationSearch').css('background-color', '#fff');
+                            // this.$('#locationSearch').css('border', 'none');
+                         },
+                         500, 8);
+                },
+            },
+            {
+                promptText: 'Click matching landmarks on both sides to add tiepoints and align your overlay.',
+                videoId: '95h45vkpxr8',
+             },
+            {
+                promptText: 'Use "Share" to see options for viewing your overlay in maps outside this site.',
+                videoId: '95h45vkpxr8',
+                helpFunc: function () {
+                     this.$('#export').focus();
+                     flicker(
+                         function() {
+                             this.$('#export').addClass('btn-primary');
+                         },
+                         function() {
+                             this.$('#export').removeClass('btn-primary');
+                         },
+                         500, 3);
+                }
+             }
         ],
 
         template:
@@ -546,7 +552,7 @@ $(function($) {
         '<div id="helpText" class="modal hide">'+
             '<div class="modal-header">'+
                 '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'+
-                '<h3>Editing Overlays</h3>'+
+                '<h3>MapFasten Help</h3>'+
             '</div>'+
             '<div id="modalBody" class="modal-body"></div>'+
             '<div class="modal-footer">'+
@@ -600,11 +606,12 @@ $(function($) {
 
         renderHelp: function() {
             var helpData = this.helpSteps[this.helpIndex];
-            this.$('#userPromptText').html(helpData[0]);
-            this.$('#modalBody').html(helpData[1]);
-            var helpFunc = helpData[2];
-            if (helpFunc) {
-                _.bind(helpFunc, this)();
+            this.$('#userPromptText').html(helpData.promptText); 
+            //this.$('#modalBody').html(helpData[1]);
+            var videoView = new app.views.HelpVideoView({el: this.$('#modalBody'), videoId: helpData.videoId});
+            videoView.render();
+            if (helpData.helpFunc) {
+                _.bind(helpData.helpFunc, this)();
             }
 
             if (this.helpIndex == 0) {
@@ -851,6 +858,39 @@ $(function($) {
         },
 
     }); // end SplitOverlayView
+    
+    app.views.HelpVideoView = app.views.View.extend({
+    
+        template:   '<div id="helpVideo">'+
+                        //'<iframe width="560" height="315" src="http://www.youtube-nocookie.com/embed/{{videoId}}" frameborder="0" allowfullscreen></iframe>'+
+                        '<embed id="videoEmbed" width="560" height="315" src="http://www.youtube.com/v/{{videoId}}?version=3&enablejsapi=1"></embed>'+
+                        '<div class="videoCaption">{{captionText}}</div>'+
+                    '</div>',
+
+        initialize: function(options){
+            this.context = {
+              videoId: options.videoId,  
+              captionText: options.captionText,
+            };
+        },
+
+        afterRender: function(){
+            var modal = this.$el.parent('.modal');
+            var thisview = this;
+
+            modal.off('.video_help');
+            modal.on('hide.video_help', function(){
+                var video = $(this).find('#videoEmbed');
+                // TODO: fix this so that the video doesn't have to reload if you open the help multiple times
+                //video[0].pauseVideo();
+                video.remove();
+            });
+            modal.on('shown.video_help', function(){
+                thisview.render();
+            });
+        },
+    
+    });
 
     // FIX: requirements text hard-coded, should auto-update based on settings
     var importRequirementsText = '[Size < 2 MB. Acceptable formats: JPEG, PDF, PNG, and others]';
