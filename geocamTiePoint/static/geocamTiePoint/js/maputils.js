@@ -60,7 +60,7 @@ $(function($) {
         var selectedIcon =
             'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue.png';
         var markerOpts = {
-            title: ''+label,
+            title: '' + label,
             draggable: true,
             position: latLng,
             map: map,
@@ -80,8 +80,9 @@ $(function($) {
         return marker;
     };
 
-    maputils.locationSearchBar = function (search_bar, map) {
-        // expecting search_bar to either be a selector string or a jquery object.
+    maputils.locationSearchBar = function(search_bar, map) {
+        // expecting search_bar to either be a selector string or a
+        // jquery object.
         var input = _.isString(search_bar) ? $(search_bar)[0] : search_bar[0];
         var autoComplete = new google.maps.places.SearchBox(input);
 
@@ -92,7 +93,8 @@ $(function($) {
             map: map
         });
 
-        google.maps.event.addListener(autoComplete, 'places_changed', function() {
+        (google.maps.event.addListener
+         (autoComplete, 'places_changed', function() {
             infoWindow.close();
             var place = autoComplete.getPlaces()[0];
             if (place.geometry.viewport) {
@@ -113,10 +115,11 @@ $(function($) {
                           ].join(' ');
             }
 
-            infoWindow.setContent('<div><strong>' + place.name + '</strong><br>' +
+            infoWindow.setContent('<div><strong>' + place.name +
+                                  '</strong><br>' +
                                   address + '</div>');
             infoWindow.open(map, marker);
-        });
+        }));
 
     };
 
@@ -124,19 +127,26 @@ $(function($) {
     maputils.fitMapToBounds = function(map, bounds) {
         // Source: https://gist.github.com/1255671
         map.fitBounds(bounds);   // does the job asynchronously
-        google.maps.event.addListenerOnce(map, 'bounds_changed', function(event) {
-            var newSpan = map.getBounds().toSpan();              // the span of the map set by Google fitBounds (always larger by what we ask)
-            var askedSpan = bounds.toSpan();                     // the span of what we asked for
-            var latRatio = (newSpan.lat()/askedSpan.lat()) - 1;  // the % of increase on the latitude
-            var lngRatio = (newSpan.lng()/askedSpan.lng()) - 1;  // the % of increase on the longitude
-            // if the % of increase is too big (> to a threshold) we zoom in
-            if (Math.min(latRatio, lngRatio) > 0.46) {
-            // 0.46 is the threshold value for zoming in. It has been established empirically by trying different values.
-            this.setZoom(map.getZoom() + 1);
-        }
-      });
+        (google.maps.event.addListenerOnce
+         (map, 'bounds_changed', function(event) {
+             // the span of the map set by Google fitBounds (always
+             // larger by what we ask)
+             var newSpan = map.getBounds().toSpan();
+             // the span of what we asked for
+             var askedSpan = bounds.toSpan();
+             // the % of increase on the latitude
+             var latRatio = (newSpan.lat() / askedSpan.lat()) - 1;
+             // the % of increase on the longitude
+             var lngRatio = (newSpan.lng() / askedSpan.lng()) - 1;
+             // if the % of increase is too big (> to a threshold) we zoom in
+             if (Math.min(latRatio, lngRatio) > 0.46) {
+                 // 0.46 is the threshold value for zoming in. It has
+                 // been established empirically by trying different
+                 // values.
+                 this.setZoom(map.getZoom() + 1);
+             }
+         }));
     }
-    
 
 });
 
@@ -216,5 +226,5 @@ maputils.createOpacityControl = function(map, mapType, overlay) {
         return undefined;
     }
 
-}
+};
 

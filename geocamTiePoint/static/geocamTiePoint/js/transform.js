@@ -436,14 +436,19 @@ $(function($) {
         var classmap = {
             'projective': ProjectiveTransform,
             'quadratic': QuadraticTransform,
-            'quadratic2': QuadraticTransform2,
+            'quadratic2': QuadraticTransform2
+        };
+        if (! transformJSON.type in classmap) {
+            throw 'Unexpected transform type';
         }
-        if (! transformJSON.type in classmap) throw "Unexpected transform type";
         var transformClass = classmap[transformJSON.type];
-        if ( transformClass === QuadraticTransform2 ) {
-            return new transformClass( matrixFromNestedList(transformJSON.matrix), transformJSON.quadraticTerms);
+        if (transformClass === QuadraticTransform2) {
+            return new transformClass(matrixFromNestedList
+                                      (transformJSON.matrix),
+                                      transformJSON.quadraticTerms);
         } else {
-            return new transformClass( matrixFromNestedList(transformJSON.matrix) );
+            return new transformClass(matrixFromNestedList
+                                      (transformJSON.matrix));
         }
     }
 

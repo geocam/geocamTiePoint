@@ -1003,31 +1003,43 @@ $(function($) {
         '<div id="new_overlay_view">' +
             '<h3>Create a New Overlay: Import Overlay Image</h3>' +
             '<ul class="nav nav-tabs" id="formTabs">' +
-            '  <li class="active" data-target="#fileUpload"><a href="#fileUpload">Upload</a></li>' +
-            '  <li data-target="#urlSubmit"><a href="#urlSubmit">From a URL</a></li>' +
+            '  <li class="active" data-target="#fileUpload">' +
+            '<a href="#fileUpload">Upload</a></li>' +
+            '  <li data-target="#urlSubmit"><a href="#urlSubmit">' +
+            'From a URL</a></li>' +
             '</ul>' +
             ' ' +
             '<div class="tab-content">' +
                 '<div class="tab-pane active" id="fileUpload">' +
-                    '<form encytype="multipart/form-data" id="overlayUploadForm">' +
+                    '<form encytype="multipart/form-data" ' +
+                    'id="overlayUploadForm">' +
                     '<div id="uploadControlGroup" class="control-group">' +
                         '<label>Choose an image to upload' +
-                        '<span class="import-requirements">' + importRequirementsText + '</span>' +
+                        '<span class="import-requirements">' +
+                          importRequirementsText + '</span>' +
                         '</label>' +
-                        '<div><input type="file" name="file" id="newOverlayFile" /></div>' +
-                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Upload" />' +
+                        '<div>' +
+                          '<input type="file" name="file"' +
+                            ' id="newOverlayFile" />' +
+                        '</div>' +
+                        '<input class="btn newOverlayFormSubmitButton" ' +
+                        'type="button" value="Upload" />' +
                         window.csrf_token +
                     '</div>' +
                     '</form>' +
                 '</div>' +
                 '<div class="tab-pane" id="urlSubmit">' +
-                    '<form encytype="multipart/form-data" id="overlayUrlForm">' +
+                    '<form encytype="multipart/form-data" ' +
+                      'id="overlayUrlForm">' +
                     '<div id="uploadControlGroup" class="control-group">' +
                         '<label>Image URL' +
-                        '<span class="import-requirements">' + importRequirementsText + '</span>' +
+                        '<span class="import-requirements">' +
+                          importRequirementsText + '</span>' +
                         '</label>' +
-                        '<input type="text" id="imageUrl" style="width: 98%"/>' +
-                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Submit" />' +
+                        '<input type="text" id="imageUrl" ' +
+                          'style="width: 98%"/>' +
+                        '<input class="btn newOverlayFormSubmitButton"' +
+                           ' type="button" value="Submit" />' +
                         window.csrf_token +
                     '</div>' +
                     '</form>' +
@@ -1044,14 +1056,11 @@ $(function($) {
         afterRender: function() {
             this.$('input.newOverlayFormSubmitButton').click(this.submitForm);
             that = this;
-            /*this.$('#urlForm input#submitUrl').click(function(){
-              $.post('/overlays/new.json', that.$('urlForm').serialize(), that.submitSuccess);
-              });*/
             $('#formTabs a:first').tab('show');
-            this.$('ul#formTabs a').click( function(e){
+            this.$('ul#formTabs a').click(function(e) {
                 e.preventDefault();
                 $(this).tab('show');
-            } );
+            });
         },
 
         getCookie: function(name) {
@@ -1061,7 +1070,8 @@ $(function($) {
                 for (var i = 0; i < cookies.length; i++) {
                     var cookie = $.trim(cookies[i]);
                     if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        cookieValue = (decodeURIComponent
+                                       (cookie.substring(name.length + 1)));
                         break;
                     }
                 }
@@ -1077,25 +1087,31 @@ $(function($) {
             var button = $(this);
             var form = button.parents('form');
             button.data('value', button[0].value);
-            button[0].value = "Working...";
+            button[0].value = 'Working...';
             button[0].disabled = true;
-            setTimeout(function(){
-                if (button[0].value == "Working...") button[0].disabled = false;
+            setTimeout(function() {
+                if (button[0].value == 'Working...') {
+                    button[0].disabled = false;
+                }
             }, 10000);
             var data = new FormData();
-            form.find('input#newOverlayFile').each(function(i, el){
+            form.find('input#newOverlayFile').each(function(i, el) {
                 $.each(el.files, function(i, file) {
                     data.append('image', file);
                 });
             });
-	        if (form.find('input#imageUrl').val()) data.append('imageUrl', form.find('input#imageUrl')[0].value);
-            var csrftoken = app.views.NewOverlayView.prototype.getCookie('csrftoken');
+            if (form.find('input#imageUrl').val()) {
+                data.append('imageUrl', form.find('input#imageUrl')[0].value);
+            }
+            var csrftoken = (app.views.NewOverlayView.prototype.getCookie
+                             ('csrftoken'));
             $.ajax({
                 url: '/overlays/new.json',
                 crossDomain: false,
                 beforeSend: function(xhr, settings) {
-                    if (!app.views.NewOverlayView.prototype.csrfSafeMethod(settings.type)) {
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    if (!app.views.NewOverlayView.prototype.csrfSafeMethod
+                        (settings.type)) {
+                        xhr.setRequestHeader('X-CSRFToken', csrftoken);
                     }
                 },
                 data: data,
@@ -1103,23 +1119,30 @@ $(function($) {
                 contentType: false,
                 processData: false,
                 type: 'POST',
-                success: _.bind(app.views.NewOverlayView.prototype.submitSuccess, this),
-                error: _.bind(app.views.NewOverlayView.prototype.submitError, this),
+                success: (_.bind
+                          (app.views.NewOverlayView.prototype.submitSuccess,
+                           this)),
+                error: (_.bind
+                        (app.views.NewOverlayView.prototype.submitError,
+                         this))
             });
         },
 
         submitError: function(xhr, status, errorThrown) {
-            console.log("Error occured when trying to submit new overlay");
+            console.log('Error occured when trying to submit new overlay');
             var button = $(this);
             var errors;
             if (xhr.status == 400) {
                 errors = JSON.parse(xhr.responseText);
             } else {
-                errors = {'__all__': xhr.errorThrown}; // similar to the Django Forms ErrorDict
+                // similar to the Django Forms ErrorDict
+                errors = {'__all__': xhr.errorThrown};
             }
             var errorDiv = $('#formErrorContainer').html('');
-            var messages = _.flatten( _.values(errors) );  // for now, just flatten all the global and field specific error messages into a list
-            _.each( messages, function(message) {
+            // for now, just flatten all the global and field specific
+            // error messages into a list
+            var messages = _.flatten(_.values(errors));
+            _.each(messages, function(message) {
                 var errorElem = $('<div/>').addClass('error').text(message);
                 errorDiv.append(errorElem);
             });
@@ -1128,21 +1151,23 @@ $(function($) {
         },
 
         submitSuccess: function(data) {
-            console.log("got data back");
+            console.log('got data back');
             var button = $(this);
             button[0].disabled = false;
             button[0].value = button.data('value');
             try {
                 var json = JSON.parse(data);
             } catch (error) {
-                console.log('Failed to parse response as JSON: ' + error.message);
+                console.log('Failed to parse response as JSON: ' +
+                            error.message);
                 return;
             }
             if (json['status'] == 'success') {
                 var overlay = new app.models.Overlay({key: json.id});
                 app.overlays.add(overlay);
                 overlay.fetch({ 'success': function() {
-                    app.router.navigate('overlay/'+json['id']+'/edit', {trigger: true});
+                    app.router.navigate('overlay/' + json['id'] + '/edit',
+                                        {trigger: true});
                 } });
             }
         }
@@ -1150,7 +1175,14 @@ $(function($) {
 
     app.views.DeleteOverlayView = app.views.View.extend({
 
-        template: '<form id="deleteOverlayForm"><h4>Are you sure you want to delete overlay {{name}}?</h4><br><input type="button" value="Delete" id="deleteOverlayFormSubmitButton" /><input type="button" value="Cancel" id="deleteOverlayFormCancelButton" />',
+        template:
+            '<form id="deleteOverlayForm">' +
+            '<h4>Are you sure you want to delete overlay {{name}}?</h4>' +
+            '<br>' +
+            '<input type="button" value="Delete"' +
+            ' id="deleteOverlayFormSubmitButton" />' +
+            '<input type="button" value="Cancel"' +
+            ' id="deleteOverlayFormCancelButton" />',
 
         initialize: function() {
             app.views.View.prototype.initialize.apply(this, arguments);
@@ -1162,8 +1194,10 @@ $(function($) {
         },
 
         afterRender: function() {
-            this.$('input#deleteOverlayFormSubmitButton').click(this.submitForm);
-            this.$('input#deleteOverlayFormCancelButton').click(this.cancel);
+            this.$('input#deleteOverlayFormSubmitButton')
+                .click(this.submitForm);
+            this.$('input#deleteOverlayFormCancelButton')
+                .click(this.cancel);
         },
 
         cancel: function() {
@@ -1171,9 +1205,9 @@ $(function($) {
         },
 
         submitForm: function() {
-            var key = this.context['key']
+            var key = this.context['key'];
             $.ajax({
-                url: '/overlay/'+key+'/delete.html',
+                url: '/overlay/' + key + '/delete.html',
                 crossDomain: false,
                 cache: false,
                 contentType: false,
@@ -1184,9 +1218,9 @@ $(function($) {
         },
 
         submitSuccess: function(data) {
-            console.log("got data back");
+            console.log('got data back');
             app.router.navigate('overlays/');
-        },
+        }
     }); // end DeleteOverlayView
 
 
@@ -1197,18 +1231,20 @@ $(function($) {
             _.bindAll(this);
         },
 
-        template:   '<h1>Share Overlay {{name}}</h1>'+
+        template: '<h1>Share Overlay {{name}}</h1>' +
             '{{#if alignedTilesUrl}}' +
             '<div id="simple_viewer">' +
-            '<a href="/overlay/{{key}}/simpleViewer_{{nospecials name}}.html" target="simpleViewer">' +
-            'View a web page displaying your aligned overlay that you can download and serve from your web site' +
+            '<a href="/overlay/{{key}}/simpleViewer_{{nospecials name}}.html"' +
+              ' target="simpleViewer">' +
+            'View a web page displaying your aligned overlay that you can' +
+            ' download and serve from your web site' +
             '</a></div>' +
             '{{/if}}' +
-            '{{#if exportUrl}}'+
-            '<div id="download_link">'+
-            '<a href="{{exportUrl}}">Download Exported Archive</a>'+
-            '</div>'+
-            '{{else}}'+
+            '{{#if exportUrl}}' +
+            '<div id="download_link">' +
+            '<a href="{{exportUrl}}">Download Exported Archive</a>' +
+            '</div>' +
+            '{{else}}' +
             '<div id="export_controls">' +
             '{{#if alignedTilesUrl}}' +
             '<div id="export_container">' +
@@ -1218,40 +1254,42 @@ $(function($) {
             '<span id="exportError" style="color:red"></span>' +
             '</div>' +
             '{{else}}' +
-            '<p>Add at least 2 tiepoint pairs before exporting the aligned image.</p>' +
+            '<p>Add at least 2 tiepoint pairs before exporting the ' +
+            'aligned image.</p>' +
             '{{/if}}' +
             '</div>' +
             '{{/if}}',
 
-        afterRender: function(){
-            this.$('#create_archive').click( _.bind(this.requestExport, this) );
-            if( this.model.exportPending ) {
+        afterRender: function() {
+            this.$('#create_archive').click(_.bind(this.requestExport, this));
+            if (this.model.exportPending) {
                 this.startSpinner();
             }
         },
 
-        requestExport: function(){
+        requestExport: function() {
             //this.model.unset('exportUrl');
             this.$('#create_archive').attr('disabled', true);
             this.model.startExport({
-                error: function(){
+                error: function() {
                     $('#exportError').html('Error during export: ' + error);
-                },
+                }
             });
             this.startSpinner();
         },
 
-        startSpinner: function(){
+        startSpinner: function() {
             thisView = this;
-            this.model.on('export_ready', function onExportReady(){
+            this.model.on('export_ready', function onExportReady() {
                 this.model.off(null, onExportReady, null);
-                if ( app.currentView === thisView ) this.render();
+                if (app.currentView === thisView) this.render();
             }, this);
             this.$('#create_archive').attr('disabled', true);
-            this.$('#export_button').html('<img src="/static/geocamTiePoint/images/loading.gif">' +
-                                          '&nbsp;' +
-                                          'Creating export archive (this could take a few minutes)...');
-        },
+            (this.$('#export_button').html
+             ('<img src="/static/geocamTiePoint/images/loading.gif">' +
+              '&nbsp;' +
+              'Creating export archive (this could take a few minutes)...'));
+        }
 
     }); //end ExportOverlayView
 }); // end jQuery ready handler

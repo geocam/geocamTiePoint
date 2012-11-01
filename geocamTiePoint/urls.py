@@ -23,7 +23,7 @@ urlpatterns = patterns(
     url(r'^overlays/list\.html$', lambda request: redirect(reverse('geocamTiePoint_backbone') + '#overlays/'),
         {}, 'geocamTiePoint_overlayIndex'),
 
-    url(r'^overlays/new\.html$', lambda request: redirect(reverse('geocamTiePoint_backbone')+'#overlays/new'),
+    url(r'^overlays/new\.html$', lambda request: redirect(reverse('geocamTiePoint_backbone') + '#overlays/new'),
         {}, 'geocamTiePoint_overlayNew'),
 
     url(r'^overlay/(?P<key>\d+)/generateExport/$', 'overlayGenerateExport',

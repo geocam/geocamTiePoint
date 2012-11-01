@@ -88,8 +88,12 @@ function getNormalizedCoord(coord, zoom) {
 }
 
 function forwardTransformLatLon(transform, latlon) {
-    // Fix a problem wherein points left of the image-space antimeridian weren't projecting properly.
-    if (latlon.lng() > 0) latlon = new google.maps.LatLng(latlon.lat(), latlon.lng() - 360.00, true);
+    // Fix a problem wherein points left of the image-space antimeridian
+    // weren't projecting properly.
+    if (latlon.lng() > 0) {
+        latlon = new google.maps.LatLng(latlon.lat(),
+                                        latlon.lng() - 360.00, true);
+    }
 
     var pixelcoords = latLonToPixel(latlon);
     pixelcoords[0] = pixelcoords.x;
