@@ -63,6 +63,7 @@ $(function($) {
             '</div>',
     });
 
+/*
     app.views.HomeView = app.views.View.extend({
         template:   '<div style="width: 800px; text-align: center;">'+
             '<p style="text-align: left;">MapFasten helps you quickly align an image or PDF with a map, '+
@@ -72,7 +73,7 @@ $(function($) {
             '<img src="' + settings.STATIC_URL + '/mapFasten/icons/mapFastenDiagram.png" width="400" height="297"/>' +
             '</div>',
     });
-
+*/
     app.views.ListOverlaysView = app.views.View.extend({
         template:
         '<a class="btn btn-primary" href="#overlays/new">New Overlay</a>' +
@@ -128,6 +129,8 @@ $(function($) {
 
     });
 
+
+    app.views.HomeView = app.views.ListOverlaysView;
 
     /*
      * OverlayView: id-accepting base class for views that deal with a

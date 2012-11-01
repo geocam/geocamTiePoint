@@ -12,7 +12,10 @@ urlpatterns = patterns(
     'geocamTiePoint.views',
 
     ## New Workflow ##
-    url(r'^$', 'backbone',
+    #url(r'^$', 'backbone',
+    #    {}, 'geocamTiePoint_backbone'),
+
+    url(r'^b/$', 'backbone',
         {}, 'geocamTiePoint_backbone'),
 
     url(r'^overlays/new\.json$', 'overlayNewJSON',
@@ -79,8 +82,8 @@ urlpatterns = patterns(
         {}, 'geocamTiePoint_overlayIdImageFileName'),
 
     ## New Client ##
-    url(r'^backbone/', 'backbone',
-        {}, 'geocamTiePoint_backbone'),
+    #url(r'^backbone/', 'backbone',
+    #    {}, 'geocamTiePoint_backbone'),
 
     ## JSON API ##
     url(r'^overlay/(?P<key>\d+).json$', 'overlayIdJson',
