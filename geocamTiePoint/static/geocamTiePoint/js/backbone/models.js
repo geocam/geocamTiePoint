@@ -85,8 +85,10 @@ $(function($) {
 
         imageBounds: function() {
             var imageSize = this.get('imageSize');
-            var sw = pixelsToLatLon({x: 0, y: imageSize[1]}, this.maxZoom());
-            var ne = pixelsToLatLon({x: imageSize[0], y: 0}, this.maxZoom());
+            var w = imageSize[0];
+            var h = imageSize[1];
+            var sw = pixelsToLatLon({x: 0, y: 0}, this.maxZoom());
+            var ne = pixelsToLatLon({x: w, y: h}, this.maxZoom());
             var bounds = new google.maps.LatLngBounds(sw, ne);
             return bounds;
         },

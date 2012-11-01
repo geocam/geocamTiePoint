@@ -301,13 +301,13 @@ $(function($) {
             var w = imageSize[0];
             var h = imageSize[1];
             var maxZoom = this.model.maxZoom();
-            var sw = pixelsToLatLon({x: 0, y: h}, maxZoom);
-            var ne = pixelsToLatLon({x: w, y: 0}, maxZoom);
-            gmap.fitBounds(new google.maps.LatLngBounds(sw, ne));
 
             gmap.mapTypes.set('image-map', maputils.ImageMapType(this.model));
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
+
+            this.gmap.fitBounds(this.model.imageBounds());
+
             (google.maps.event.addListenerOnce
              (this.gmap, 'idle', _.bind(function() {
                  this.drawMarkers();
@@ -317,6 +317,9 @@ $(function($) {
         },
 
         debugInstrumentation: function() {
+            window.imageMap = this.gmap;
+
+            // display labeled markers along axes from the center.
             var center = this.gmap.getCenter();
             var coords = [];
             coords.push([center.lat(), center.lng()]);
@@ -335,6 +338,11 @@ $(function($) {
                 });
             });
 
+            // Display a rectangle for the image bounds according to the model.
+            var rect = new google.maps.Rectangle({map: this.gmap});
+            rect.set('bounds', this.model.imageBounds());
+
+            // Display image coords and projected map coords for the cursor position
             var positionBox = $('<div id="positionBox">' +
                 '<div id="imagePos" "></div>' +
                 '<div id="mapPos" </div>' +
@@ -351,6 +359,7 @@ $(function($) {
                              forwardTransformLatLon(transform, e.latLng)
                              .toString());
              }));
+
         },
 
         drawMarkers: function() {
@@ -616,6 +625,10 @@ $(function($) {
         },
 
         afterRender: function() {
+            this.$('#split_container').splitter({
+                resizeToWidth: true,
+                dock: 'right'
+            });
             $('#promptHelp').click(function() {
                 $('#helpText').modal('show');
             });
@@ -625,24 +638,23 @@ $(function($) {
             this.imageView = new app.views.ImageQtreeView({
                 el: '#split_right',
                 model: this.model,
-                debug: false
+                debug: false,
             }).render();
             this.mapView = new app.views.MapView({
                 el: '#split_left',
                 model: this.model
             }).render();
 
+            var splitview = this;
             var subviews = [this.mapView, this.imageView];
-            this.$('#split_container').splitter({
-                resizeToWidth: true,
-                dock: 'right'
-            }).bind('resize', function(evt) {
+            this.$('#split_container').bind('resize', function(evt) {
                 // ensure Google Maps instances get resized when the
                 // splitter moves.
                 _.each(subviews, function(subview) {
                     google.maps.event.trigger(subview.gmap, 'resize');
                 });
             });
+            
             maputils.locationSearchBar('#locationSearch', this.mapView.gmap);
             this.initButtons();
             this.initWorkflowControls();
