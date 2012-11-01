@@ -11,7 +11,6 @@ from django.conf import settings
 from django.contrib import admin
 admin.autodiscover()
 
-import geocamTiePoint
 from geocamTiePoint.urls import urlpatterns as geocamTiePointPatterns
 
 urlpatterns = patterns('',
