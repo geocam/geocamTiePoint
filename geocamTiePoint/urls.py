@@ -12,8 +12,6 @@ urlpatterns = patterns(
     'geocamTiePoint.views',
 
     ## New Workflow ##
-    #url(r'^$', 'backbone',
-    #    {}, 'geocamTiePoint_backbone'),
 
     url(r'^b/$', 'backbone',
         {}, 'geocamTiePoint_backbone'),
@@ -27,19 +25,6 @@ urlpatterns = patterns(
 
     url(r'^overlays/new\.html$', lambda request: redirect(reverse('geocamTiePoint_backbone')+'#overlays/new'),
         {}, 'geocamTiePoint_overlayNew'),
-
-    ## Old Client ##
-    url(r'^old/overlays/list\.html$', 'overlayIndex',
-        {}, 'geocamTiePoint_overlayIndex_old'),
-
-    url(r'^old/overlays/new\.html$', 'overlayNew',
-        {}, 'geocamTiePoint_overlayNew_old'),
-
-    url(r'^overlay/(?P<key>\d+)\.html$', 'overlayId',
-        {}, 'geocamTiePoint_overlayId'),
-
-    url(r'^overlay/(?P<key>\d+)/warp$', 'overlayIdWarp',
-        {}, 'geocamTiePoint_overlayIdWarp'),
 
     url(r'^overlay/(?P<key>\d+)/generateExport/$', 'overlayGenerateExport',
         {}, 'geocamTiePoint_overlayGenerateExport'),
@@ -57,9 +42,6 @@ urlpatterns = patterns(
 
     url(r'^overlay/(?P<key>\d+)/delete\.html$', 'overlayDelete',
         {}, 'geocamTiePoint_overlayDelete'),
-
-    url(r'^overlay/(?P<key>\d+)/preview\.html$', 'overlayIdPreview',
-        {}, 'geocamTiePoint_overlayIdPreview'),
 
     url(r'^overlay/(?P<key>\d+)/simpleViewer_(?P<slug>[^/\.]*)\.html$', 'simpleAlignedOverlayViewer',
         {}, 'geocamTiePoint_simpleAlignedOverlayViewer'),
@@ -81,18 +63,11 @@ urlpatterns = patterns(
         'overlayIdImageFileName',
         {}, 'geocamTiePoint_overlayIdImageFileName'),
 
-    ## New Client ##
-    #url(r'^backbone/', 'backbone',
-    #    {}, 'geocamTiePoint_backbone'),
-
     ## JSON API ##
     url(r'^overlay/(?P<key>\d+).json$', 'overlayIdJson',
         {}, 'geocamTiePoint_overlayIdJson'),
 
     ## testing ui demo ##
-    url(r'^uiDemo/(?P<key>\d+)/$', 'uiDemo',
-        {}, 'geocamTiePoint_uiDemo'),
-
     url(r'^overlays\.json$', 'overlayListJson',
         {}, 'geocamTiePoint_overlayListJson'),
 

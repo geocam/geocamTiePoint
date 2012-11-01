@@ -82,16 +82,6 @@ def backbone(request):
         return HttpResponseNotAllowed(['GET'])
 
 
-def overlayIndex(request):
-    if request.method == 'GET':
-        overlays = models.Overlay.objects.all()
-        return render_to_response('geocamTiePoint/overlay-index.html',
-                                  {'overlays': overlays},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(['GET'])
-
-
 def overlayDelete(request, key):
     if request.method == 'GET':
         overlay = get_object_or_404(Overlay, key=key)
@@ -250,118 +240,6 @@ def overlayNewJSON(request):
         return HttpResponseNotAllowed(('POST'))
 
 
-@transaction.commit_on_success
-def overlayNew(request):
-    """
-    Superseded by overlayNewJSON in backbone version!
-    """
-    if request.method == 'POST':
-        form = forms.NewImageDataForm(request.POST, request.FILES)
-        if form.is_valid():
-            # create and save new empty overlay so we can refer to it
-            # this causes a ValueError if the user isn't logged in
-            overlay = models.Overlay(author=request.user,
-                                     isPublic=settings.GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT)
-            overlay.save()
-
-            # save imageData
-            image = None
-            imageRef = form.cleaned_data['image']
-            imageData = models.ImageData(contentType=imageRef.content_type,
-                                         overlay=overlay)
-            if imageRef.content_type in PDF_MIME_TYPES:
-                # convert PDF to raster image
-                pngData = pdf.convertPdf(imageRef.file.read())
-                imageData.image.save('dummy.png', ContentFile(pngData), save=False)
-                imageData.contentType = 'image/png'
-            else:
-                bits = imageRef.file.read()
-                image = PIL.Image.open(StringIO(bits))
-                if image.mode != 'RGBA':
-                    # add alpha channel to image for better
-                    # transparency handling later
-                    image = image.convert('RGBA')
-                    out = StringIO()
-                    image.save(out, format='png')
-                    convertedBits = out.getvalue()
-                    logging.info('converted image to RGBA, output length %s bytes',
-                                 len(bits))
-                    imageData.image.save('dummy.png', ContentFile(convertedBits),
-                                         save=False)
-                    imageData.contentType = 'image/png'
-                else:
-                    imageData.image.save('dummy.png', ContentFile(bits), save=False)
-                    imageData.contentType = imageRef.content_type
-            imageData.save()
-
-            if image is None:
-                image = PIL.Image.open(imageData.image.file)
-
-            # fill in overlay info
-            overlay.name = imageRef.name
-            overlay.imageData = imageData
-            overlay.extras.points = []
-            overlay.extras.imageSize = image.size
-            overlay.save()
-
-            # generate initial quad tree
-            overlay.generateUnalignedQuadTree()
-            overlay.save()
-
-            # check to see if the client was ajax, in which case
-            # we respond with json
-            if request.is_ajax():
-                data = {'status': 'success', 'id': overlay.key}
-                return HttpResponse(json.dumps(data))
-
-            # otherwise respond with a normal page.
-            return render_to_response('geocamTiePoint/new-overlay-result.html',
-                                      {'status': 'success',
-                                       'id': overlay.key},
-                                      context_instance=RequestContext(request))
-        else:
-            return render_to_response('geocamTiePoint/new-overlay.html',
-                                      {'form': form},
-                                      context_instance=RequestContext(request))
-
-    elif request.method == 'GET':
-        form = forms.NewImageDataForm()
-        return render_to_response('geocamTiePoint/new-overlay.html',
-                                  {'form': form},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(('POST', 'GET'))
-
-
-def overlayId(request, key):
-    if request.method == 'GET':
-        overlay = get_object_or_404(Overlay, key=key)
-        settingsExportVars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
-                              'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',)
-        settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
-        return render_to_response('geocamTiePoint/overlay-view.html',
-                                  {'overlay': overlay,
-                                   'overlayJson': dumps(overlay.jsonDict),
-                                   'settings': dumps(settingsExportDict)},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(['GET'])
-
-
-def overlayIdPreview(request, key):
-    if request.method == 'GET':
-        overlay = get_object_or_404(Overlay, key=key)
-        settingsExportVars = ('STATIC_URL',)
-        settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
-        return render_to_response('geocamTiePoint/overlay-preview.html',
-                                  {'overlay': overlay,
-                                   'overlayJson': dumps(overlay.jsonDict),
-                                   'settings': dumps(settingsExportDict)},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(['GET'])
-
-
 @csrf_exempt
 def overlayIdJson(request, key):
     if request.method == 'GET':
@@ -391,24 +269,6 @@ def overlayListJson(request):
     overlays = Overlay.objects.order_by('-lastModifiedTime')[:100]
 
     return HttpResponse(dumps(list(o.jsonDict for o in overlays)), content_type='application/json')
-
-
-@csrf_exempt
-def overlayIdWarp(request, key):
-    """
-    Explicit warp call is deprecated. We now warp every time the client
-    posts an update to the overlay.
-    """
-    if request.method == 'GET':
-        return render_to_response('geocamTiePoint/warp-form.html', {},
-                                  context_instance=RequestContext(request))
-    elif request.method == 'POST':
-        overlay = get_object_or_404(Overlay, key=key)
-        overlay.generateAlignedQuadTree()
-        overlay.save()
-        return HttpResponse("{}", content_type='application/json')
-    else:
-        return HttpResponseNotAllowed(['GET', 'POST'])
 
 
 def overlayIdImageFileName(request, key, fileName):
@@ -493,20 +353,6 @@ def getPublicTile(request, quadTreeId, zoom, x, y):
 
 def dummyView(*args, **kwargs):
     return HttpResponseNotFound()
-
-
-def uiDemo(request, key):
-    if request.method == 'GET':
-        overlay = get_object_or_404(Overlay, key=key)
-        settingsExportVars = ('GEOCAM_TIE_POINT_DEFAULT_MAP_VIEWPORT',
-                              'GEOCAM_TIE_POINT_ZOOM_LEVELS_PAST_OVERLAY_RESOLUTION',)
-        settingsExportDict = dict([(k, getattr(settings, k)) for k in settingsExportVars])
-        return render_to_response('geocamTiePoint/uiDemo.html',
-                                  {'overlayJson': dumps(overlay.jsonDict),
-                                   'settings': dumps(settingsExportDict)},
-                                  context_instance=RequestContext(request))
-    else:
-        return HttpResponseNotAllowed(['GET'])
 
 
 @csrf_exempt
