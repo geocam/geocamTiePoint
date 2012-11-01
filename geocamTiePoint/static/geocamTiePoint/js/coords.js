@@ -24,6 +24,7 @@ function latLonToMeters(latLon) {
     var my = Math.log(Math.tan((90 + latLon.lat()) * Math.PI / 360)) /
         (Math.PI / 180);
     my = my * ORIGIN_SHIFT / 180;
+    //console.log(''+latLon.lng()+' --> '+mx);
     return {x: mx,
             y: my};
 }
@@ -40,6 +41,7 @@ function metersToPixels(meters) {
     var res = resolution(maxZoom0G);
     var px = (meters.x + ORIGIN_SHIFT) / res;
     var py = (-meters.y + ORIGIN_SHIFT) / res;
+    //console.log(''+meters.x+' --> '+px);
     return {x: px, y: py};
 }
 
@@ -58,6 +60,7 @@ function resolution(zoom) {
 
 function latLonToPixel(latLon) {
     var meters = latLonToMeters(latLon);
+    //console.log(meters.x);
     var pixels = metersToPixels(meters);
     return pixels;
 }
@@ -85,6 +88,9 @@ function getNormalizedCoord(coord, zoom) {
 }
 
 function forwardTransformLatLon(transform, latlon) {
+    // Fix a problem wherein points left of the image-space antimeridian weren't projecting properly.
+    if (latlon.lng() > 0) latlon = new google.maps.LatLng(latlon.lat(), latlon.lng() - 360.00, true);
+
     var pixelcoords = latLonToPixel(latlon);
     pixelcoords[0] = pixelcoords.x;
     pixelcoords[1] = pixelcoords.y;
