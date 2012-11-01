@@ -891,6 +891,7 @@ $(function($) {
                     assert(selected[0] === selected[1],
                            'Selected markers do not match.');
                 }
+                actionPerformed();
                 selected = selected[0];
                 overlay.deleteTiepoint(selected);
                 _.each(views, function(v) { v.selectMarker(null); });
