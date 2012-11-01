@@ -25,7 +25,7 @@ import numpy.linalg
 
 from django.core.cache import cache
 
-from geocamTiePoint import transform, settings
+from geocamTiePoint import transform
 
 TILE_SIZE = 256.
 PATCH_SIZE = 32

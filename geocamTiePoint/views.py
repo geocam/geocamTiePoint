@@ -19,7 +19,7 @@ import PIL.Image
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, HttpResponseRedirect, HttpResponseNotFound
-from django.http import HttpResponseNotAllowed, Http404, HttpResponseBadRequest
+from django.http import HttpResponseNotAllowed, Http404
 from django.template import RequestContext
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -112,20 +112,20 @@ class ErrorJSONResponse(HttpResponse):
     """
     def __init__(self, errors, *args, **kwargs):
         if isinstance(errors, basestring):
-            errors = { "__all__": [errors] }
+            errors = {"__all__": [errors]}
         super(ErrorJSONResponse, self).__init__(json.dumps(errors), *args, status=400, content_type="application/json", **kwargs)
 
 
-def toMegaBytes(bytes):
-    return '%.1d' % (bytes / (1024 * 1024))
+def toMegaBytes(numBytes):
+    return '%.1d' % (numBytes / (1024 * 1024))
 
 
 class FieldFileLike(object):
     """
     Given a file-like object, vaguely simulate a Django FieldFile.
     """
-    def __init__(self, file, content_type):
-        self.file = file
+    def __init__(self, f, content_type):
+        self.file = f
         self.content_type = content_type
 
 
@@ -134,7 +134,7 @@ def overlayNewJSON(request):
     if request.method == 'POST':
         form = forms.NewImageDataForm(request.POST, request.FILES)
         if not form.is_valid():
-            return ErrorJSONResponse( form.errors )
+            return ErrorJSONResponse(form.errors)
         else:
             image = None
             imageRef = form.cleaned_data['image']
@@ -158,21 +158,21 @@ def overlayNewJSON(request):
                 # no image, proceed to check for url
                 if not form.cleaned_data['imageUrl']:
                     # what did the user even do
-                    return ErrorJSONResponse( "No image url in returned form data" )
+                    return ErrorJSONResponse("No image url in returned form data")
                 # we have a url, try to download it
                 try:
                     response = urllib2.urlopen(form.cleaned_data['imageUrl'])
                 except urllib2.HTTPError as e:
-                    return ErrorJSONResponse( "There was a problem fetching the image at this URL." )
+                    return ErrorJSONResponse("There was a problem fetching the image at this URL.")
                 if response.code != 200:
-                    return ErrorJSONResponse( "There was a problem fetching the image at this URL." )
+                    return ErrorJSONResponse("There was a problem fetching the image at this URL.")
                 if not validOverlayContentType(response.headers.get('content-type')):
                     # we didn't receive an image,
                     # or we did and the server didn't say so.
                     # either way we're not going to deal with it
-                    logging.error( "Non-image content-type:" + response.headers['Content-Type'].split('/')[0] )
+                    logging.error("Non-image content-type:" + response.headers['Content-Type'].split('/')[0])
                     return ErrorJSONResponse("The file at this URL does not seem to be an image.")
-                imageSize = int( response.info().get('content-length') )
+                imageSize = int(response.info().get('content-length'))
                 if imageSize > settings.MAX_IMPORT_FILE_SIZE:
                     return ErrorJSONResponse("The submitted file is larger than the maximum allowed size.  Maximum size is %d bytes." % settings.MAX_IMPORT_FILE_SIZE)
                 imageFB = StringIO(response.read())
@@ -194,8 +194,8 @@ def overlayNewJSON(request):
             else:
                 try:
                     image = PIL.Image.open(StringIO(bits))
-                except Exception as e:
-                    logging.error( "PIL failed to open image: " + str(e) )
+                except Exception as e:  # pylint: disable=W0703
+                    logging.error("PIL failed to open image: " + str(e))
                     return ErrorJSONResponse("There was a problem reading the image.")
                 if image.mode != 'RGBA':
                     # add alpha channel to image for better

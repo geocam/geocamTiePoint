@@ -151,7 +151,6 @@ class QuadTree(models.Model):
 
     @classmethod
     def getGeneratorWithCache(cls, quadTreeId):
-        global cachedGeneratorG
         cachedGeneratorCopy = getattr(cachedGeneratorG, 'gen',
                                       {'key': None, 'value': None})
         key = cls.getGeneratorCacheKey(quadTreeId)

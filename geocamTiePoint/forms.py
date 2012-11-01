@@ -18,7 +18,7 @@ class NewImageDataForm(forms.Form):
         image_file = cleaned_data.get("image")
         image_url = cleaned_data.get("imageUrl")
 
-        if not bool(image_file) ^ bool(image_url): # logical xor
+        if not bool(image_file) ^ bool(image_url):  # logical xor
             raise ValidationError("Requires a URL or uploaded image, but not both.")
 
         return cleaned_data

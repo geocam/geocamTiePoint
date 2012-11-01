@@ -4,7 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-MAX_IMPORT_FILE_SIZE =  2097152 # bytes
+MAX_IMPORT_FILE_SIZE = 2097152  # bytes
 
 # This feature is rigged to be disabled due to the planned removal of the Appengine PDF service
 PDF_IMPORT_ENABLED = True
@@ -62,4 +62,3 @@ GEOCAM_TIE_POINT_LICENSE_CHOICES = (
 # aligned tiles from public overlays can be viewed by any non-logged-in
 # user, even though the app is in private beta.
 GEOCAM_TIE_POINT_PUBLIC_BY_DEFAULT = True
-

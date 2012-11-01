@@ -19,7 +19,8 @@ $(function($) {
     });
 
     app.views.View = Backbone.View.extend({
-        // views will render here unless another element is specified on instantiation.
+        // views will render here unless another element is specified on
+        // instantiation.
         el: app.container_id,
         template: null,
         context: null,
@@ -35,10 +36,11 @@ $(function($) {
               assert(this.context || this.model.toJSON,
               'Could note find a a context for the template.');
             */
-            if (! this.context && ! this.model ) { this.context = {}; }
+            if (! this.context && ! this.model) { this.context = {}; }
             var context;
             if (this.context) {
-                context = _.isFunction(this.context) ? this.context() : this.context;
+                context = (_.isFunction(this.context) ?
+                           this.context() : this.context);
             } else {
                 context = this.model.toJSON();
             }
@@ -54,26 +56,19 @@ $(function($) {
 
     app.views.NavbarView = app.views.View.extend({
         template:
-        '<div class="navbar-inner">'+
-            '<ul id="navlist" class="nav">'+
-            '<li><a href="/"><img src="/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
-            '<li class="nav_pad_vertical navbar-text"><a href="#overlays/">List Overlays</a></li>'+
-            '</ul>'+
-            '<p class="pull-right navbar-text" style="float:right"><a href="/accounts/logout/">Logout</a></p>'+
-            '</div>',
+            '<div class="navbar-inner">' +
+            '<ul id="navlist" class="nav">' +
+            '<li><a href="/">' +
+            '<img src="/static/mapFasten/icons/mapFastenLogo.png"/>' +
+            '</a></li>' +
+            '<li class="nav_pad_vertical navbar-text">' +
+            '<a href="#overlays/">List Overlays</a></li>' +
+            '</ul>' +
+            '<p class="pull-right navbar-text" style="float:right">' +
+            '<a href="/accounts/logout/">Logout</a></p>' +
+            '</div>'
     });
 
-/*
-    app.views.HomeView = app.views.View.extend({
-        template:   '<div style="width: 800px; text-align: center;">'+
-            '<p style="text-align: left;">MapFasten helps you quickly align an image or PDF with a map, '+
-            'creating a shareable map layer that you can display in maps ' +
-            'based on the Google Maps API and combine with other layers.</p>'+
-            '<p><a class="btn btn-primary get-started" href="#overlays/">Let\'s get started &gt;&gt;</a></p>' +
-            '<img src="' + settings.STATIC_URL + '/mapFasten/icons/mapFastenDiagram.png" width="400" height="297"/>' +
-            '</div>',
-    });
-*/
     app.views.ListOverlaysView = app.views.View.extend({
         template:
         '<a class="btn btn-primary" href="#overlays/new">New Overlay</a>' +
@@ -81,40 +76,51 @@ $(function($) {
             '{{debug}}' +
             '<table id="overlay_list">' +
             '{{#each overlays.models }}<tr>' +
-            '<td>{{#if attributes.alignedTilesUrl}}<a href="#overlay/{{id}}">{{/if}}{{get "name"}}{{#if attributes.alignedTilesUrl}}</a>{{/if}}</td>' +
-            '<td><a id="edit_{{id}}" class="edit" href="#overlay/{{id}}/edit" >[edit]</a></td>' +
-            '<td><a id="delete_{{id}}" class="delete" href="#overlays/" onClick="app.currentView.deleteOverlay({{id}})">[delete]</a></td>' +
+            '<td>{{#if attributes.alignedTilesUrl}}' +
+            '<a href="#overlay/{{id}}">' +
+            '{{/if}}' +
+            '{{get "name"}}' +
+            '{{#if attributes.alignedTilesUrl}}</a>{{/if}}</td>' +
+            '<td><a id="edit_{{id}}" class="edit" ' +
+            'href="#overlay/{{id}}/edit">' +
+            '[edit]</a></td>' +
+            '<td><a id="delete_{{id}}" class="delete" href="#overlays/"' +
+            ' onClick="app.currentView.deleteOverlay({{id}})">' +
+            '[delete]</a></td>' +
             '</tr>{{/each}}' +
-            '</table>'+
-            '<div class="modal hide" id="confirmDelete" aria-hidden="true">'+
-                '<div class="modal-body">'+
-                    '<p>Delete this overlay?</p>'+
-                '</div>'+
-                '<div class="modal-footer">'+
-                    '<button class="btn" onClick="$(\'#confirmDelete\').modal(\'hide\');">No!</button>'+
-                    '<button id="deleteYesBtn" class="btn btn-primary">Yes</button>'+
-                '</div>'+
+            '</table>' +
+            '<div class="modal hide" id="confirmDelete" aria-hidden="true">' +
+                '<div class="modal-body">' +
+                    '<p>Delete this overlay?</p>' +
+                '</div>' +
+                '<div class="modal-footer">' +
+                    '<button class="btn" ' +
+                    'onClick="$(\'#confirmDelete\').modal(\'hide\');">' +
+                    'No!</button>' +
+                    '<button id="deleteYesBtn" class="btn btn-primary">' +
+                    'Yes</button>' +
+                '</div>' +
             '</div>',
 
         initialize: function() {
             app.views.View.prototype.initialize.apply(this, arguments);
             this.context = { overlays: app.overlays };
-            app.overlays.on('remove', function(){this.render();}, this);
+            app.overlays.on('remove', function() {this.render();}, this);
         },
 
         deleteOverlay: function(overlay_id) {
             var dialog = this.$('#confirmDelete');
-            function deleteSpecificOverlay(){
+            function deleteSpecificOverlay() {
                 dialog.modal('hide');
                 app.overlays.get(overlay_id).destroy();
             }
-            dialog.on('click','#deleteYesBtn', deleteSpecificOverlay);
-            dialog.on('hidden', function(){
-                dialog.off('click','#deleteYesBtn', deleteSpecificOverlay);
+            dialog.on('click', '#deleteYesBtn', deleteSpecificOverlay);
+            dialog.on('hidden', function() {
+                dialog.off('click', '#deleteYesBtn', deleteSpecificOverlay);
                 return true;
             });
             dialog.modal('show');
-        },
+        }
 
         /*
           afterRender: function(){
@@ -152,7 +158,7 @@ $(function($) {
 
         setState: function(state) {
             return this.model.set(state);
-        },
+        }
     });
 
 
@@ -171,8 +177,8 @@ $(function($) {
             this.model.on('change:points', this.drawMarkers, this);
         },
 
-        updateTiepointFromMarker: function (index, marker) {
-            assert(false, "Override me in a subclass!");
+        updateTiepointFromMarker: function(index, marker) {
+            assert(false, 'Override me in a subclass!');
         },
 
         _drawMarkers: function(latlons_in_gmap_space) {
@@ -182,13 +188,16 @@ $(function($) {
             // destroy existing markers, if they exist.
             while (this.markers && this.markers.length > 0) {
                 var marker = this.markers.pop();
-                if ( marker.get('selected') ) selected_idx = this.markers.length;
+                if (marker.get('selected')) selected_idx = this.markers.length;
                 marker.setMap(null);
             }
             var markers = this.markers = [];
             _.each(latlons_in_gmap_space, function(latLon, index) {
                 if (! _.any(_.values(latLon), _.isNull)) {
-                    var marker = (maputils.createLabeledMarker(latLon, '' + (index + 1), gmap));
+                    var marker = (maputils
+                                  .createLabeledMarker(latLon,
+                                                       '' + (index + 1),
+                                                       gmap));
                     if (index === selected_idx) marker.set('selected', true);
                     this.initMarkerDragHandlers(marker);
                     markers[index] = marker;
@@ -197,8 +206,8 @@ $(function($) {
             model.trigger('redraw_markers');
         },
 
-        drawMarkers: function(){
-            assert(false, "Override me in a subclass!");
+        drawMarkers: function() {
+            assert(false, 'Override me in a subclass!');
         },
 
         selectMarker: function(idx) {
@@ -210,24 +219,27 @@ $(function($) {
 
         getSelectedMarkerIndex: function() {
             var selected_idx = -1;
-            _.each(this.markers, function(marker, i){
+            _.each(this.markers, function(marker, i) {
                 if (marker.get('selected')) {
                     selected_idx = i;
                     return true;
-                };
+                }
             });
             return selected_idx;
         },
 
         handleClick: function(event) {
             if (!_.isUndefined(window.draggingG) && draggingG) return;
-            assert(!_.isUndefined(window.actionPerformed), "Missing global actionPerformed().  Check for undo.js");
+            assert(!_.isUndefined(window.actionPerformed),
+                   'Missing global actionPerformed().  Check for undo.js');
             actionPerformed();
             var latLng = event.latLng;
             var coord = latLonToPixel(latLng);
             var index = this.markers.length;
 
-            var marker = maputils.createLabeledMarker(latLng, ''+(index+1), this.gmap);
+            var marker = maputils.createLabeledMarker(latLng,
+                                                      '' + (index + 1),
+                                                      this.gmap);
             this.initMarkerDragHandlers(marker);
 
             this.markers.push(marker);
@@ -235,26 +247,31 @@ $(function($) {
             app.currentView.selectMarker(index);
         },
 
-        initGmapUIHandlers: function(){
-                if ( ! this.options.readonly ) {
-                    google.maps.event.addListener( this.gmap, 'click', _.bind(this.handleClick, this) );
+        initGmapUIHandlers: function() {
+                if (! this.options.readonly) {
+                    google.maps.event.addListener(this.gmap, 'click',
+                                                  _.bind(this.handleClick,
+                                                         this));
                 }
         },
 
         initMarkerDragHandlers: function(marker) {
             var view = this;
-            google.maps.event.addListener(marker, 'dragstart', function(evt){
-                window.draggingG = true;
-                view.trigger('dragstart');
-            });
-            google.maps.event.addListener(marker, 'dragend', _.bind(function(event) {
-                actionPerformed();
-                var index = this.markers.indexOf(marker);
-                assert(index >= 0, "Marker not found.");
-                this.updateTiepointFromMarker(index, marker);
-                _.delay(function(){window.draggingG = false;}, 200);
-            }, this));
-        },
+            (google.maps.event.addListener
+             (marker, 'dragstart', function(evt) {
+                 window.draggingG = true;
+                 view.trigger('dragstart');
+             }));
+            (google.maps.event.addListener
+             (marker, 'dragend',
+              _.bind(function(event) {
+                  actionPerformed();
+                  var index = this.markers.indexOf(marker);
+                  assert(index >= 0, 'Marker not found.');
+                  this.updateTiepointFromMarker(index, marker);
+                  _.delay(function() {window.draggingG = false;}, 200);
+              }, this)));
+        }
 
     }); // end OverlayGoogleMapsView base class
 
@@ -268,7 +285,6 @@ $(function($) {
 
         afterRender: function() {
             app.gmap = new google.maps.Map(this.$('#image_canvas')[0], {
-		//var gmap = app.gmap = new google.maps.Map(this.el, {
                 zoom: MIN_ZOOM_OFFSET,
                 streetViewControl: false,
                 backgroundColor: 'rgb(192, 192, 192)',
@@ -292,44 +308,49 @@ $(function($) {
             gmap.mapTypes.set('image-map', maputils.ImageMapType(this.model));
             gmap.setMapTypeId('image-map');
             this.gmap = gmap;
-            google.maps.event.addListenerOnce(this.gmap, 'idle', _.bind(function(){
-                this.drawMarkers();
-                this.trigger('gmap_loaded');
-                if (this.options.debug) this.debugInstrumentation.apply(this);
-            }, this));
+            (google.maps.event.addListenerOnce
+             (this.gmap, 'idle', _.bind(function() {
+                 this.drawMarkers();
+                 this.trigger('gmap_loaded');
+                 if (this.options.debug) this.debugInstrumentation.apply(this);
+             }, this)));
         },
 
         debugInstrumentation: function() {
             var center = this.gmap.getCenter();
-            var coords = []
-            coords.push( [ center.lat(), center.lng() ] )
-            for (var i = -180; i<= 180; i += 10){
+            var coords = [];
+            coords.push([center.lat(), center.lng()]);
+            for (var i = -180; i <= 180; i += 10) {
                 coords.push([center.lat(), i]);
             }
-            for (var i=-90; i<=90; i+= 10) {
-                coords.push([i, center.lng()])
+            for (var i = -90; i <= 90; i += 10) {
+                coords.push([i, center.lng()]);
             }
             var map = this.gmap;
-            _.each(coords, function(coord){
+            _.each(coords, function(coord) {
                 var marker = new google.maps.Marker({
                     position: new google.maps.LatLng(coord[0], coord[1]),
                     title: coord.toString(),
-                    map: map,
+                    map: map
                 });
             });
 
-            var positionBox = $('<div id="positionBox">'+
-                '<div id="imagePos" "></div>'+
-                '<div id="mapPos" </div>'+
+            var positionBox = $('<div id="positionBox">' +
+                '<div id="imagePos" "></div>' +
+                '<div id="mapPos" </div>' +
             '</div>');
             $('#workflow_controls').before(positionBox);
             var imagePos = positionBox.find('#imagePos');
             var mapPos = positionBox.find('#mapPos');
-            var transform = geocamTiePoint.transform.deserializeTransform(this.model.get('transform'));
-            google.maps.event.addListener(map, 'mousemove', function trackMouse(e){
-                imagePos.text('image: '+e.latLng.toString());
-                mapPos.text( 'map: '+forwardTransformLatLon(transform, e.latLng).toString() );
-            });
+            var transform = (geocamTiePoint.transform.deserializeTransform
+                             (this.model.get('transform')));
+            (google.maps.event.addListener
+             (map, 'mousemove', function trackMouse(e) {
+                 imagePos.text('image: ' + e.latLng.toString());
+                 mapPos.text('map: ' +
+                             forwardTransformLatLon(transform, e.latLng)
+                             .toString());
+             }));
         },
 
         drawMarkers: function() {
@@ -345,10 +366,10 @@ $(function($) {
             return this._drawMarkers(latLons);
         },
 
-        updateTiepointFromMarker: function (index, marker) {
+        updateTiepointFromMarker: function(index, marker) {
             var coords = latLonToPixel(marker.getPosition());
-            this.model.updateTiepoint( 'image', index, coords);
-        },
+            this.model.updateTiepoint('image', index, coords);
+        }
 
     }); // end ImageQtreeView
 
@@ -358,7 +379,8 @@ $(function($) {
         overlay_enabled: true,
 
         initialize: function(options) {
-            app.views.OverlayGoogleMapsView.prototype.initialize.apply(this, arguments);
+            (app.views.OverlayGoogleMapsView.prototype.initialize.apply
+             (this, arguments));
             if (this.id && !this.model) {
                 this.model = app.overlays.get(this.id);
             }
@@ -401,16 +423,20 @@ $(function($) {
                 maputils.handleNoGeolocation(gmap, false);
             }
             this.gmap = gmap;
-            if ( ! this.options.readonly ) {
+            if (! this.options.readonly) {
                 this.drawMarkers();
             }
             this.trigger('gmap_loaded');
 
             /* Events and init for the  qtree overlay */
-            this.model.on('change:points', function(){
-                if ( _.isUndefined(this.previousPoints) || ! _.isEqual(this.previousPoints, this.model.get('points')) ) {
+            this.model.on('change:points', function() {
+                if (_.isUndefined(this.previousPoints) ||
+                    ! _.isEqual(this.previousPoints,
+                                this.model.get('points'))) {
                     // Serialize and deserialize to create a deep copy.
-                    this.previousPoints = JSON.parse( JSON.stringify( this.model.get('points') ) );
+                    this.previousPoints = (JSON.parse
+                                           (JSON.stringify
+                                            (this.model.get('points'))));
                     this.destroyAlignedImageQtree();
                     if (this.model.get('points').length > 2) this.model.warp();
                 }
@@ -418,31 +444,34 @@ $(function($) {
             this.on('dragstart', this.destroyAlignedImageQtree, this);
             this.model.on('add_point', this.destroyAlignedImageQtree, this);
             this.model.on('warp_success', this.refreshAlignedImageQtree, this);
-            if ( this.model.get('transform') && this.model.get('transform').type ) {
+            if (this.model.get('transform') &&
+                this.model.get('transform').type) {
                 this.initAlignedImageQtree();
             }
         },
 
         initAlignedImageQtree: function() {
             var DEFAULT_OPACITY = 40;
-            if( this.overlay_enabled && !this.alignedImageVisible ) {
+            if (this.overlay_enabled && !this.alignedImageVisible) {
                 this.alignedImageVisible = true;
                 var mapType = new maputils.AlignedImageMapType(this.model);
                 this.gmap.overlayMapTypes.insertAt(0, mapType);
-                if (_.isUndefined(this.model.overlayOpacity)) this.model.overlayOpacity = DEFAULT_OPACITY;
+                if (_.isUndefined(this.model.overlayOpacity)) {
+                    this.model.overlayOpacity = DEFAULT_OPACITY;
+                }
                 maputils.createOpacityControl(this.gmap, mapType, this.model);
             }
         },
 
-        destroyAlignedImageQtree: function(){
-            if ( this.alignedImageVisible ) {
+        destroyAlignedImageQtree: function() {
+            if (this.alignedImageVisible) {
                 this.gmap.overlayMapTypes.pop();
-                this.gmap.controls[google.maps.ControlPosition.TOP_RIGHT].pop()
+                this.gmap.controls[google.maps.ControlPosition.TOP_RIGHT].pop();
                 this.alignedImageVisible = false;
             }
         },
 
-        refreshAlignedImageQtree: function(){
+        refreshAlignedImageQtree: function() {
             this.destroyAlignedImageQtree();
             this.initAlignedImageQtree();
         },
@@ -459,43 +488,44 @@ $(function($) {
             result = this._drawMarkers(latLons);
         },
 
-        updateTiepointFromMarker: function (index, marker) {
+        updateTiepointFromMarker: function(index, marker) {
             var coords = latLonToMeters(marker.getPosition());
-            this.model.updateTiepoint( 'map', index, coords);
-        },
+            this.model.updateTiepoint('map', index, coords);
+        }
 
     }); // end MapView
-
-    var lorem = '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec fringilla, lorem vitae tincidunt sagittis, dolor purus pretium mi, id interdum magna enim in ligula. Nulla facilisi. Suspendisse potenti. Quisque eu enim faucibus felis euismod convallis vel ac orci. Suspendisse et commodo leo. Etiam a ligula arcu, ut vulputate ligula. Vestibulum posuere orci eu purus interdum tincidunt at ut augue. Proin sed nulla massa, sit amet condimentum neque. Etiam quis sapien velit. Nulla convallis aliquet nulla ut laoreet. Morbi at lacus velit. Ut at libero purus, eu malesuada metus. Nam egestas, erat non ultrices scelerisque, massa nulla placerat orci, ac iaculis eros lectus a quam. Mauris sit amet ante eu urna dignissim placerat eu eget elit. Curabitur vitae cursus dolor.</p>';
 
     app.views.SplitOverlayView = app.views.OverlayView.extend({
 
         helpSteps: [
             {
-                promptText: 'Use "Go to Location" to zoom the map to the neighborhood of your overlay.',
+                promptText: 'Use "Go to Location" to zoom the map ' +
+                    'to the neighborhood of your overlay.',
                 videoId: 'sHp_OGcgckQ',
-                helpFunc: function () {
+                helpFunc: function() {
                      this.$('#locationSearch').focus();
                      flicker(
-                         function () {
-                             this.$('#locationSearch').css('background-color', '#aaf');
-                             //this.$('#locationSearch').css('border', 'solid 4px blue').css('padding', '-2');
+                         function() {
+                             (this.$('#locationSearch')
+                              .css('background-color', '#aaf'));
                          },
-                         function () {
-                             this.$('#locationSearch').css('background-color', '#fff');
-                            // this.$('#locationSearch').css('border', 'none');
+                         function() {
+                             (this.$('#locationSearch')
+                              .css('background-color', '#fff'));
                          },
                          500, 8);
-                },
+                }
             },
             {
-                promptText: 'Click matching landmarks on both sides to add tiepoints and align your overlay.',
-                videoId: '95h45vkpxr8',
+                promptText: 'Click matching landmarks on both sides' +
+                    ' to add tiepoints and align your overlay.',
+                videoId: '95h45vkpxr8'
              },
             {
-                promptText: 'Use "Share" to see options for viewing your overlay in maps outside this site.',
+                promptText: 'Use "Share" to see options for viewing ' +
+                    'your overlay in maps outside this site.',
                 videoId: 'rgNW5Iaq1Dw',
-                helpFunc: function () {
+                helpFunc: function() {
                      this.$('#export').focus();
                      flicker(
                          function() {
@@ -511,55 +541,68 @@ $(function($) {
 
         template:
         '<div id="location" class="btn-toolbar">' +
-            '<span class="input-prepend">'+
-                '<span class="add-on">Go to</span>'+
-                '<input type="text" id="locationSearch" placeholder="Location"></input>' +
+            '<span class="input-prepend">' +
+                '<span class="add-on">Go to</span>' +
+                '<input type="text" id="locationSearch" ' +
+                'placeholder="Location"></input>' +
             '</span>' +
-            '<span class="alert instructions-prompt">'+
-                '<strong style="float:left; margin-right:1em;">Tips:</strong>'+
-                '<div class="btn-group floatleft" style="margin-right: 10px;">'+
-                    '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
-                    '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
-                '</div>'+
-                '<span id="userPromptText">Add matching tiepoints on both sides to align your overlay.</span>'+
-                '<button id="video" class="btn btn-mini">Video</button>'+
-                '<a class="close" data-dismiss="alert">&times;</a>'+
-                //'<button id="promptHelp" class="btn btn-mini">details</button>'+
-            '</span>'+
-        '</div>'+
+            '<span class="alert instructions-prompt">' +
+                '<strong style="float:left; margin-right:1em;">Tips:</strong>' +
+                '<div class="btn-group floatleft"' +
+                    ' style="margin-right: 10px;">' +
+                    '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>' +
+                    '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>' +
+                '</div>' +
+                '<span id="userPromptText">Add matching tiepoints on both' +
+                ' sides to align your overlay.</span>' +
+                '<button id="video" class="btn btn-mini">Video</button>' +
+                '<a class="close" data-dismiss="alert">&times;</a>' +
+            '</span>' +
+        '</div>' +
         '<div id="workflow_controls" class="btn-toolbar">' +
-            '<div class="btn-group">'+
-                '<button class="btn" id="help"">Help</button>'+
-            '</div>'+
-            '<div class="btn-group">'+
-                '<button class="btn" id="undo" onclick="undo()">Undo</button>'+
-                '<button class="btn" id="redo" onclick="redo()">Redo</button>'+
-                '<button class="btn" id="delete" disabled=true>Delete</button>'+
-            '</div>'+
+            '<div class="btn-group">' +
+                '<button class="btn" id="help"">Help</button>' +
+            '</div>' +
+            '<div class="btn-group">' +
+                '<button class="btn" id="undo" onclick="undo()">Undo</button>' +
+                '<button class="btn" id="redo" onclick="redo()">Redo</button>' +
+                '<button class="btn" id="delete" disabled=true>' +
+                'Delete</button>' +
+            '</div>' +
             '<div id="zoom_group" class="btn-group" style="margin-left:10px">' +
                 '<button class="btn" id="zoom_100">Zoom Max</button>' +
                 '<button class="btn" id="zoom_fit">Zoom Fit</button>' +
             '</div>' +
-                '<button class="btn"><label for="show_preview"><input id="show_preview" type="checkbox" checked="true"/>Show Preview</label></button>' +
-            '<div id="save-export" class="btn-group">'+
-                '<button class="btn" id="export">Share</button>'+
-                '<button class="btn" id="save">Save</button>'+
-                '<span id="saveStatus" data-saving-text="Saving..." data-changed-text="Changed since last save" data-saved-text="Saved." data-server-error="Server Error" data-server-unreachable="Server unreachable"></span>'+
-            '</div>'+
+                '<button class="btn"><label for="show_preview">' +
+                   '<input id="show_preview" type="checkbox" ' +
+                   'checked="true"/>Show Preview</label>' +
+                '</button>' +
+            '<div id="save-export" class="btn-group">' +
+                '<button class="btn" id="export">Share</button>' +
+                '<button class="btn" id="save">Save</button>' +
+                '<span id="saveStatus" ' +
+                  'data-saving-text="Saving..." ' +
+                  'data-changed-text="Changed since last save" ' +
+                  'data-saved-text="Saved." ' +
+                  'data-server-error="Server Error" ' +
+                  'data-server-unreachable="Server unreachable">' +
+                '</span>' +
+            '</div>' +
         '</div>' +
         '<div id="split_container">' +
             '<div id="split_left"></div>' +
             '<div id="split_right"></div>' +
-        '</div>'+
-        '<div id="helpText" class="modal hide">'+
-            '<div class="modal-header">'+
-                '<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>'+
-                '<h3>MapFasten Help</h3>'+
-            '</div>'+
-            '<div id="modalBody" class="modal-body"></div>'+
-            '<div class="modal-footer">'+
-                '<button id="helpCloseBtn">Okay</button>'+
-            '</div>'+
+        '</div>' +
+        '<div id="helpText" class="modal hide">' +
+            '<div class="modal-header">' +
+                '<button type="button" class="close" ' +
+                  'data-dismiss="modal" aria-hidden="true">&times;</button>' +
+                '<h3>MapFasten Help</h3>' +
+            '</div>' +
+            '<div id="modalBody" class="modal-body"></div>' +
+            '<div class="modal-footer">' +
+                '<button id="helpCloseBtn">Okay</button>' +
+            '</div>' +
         '</div>',
 
         beforeRender: function() {
@@ -573,12 +616,16 @@ $(function($) {
         },
 
         afterRender: function() {
-            $('#promptHelp').click(function(){ $('#helpText').modal('show'); });
-            $('#helpCloseBtn').click(function(){ $('#helpText').modal('hide'); });
+            $('#promptHelp').click(function() {
+                $('#helpText').modal('show');
+            });
+            $('#helpCloseBtn').click(function() {
+                $('#helpText').modal('hide');
+            });
             this.imageView = new app.views.ImageQtreeView({
                 el: '#split_right',
                 model: this.model,
-                debug: false,
+                debug: false
             }).render();
             this.mapView = new app.views.MapView({
                 el: '#split_left',
@@ -588,9 +635,10 @@ $(function($) {
             var subviews = [this.mapView, this.imageView];
             this.$('#split_container').splitter({
                 resizeToWidth: true,
-                dock: 'right',
-            }).bind('resize', function(evt){
-                // ensure Google Maps instances get resized when the splitter moves.
+                dock: 'right'
+            }).bind('resize', function(evt) {
+                // ensure Google Maps instances get resized when the
+                // splitter moves.
                 _.each(subviews, function(subview) {
                     google.maps.event.trigger(subview.gmap, 'resize');
                 });
@@ -599,7 +647,8 @@ $(function($) {
             this.initButtons();
             this.initWorkflowControls();
             this.initMarkerSelectHandlers();
-            this.model.on('add_point redraw_markers', this.initMarkerSelectHandlers, this);
+            (this.model.on
+             ('add_point redraw_markers', this.initMarkerSelectHandlers, this));
 
             this.renderHelp();
             this.animatePrompt();
@@ -608,9 +657,13 @@ $(function($) {
 
         renderHelp: function() {
             var helpData = this.helpSteps[this.helpIndex];
-            this.$('#userPromptText').html(helpData.promptText); 
+            this.$('#userPromptText').html(helpData.promptText);
             //this.$('#modalBody').html(helpData[1]);
-            var videoView = new app.views.HelpVideoView({el: this.$('#modalBody'), videoId: helpData.videoId, parentView: this});
+            var videoView = new app.views.HelpVideoView({
+                el: this.$('#modalBody'),
+                videoId: helpData.videoId,
+                parentView: this
+            });
             videoView.render();
             if (helpData.helpFunc) {
                 _.bind(helpData.helpFunc, this)();
@@ -628,22 +681,21 @@ $(function($) {
             }
         },
 
-        animatePrompt: function(){
+        animatePrompt: function() {
             var prompt = $('.instructions-prompt');
             var startProps = {
                 position: 'relative',
                 'z-index': 1000,
-                top: '300px',
-                //left: '130px',
+                top: '300px'
             };
             var endProps = {
                 top: '0px',
-                left: '0px',
+                left: '0px'
             };
             prompt.css(startProps);
             prompt.animate(endProps, {
                 duration: 1500,
-                complete: function(){ prompt.css('position', 'static'); },
+                complete: function() { prompt.css('position', 'static'); }
             });
         },
 
@@ -659,8 +711,11 @@ $(function($) {
 
         zoomMaximum: function() {
             //var imageZoom = this.imageView.model.maxZoom();
-            var imageZoom = this.imageView.gmap.mapTypes.get('image-map').maxZoom;
-            google.maps.event.addListenerOnce(this.imageView.gmap, 'bounds_changed', _.bind(this.matchImageZoom, this));
+            var imageZoom = (this.imageView.gmap.mapTypes
+                             .get('image-map').maxZoom);
+            (google.maps.event.addListenerOnce
+             (this.imageView.gmap, 'bounds_changed',
+              _.bind(this.matchImageZoom, this)));
             this.imageView.gmap.setZoom(imageZoom);
 
             var isSelected = function(marker) {
@@ -684,14 +739,18 @@ $(function($) {
                 console.log('SW: ' + bounds.getSouthWest().toString());
                 console.log('NE: ' + bounds.getNorthEast().toString());
             }
-            // transform the bounds of the image view into map space and zoom/pan the map view to fit.
-            var transform = geocamTiePoint.transform.deserializeTransform(this.model.get('transform'));
+            // transform the bounds of the image view into map space and
+            // zoom/pan the map view to fit.
+            var transform = (geocamTiePoint.transform.deserializeTransform
+                             (this.model.get('transform')));
             var imageBounds = this.imageView.gmap.getBounds();
             var mapBounds = new google.maps.LatLngBounds();
-            console.log("Image Bounds");
+            console.log('Image Bounds');
             logBounds(imageBounds);
-            mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getSouthWest()) );
-            mapBounds.extend( forwardTransformLatLon( transform, imageBounds.getNorthEast()) );
+            (mapBounds.extend
+             (forwardTransformLatLon(transform, imageBounds.getSouthWest())));
+            (mapBounds.extend
+             (forwardTransformLatLon(transform, imageBounds.getNorthEast())));
             //console.log("Map Bounds");
             //logBounds(mapBounds);
             maputils.fitMapToBounds(this.mapView.gmap, mapBounds);
@@ -712,9 +771,9 @@ $(function($) {
                 console.log('key detect: ' + e.which);
                 switch (e.which) {
                     // match z or Z
-                    case 122: 
-                    case 90:  
-                        if ( e.ctrlKey ) { // todo: command-key support for os x
+                    case 122:
+                    case 90:
+                        if (e.ctrlKey) { // todo: command-key support for os x
                             // ctrl-z: undo
                             undo();
                             break;
@@ -729,7 +788,8 @@ $(function($) {
                     case 89: // y
                         if (e.ctrlKey) redo();
                     case 46: // delete
-                    // TODO: make this work with backspace without triggering the default (prev page) behavior
+                    // TODO: make this work with backspace without
+                    // triggering the default (prev page) behavior
                     //case 8: // backspace
                         $('button#delete').click();
                         break;
@@ -740,7 +800,7 @@ $(function($) {
                 return false;
             });
 
-            this.$('button#help, button#video').click(function(){
+            this.$('button#help, button#video').click(function() {
                 $('#helpText').modal('show');
             });
             this.$('#promptPrevStep').click(_.bind(this.prevHelpStep, this));
@@ -751,13 +811,17 @@ $(function($) {
             var splitView = this;
             var overlay = this.model;
 
-            // Don't allow the user to save the tiepoints until at least two are defined.
+            // Don't allow the user to save the tiepoints until at least
+            // two are defined.
             if (! overlay.get('points') || overlay.get('points').length < 2) {
                 var save_button = $('button#save');
                 save_button.attr('disabled', true);
-                function observePoints(){
+                function observePoints() {
                     if (this.get('points').length >= 2) {
-                        if ( _.filter(this.get('points'), function(p){return _.all(p, _.identity)} ).length >= 2 ){
+                        if (_.filter(this.get('points'),
+                                     function(p) {
+                                         return _.all(p, _.identity);
+                                     }).length >= 2) {
                             save_button.attr('disabled', false);
                             this.off('change:points', observePoints);
                         }
@@ -766,7 +830,7 @@ $(function($) {
                 overlay.on('change:points', observePoints, overlay);
             }
 
-            $('button#save').click( function() {
+            $('button#save').click(function() {
                 var button = $(this);
                 button.data('original-text', button.text());
                 overlay.warp({
@@ -777,48 +841,59 @@ $(function($) {
             });
 
             var saveStatus = $('#saveStatus');
-            this.model.on('before_warp', function(){
+            this.model.on('before_warp', function() {
                 //saveStatus.text(saveStatus.data('saving-text'));
-                saveStatus.html('<img src="/static/geocamTiePoint/images/loading.gif">');
-            }).on('warp_success', function(){
+                (saveStatus.html
+                 ('<img src="/static/geocamTiePoint/images/loading.gif">'));
+            }).on('warp_success', function() {
                 saveStatus.text(saveStatus.data('saved-text'));
-            }).on('warp_server_error', function(){
-                saveStatus.html($('<span class="error">').text(saveStatus.data('server-error')));
-            }).on('warp_server_unreachable', function(){
-                saveStatus.html($('<span class="error">').text(saveStatus.data('server-unreachable')));
+            }).on('warp_server_error', function() {
+                (saveStatus.html
+                 ($('<span class="error">').text
+                  (saveStatus.data('server-error'))));
+            }).on('warp_server_unreachable', function() {
+                (saveStatus.html
+                 ($('<span class="error">').text
+                  (saveStatus.data('server-unreachable'))));
             });
 
             $('button#export').click(function() {
-                app.router.navigate('overlay/'+overlay.id+'/export', {trigger: true});
+                app.router.navigate('overlay/' + overlay.id + '/export',
+                                    {trigger: true});
             });
 
-            $('input#show_preview').change(function(evt){
+            $('input#show_preview').change(function(evt) {
                 if (this.checked) {
                     splitView.mapView.overlay_enabled = true;
                     splitView.mapView.initAlignedImageQtree();
-                } else{
+                } else {
                     splitView.mapView.overlay_enabled = false;
                     splitView.mapView.destroyAlignedImageQtree();
                 }
             });
 
-            this.on('change_selection', function(){
+            this.on('change_selection', function() {
                 var selectedMarkers = this.selectedMarkers();
-                var markerSelected = _.any(selectedMarkers, function(i){ return i > -1 });
+                var markerSelected = _.any(selectedMarkers, function(i) {
+                    return i > -1;
+                });
                 $('button#delete').attr('disabled', !markerSelected);
             });
-            $('button#delete').click(function(){
+            $('button#delete').click(function() {
                 var views = [splitView.mapView, splitView.imageView];
-                var selected = _.map(views, function(v){ return v.getSelectedMarkerIndex(); });
+                var selected = _.map(views, function(v) {
+                    return v.getSelectedMarkerIndex();
+                });
                 selected = _.filter(selected, function(s) {return s >= 0});
                 if (selected.length === 0) {
                     return false;
-                } else if ( selected.length === 2 ) {
-                    assert(selected[0]===selected[1], "Selected markers do not match.");
+                } else if (selected.length === 2) {
+                    assert(selected[0] === selected[1],
+                           'Selected markers do not match.');
                 }
                 selected = selected[0];
                 overlay.deleteTiepoint(selected);
-                _.each(views, function(v){v.selectMarker(null)});
+                _.each(views, function(v) { v.selectMarker(null); });
                 overlay.trigger('redraw_markers');
             });
         },
@@ -826,9 +901,11 @@ $(function($) {
         initMarkerSelectHandlers: function() {
 
             /* Clear any extant select handlers, lest they get duplicated */
-            var selectHandlers = this._selectHandlers = this._selectHandlers || [];
+            var selectHandlers =
+                this._selectHandlers =
+                this._selectHandlers || [];
             while (selectHandlers.length > 0) {
-                google.maps.event.removeListener(selectHandlers.pop())
+                google.maps.event.removeListener(selectHandlers.pop());
             }
 
             var splitView = this;
@@ -849,100 +926,114 @@ $(function($) {
 
         selectedMarkers: function() {
             var views = [this.mapView, this.imageView];
-            return _.map(views, function(v) { return v.getSelectedMarkerIndex() });
+            return _.map(views, function(v) {
+                return v.getSelectedMarkerIndex();
+            });
         },
 
         selectMarker: function(index) {
             var views = [this.mapView, this.imageView];
-            _.each(views, function(view){
+            _.each(views, function(view) {
                 view.selectMarker(index);
             });
-        },
+        }
 
     }); // end SplitOverlayView
-    
-    app.views.HelpVideoView = app.views.View.extend({
-    
-        template:   '<div id="helpVideo">'+
-                        //'<iframe width="560" height="315" src="http://www.youtube-nocookie.com/embed/{{videoId}}" frameborder="0" allowfullscreen></iframe>'+
-                        '<div class="btn-group floatleft" style="margin-right: 10px;">'+
-                            '<a id="helpPrev" class="btn btn-mini" {{#if first}}disabled="true"{{/if}} >&lt;&lt;</a>'+
-                            '<a id="helpNext" class="btn btn-mini" {{#if last}}disabled="true"{{/if}}>&gt;&gt;</a>'+
-                        '</div>'+
-                        '<embed id="videoEmbed" width="560" height="315" src="http://www.youtube.com/v/{{videoId}}?version=3&enablejsapi=1"></embed>'+
-                        '<div class="videoCaption">{{captionText}}</div>'+
-                    '</div>',
 
-        initialize: function(options){
+    app.views.HelpVideoView = app.views.View.extend({
+
+        template:
+          '<div id="helpVideo">' +
+            '<div class="btn-group floatleft" style="margin-right: 10px;">' +
+              '<a id="helpPrev" class="btn btn-mini" ' +
+                '{{#if first}}disabled="true"{{/if}} >&lt;&lt;</a>' +
+              '<a id="helpNext" class="btn btn-mini" ' +
+                '{{#if last}}disabled="true"{{/if}}>&gt;&gt;</a>' +
+            '</div>' +
+            '<embed id="videoEmbed" width="560" height="315" ' +
+              'src="http://www.youtube.com/v/' +
+              '{{videoId}}?version=3&enablejsapi=1">' +
+            '</embed>' +
+            '<div class="videoCaption">{{captionText}}</div>' +
+          '</div>',
+
+        initialize: function(options) {
             var parentView = options.parentView;
             this.context = {
-              videoId: options.videoId,  
+              videoId: options.videoId,
               captionText: options.captionText,
               first: parentView.helpIndex == 0,
-              last: parentView.helpIndex == ( parentView.helpSteps.length - 1 ),
+              last: (parentView.helpIndex ==
+                     (parentView.helpSteps.length - 1))
             };
         },
 
-        afterRender: function(){
+        afterRender: function() {
             var modal = this.$el.parent('.modal');
             var thisview = this;
 
             modal.off('.video_help');
-            modal.on('hide.video_help', function(){
+            modal.on('hide.video_help', function() {
                 var video = $(this).find('#videoEmbed');
-                // TODO: fix this so that the video doesn't have to reload if you open the help multiple times
+                // TODO: fix this so that the video doesn't have to
+                //reload if you open the help multiple times
                 //video[0].pauseVideo();
                 video.remove();
             });
-            modal.on('shown.video_help', function(){
+            modal.on('shown.video_help', function() {
                 thisview.render();
             });
-            this.$('#helpPrev').click( _.bind(this.options.parentView.prevHelpStep, this.options.parentView) );
-            this.$('#helpNext').click( _.bind(this.options.parentView.nextHelpStep, this.options.parentView) );
-        },
-    
+            (this.$('#helpPrev').click
+             (_.bind(this.options.parentView.prevHelpStep,
+                     this.options.parentView)));
+            (this.$('#helpNext').click
+             (_.bind(this.options.parentView.nextHelpStep,
+                     this.options.parentView)));
+        }
+
     });
 
     // FIX: requirements text hard-coded, should auto-update based on settings
-    var importRequirementsText = '[Size < 2 MB. Acceptable formats: JPEG, PDF, PNG, and others]';
+    var importRequirementsText =
+        '[Size < 2 MB. Acceptable formats: JPEG, PDF, PNG, and others]';
 
     app.views.NewOverlayView = app.views.View.extend({
 
         template:
-        '<div id="new_overlay_view">'+
-            '<h3>Create a New Overlay: Import Overlay Image</h3>'+
-            '<ul class="nav nav-tabs" id="formTabs">'+
-            '  <li class="active" data-target="#fileUpload"><a href="#fileUpload">Upload</a></li>'+
-            '  <li data-target="#urlSubmit"><a href="#urlSubmit">From a URL</a></li>'+
-            '</ul>'+
-            ' '+
-            '<div class="tab-content">'+
-                '<div class="tab-pane active" id="fileUpload">'+
-                    '<form encytype="multipart/form-data" id="overlayUploadForm">'+
-                    '<div id="uploadControlGroup" class="control-group">'+
+        '<div id="new_overlay_view">' +
+            '<h3>Create a New Overlay: Import Overlay Image</h3>' +
+            '<ul class="nav nav-tabs" id="formTabs">' +
+            '  <li class="active" data-target="#fileUpload"><a href="#fileUpload">Upload</a></li>' +
+            '  <li data-target="#urlSubmit"><a href="#urlSubmit">From a URL</a></li>' +
+            '</ul>' +
+            ' ' +
+            '<div class="tab-content">' +
+                '<div class="tab-pane active" id="fileUpload">' +
+                    '<form encytype="multipart/form-data" id="overlayUploadForm">' +
+                    '<div id="uploadControlGroup" class="control-group">' +
                         '<label>Choose an image to upload' +
                         '<span class="import-requirements">' + importRequirementsText + '</span>' +
-                        '</label>'+
-                        '<div><input type="file" name="file" id="newOverlayFile" /></div>'+
-                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Upload" />'+
+                        '</label>' +
+                        '<div><input type="file" name="file" id="newOverlayFile" /></div>' +
+                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Upload" />' +
                         window.csrf_token +
-                    '</div>'+
-                    '</form>'+
-                '</div>'+
-                '<div class="tab-pane" id="urlSubmit">'+
-                    '<form encytype="multipart/form-data" id="overlayUrlForm">'+
-                    '<div id="uploadControlGroup" class="control-group">'+
+                    '</div>' +
+                    '</form>' +
+                '</div>' +
+                '<div class="tab-pane" id="urlSubmit">' +
+                    '<form encytype="multipart/form-data" id="overlayUrlForm">' +
+                    '<div id="uploadControlGroup" class="control-group">' +
                         '<label>Image URL' +
                         '<span class="import-requirements">' + importRequirementsText + '</span>' +
                         '</label>' +
-                        '<input type="text" id="imageUrl" style="width: 98%"/>'+
-                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Submit" />'+
+                        '<input type="text" id="imageUrl" style="width: 98%"/>' +
+                        '<input class="btn newOverlayFormSubmitButton" type="button" value="Submit" />' +
                         window.csrf_token +
-                    '</div>'+
-                    '</form>'+
-                '</div>'+
-            '</div>'+
-            '<div id="formErrorContainer"></div>'+
+                    '</div>' +
+                    '</form>' +
+                '</div>' +
+            '</div>' +
+            '<div id="formErrorContainer"></div>' +
         '</div>',
 
         initialize: function() {

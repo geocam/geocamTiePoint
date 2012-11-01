@@ -28,7 +28,7 @@ $(function($) {
             view.render();
         },
 
-        reloadToFixMapIfNeeded: function () {
+        reloadToFixMapIfNeeded: function() {
             // HACK: force reload to avoid problems the second time we
             // render a map in the same tab
             this.numMapViews++;
@@ -82,15 +82,19 @@ $(function($) {
      * Support for undo/redo global functions
     */
     window.getState = function() {
-        if (app.currentView && app.currentView.getState) return app.currentView.getState();
+        if (app.currentView && app.currentView.getState) {
+            return app.currentView.getState();
+        }
     };
     window.setState = function(state) {
-        if (app.currentView && app.currentView.setState) return app.currentView.setState(state);
+        if (app.currentView && app.currentView.setState) {
+            return app.currentView.setState(state);
+        }
     };
 
     //Keep the content container height in sync with the window
-    $(window).resize(function(e){
+    $(window).resize(function(e) {
         var container = $('#contents');
-        container.height( $(window).height() - container.offset().top );
+        container.height($(window).height() - container.offset().top);
     }).resize();
 });
