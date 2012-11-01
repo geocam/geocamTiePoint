@@ -157,3 +157,7 @@ a.btn-primary {
 #helpText { /* Modal help dialog, with video embed */
     width: 600px;
 }
+
+#video {
+    margin-left: 10px;
+}

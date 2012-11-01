@@ -56,7 +56,7 @@ $(function($) {
         template:
         '<div class="navbar-inner">'+
             '<ul id="navlist" class="nav">'+
-            '<li><a href="#"><img src="/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
+            '<li><a href="/"><img src="/static/mapFasten/icons/mapFastenLogo.png"/></a></li>'+
             '<li class="nav_pad_vertical navbar-text"><a href="#overlays/">List Overlays</a></li>'+
             '</ul>'+
             '<p class="pull-right navbar-text" style="float:right"><a href="/accounts/logout/">Logout</a></p>'+
@@ -521,7 +521,7 @@ $(function($) {
                     '<a id="promptPrevStep" class="btn btn-mini">&lt;&lt;</a>'+
                     '<a id="promptNextStep" class="btn btn-mini">&gt;&gt;</a>'+
                 '</div>'+
-                '<span id="userPromptText" class="floatleft">Add matching tiepoints on both sides to align your overlay.</span>'+
+                '<span id="userPromptText">Add matching tiepoints on both sides to align your overlay.</span>'+
                 '<button id="video" class="btn btn-mini">Video</button>'+
                 '<a class="close" data-dismiss="alert">&times;</a>'+
                 //'<button id="promptHelp" class="btn btn-mini">details</button>'+
