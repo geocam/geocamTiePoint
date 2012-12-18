@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html>
 <head>
 <title>MapFasten: {{ name }}</title>
 <style>
@@ -11,6 +13,7 @@ html, body, #map_canvas {
 }
 </style>
 </head>
+<body>
 <div>
   You can save this web page and serve it from your own web site as an easy way
   to share your overlay.
@@ -41,6 +44,39 @@ html, body, #map_canvas {
 
 <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
 <script>
+
+/********************************************
+
+bind() does not work correctly in the Webkit versions shipped in iOS 5.1.1.
+
+Therefore, the following is an approximate bind implementation.
+
+Source: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Function/bind
+
+********************************************/
+if (!Function.prototype.bind) {
+  Function.prototype.bind = function (oThis) {
+    if (typeof this !== "function") {
+      // closest thing possible to the ECMAScript 5 internal IsCallable function
+      throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+    }
+ 
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
+        fNOP = function () {},
+        fBound = function () {
+          return fToBind.apply(this instanceof fNOP && oThis
+                                 ? this
+                                 : oThis,
+                               aArgs.concat(Array.prototype.slice.call(arguments)));
+        };
+ 
+    fNOP.prototype = this.prototype;
+    fBound.prototype = new fNOP();
+ 
+    return fBound;
+  };
+}
 
 function MapFastenOverlay(name, slug, tileRootUrl, bounds) {
     this.name = name;
@@ -143,3 +179,5 @@ function initialize() {
 google.maps.event.addDomListener(window, 'load', initialize);
 
 </script>
+</body>
+</html>
