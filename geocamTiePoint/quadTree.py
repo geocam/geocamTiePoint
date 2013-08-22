@@ -149,6 +149,22 @@ def tileExtent(zoom, x, y):
     return mercatorCorners
 
 
+def tileBoundsLonLat(zoom, x, y):
+    corners = ((x, y),
+               (x + 1, y + 1))
+    pixelCorners = [tileIndexToPixels(*corner) for corner in corners]
+    mercatorCorners = [pixelsToMeters(*(pixels + (zoom,))) for pixels in pixelCorners]
+    nw, se = [metersToLatLon(c) for c in mercatorCorners]
+    west, north = nw
+    east, south = se
+    return {
+        'north': north,
+        'south': south,
+        'east': east,
+        'west': west
+    }
+
+
 def tileIndexToPixels(x, y):
     return x * TILE_SIZE, y * TILE_SIZE
 
