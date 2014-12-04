@@ -44,7 +44,8 @@ def numericalJacobian(f):
         n = len(y)
         result = numpy.zeros((n, k))
         for i in xrange(k):
-            xp = x.copy()
+            #xp = x.copy()
+            xp = list(x)
             eps = 1e-7 + abs(1e-7 * x[i])
             xp[i] += eps
             yp = f(xp)

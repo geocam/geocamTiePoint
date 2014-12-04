@@ -14,6 +14,8 @@
 # pylint: disable=W0223
 
 import numpy as np
+from numpy import linalg as LA
+
 import PIL.Image
 import glob, os
 try:
@@ -29,6 +31,10 @@ from geocamUtil.geom3 import Vector3, Point3, Ray3
 from geocamUtil.sphere import Sphere
 from geocamUtil.geomath import EARTH_RADIUS_METERS, transformLonLatAltToEcef, transformEcefToLonLatAlt
 
+
+def degreesToRadians(degrees):
+    return degrees * (np.pi / 180.)
+
 class IssImage(object):
     
     def __init__(self, filename, cameraLongitude, cameraLatitude, cameraAltitude, focalLength):
@@ -40,9 +46,10 @@ class IssImage(object):
         self.opticalCenterX = int(self.width / 2.0)
         self.opticalCenterY = int(self.height / 2.0)
         self.focal_length_meters = focalLength
-        self.camera_logitude = cameraLongitude
+        self.camera_longitude = cameraLongitude
         self.camera_latitude = cameraLatitude
         self.camera_altitude = cameraAltitude
+
 
     def save(self):
         imageString = StringIO()
@@ -70,26 +77,48 @@ class IssImage(object):
         dirVec = Vector3(x,y,z)
         normDir = dirVec.norm()
         return normDir
-
+    
+    
+    def getCameraToEcefFrameRotationMatrix(self, camPoseEcef):
+        """
+        Given the camera pose, provides rotation matrix for 
+        transforming a vector from camera frame to ecef frame.
+        """
+        longitude = degreesToRadians(self.camera_longitude)
+        c1 = np.array([-1 * np.sin(longitude), np.cos(longitude), 0])
+        c3 = np.array([-1 * camPoseEcef[0], -1 * camPoseEcef[1], -1 * camPoseEcef[2]])
+        c3 = c3 / LA.norm(c3)  # normalize the vector
+        c2 = np.cross(c3, c1)
+        c2 = c2 / LA.norm(c2)  # normalize
+        rotMatrix = np.matrix([c1, c2, c3])
+        return np.transpose(rotMatrix)
+        
     
     def imageCoordToEcef(self, x, y):
-        cameraPoseEcef = transformLonLatAltToEcef([self.camera_logitude, self.camera_latitude, self.camera_altitude])
+        """
+        Given the camera position in ecef and image coordinates x,y
+        returns the coordinates in ecef frame (x,y,z)
+        """
+        cameraPoseEcef = transformLonLatAltToEcef([self.camera_longitude, self.camera_latitude, self.camera_altitude])
         cameraPose = Point3(cameraPoseEcef[0], cameraPoseEcef[1], cameraPoseEcef[2])  # ray start is camera position in world coordinates
-        
+                
         dirVector = self.pixelToVector([x,y])  # vector from center of projection to pixel on image.
-        print "dirVector %s" % str(dirVector)
-        # this ray is oriented in camera coords. We need to rotate it so its frame matches that of ecef's.
-        rotMatrix = np.matrix('1 2 3; 4 5 6; 7 8 9')  # dummy rotation matrix
-        dirVector_np = np.array([dirVector.dx, dirVector.dy, dirVector.dx])
-        #TODO: insert the rotation matrix here!!
-        dirVectorAlignedWithEcefFrame_np = rotMatrix * dirVector_np
-        
-        ray = Ray3(cameraPose, dirVector)
-        
+        # rotate the direction vector (center of proj to pixel) from camera frame to ecef frame 
+        rotMatrix = self.getCameraToEcefFrameRotationMatrix(cameraPoseEcef)
+        dirVector_np = np.array([[dirVector.dx], [dirVector.dy], [dirVector.dx]])         
+        dirVecEcef_np = rotMatrix * dirVector_np
+        dirVectorEcef = Vector3(dirVecEcef_np[0], dirVecEcef_np[1], dirVecEcef_np[2])
+        dirVectorEcef = dirVectorEcef.norm()
+        print "direction vector normalized: "
+        print dirVectorEcef
+        print "camera pose"
+        print cameraPose
+        ray = Ray3(cameraPose, dirVectorEcef)
         earthCenter = Point3(0,0,0)  # since we use ecef, earth center is 0 0 0
         earth = Sphere(earthCenter, EARTH_RADIUS_METERS)
         t = earth.intersect(ray)
         print "t: %d" % t
+        
         if t != None:
             # convert t to ecef coords
             return ray.start + t*ray.dir
