@@ -17,7 +17,6 @@ import numpy as np
 from numpy import linalg as LA
 
 import PIL.Image
-import glob, os
 try:
     from cStringIO import StringIO
 except ImportError:
@@ -71,21 +70,11 @@ class IssImage(object):
         - optical center is center of the image
         - focal length in x is equal to focal length in y
         """
-        print "optical Center x"
-        print self.opticalCenterX
-        print "optical Center y"
-        print self.opticalCenterY
-        print "pixelCoord"
-        print pixelCoord
         x = (pixelCoord[0] - self.opticalCenterX) / self.focal_length_meters
         y = (pixelCoord[1] - self.opticalCenterY) / self.focal_length_meters
         z = 1
         dirVec = Vector3(x,y,z)
-        print "direction vector before norm"
-        print dirVec
         normDir = dirVec.norm()
-        print "direction vector after norm"
-        print normDir
         return normDir
     
     
@@ -109,30 +98,19 @@ class IssImage(object):
         Given the camera position in ecef and image coordinates x,y
         returns the coordinates in ecef frame (x,y,z)
         """
-        print "lon lat alt"
-        print [self.camera_longitude, self.camera_latitude, self.camera_altitude]
-        
         cameraPoseEcef = transformLonLatAltToEcef([self.camera_longitude, self.camera_latitude, self.camera_altitude])
         cameraPose = Point3(cameraPoseEcef[0], cameraPoseEcef[1], cameraPoseEcef[2])  # ray start is camera position in world coordinates
-        print "Camera Pose"
-        print cameraPose
-             
         dirVector = self.pixelToVector([x,y])  # vector from center of projection to pixel on image.
-        print "direction vector in camera frame"
-        print dirVector
         # rotate the direction vector (center of proj to pixel) from camera frame to ecef frame 
         rotMatrix = self.getCameraToEcefFrameRotationMatrix(cameraPoseEcef)
         dirVector_np = np.array([[dirVector.dx], [dirVector.dy], [dirVector.dz]])         
         dirVecEcef_np = rotMatrix * dirVector_np
-        print "ROTATION MATRIX"
-        print rotMatrix
+        # normalize the direction vector
         dirVectorEcef = Vector3(dirVecEcef_np[0], dirVecEcef_np[1], dirVecEcef_np[2])
         dirVectorEcef = dirVectorEcef.norm()
-        print "direction vector normalized: "
-        print dirVectorEcef
-        print "camera pose"
-        print cameraPose
+        #construct the ray
         ray = Ray3(cameraPose, dirVectorEcef)
+        #intersect it with Earth
         earthCenter = Point3(0,0,0)  # since we use ecef, earth center is 0 0 0
         earth = Sphere(earthCenter, EARTH_RADIUS_METERS)
         t = earth.intersect(ray)
@@ -154,7 +132,6 @@ class IssImage(object):
         corner2 = [self.width, 0]
         corner3 = [0, self.height]
         corner4 = [self.width, self.height]
-        
 #         print "final ecef coordinates of the center of the image"
 #         print self.imageCoordToEcef(self.width/2.0, self.height/2.0)
 #         finalLatLong = transformEcefToLonLatAlt(self.imageCoordToEcef(self.width/2.0, self.height/2.0))
@@ -163,27 +140,26 @@ class IssImage(object):
 
 #         # this returns None when there is no intersection...
         corner1_ecef = self.imageCoordToEcef(corner1[0], corner1[1])
-        print corner1_ecef
-#         corner2_ecef = self.imageCoordToEcef(corner2[0], corner2[1])
-#         corner3_ecef = self.imageCoordToEcef(corner3[0], corner3[1])
-#         corner4_ecef = self.imageCoordToEcef(corner4[0], corner4[1])
-#         print [corner1_ecef, corner2_ecef, corner3_ecef, corner4_ecef]
+        corner2_ecef = self.imageCoordToEcef(corner2[0], corner2[1])
+        corner3_ecef = self.imageCoordToEcef(corner3[0], corner3[1])
+        corner4_ecef = self.imageCoordToEcef(corner4[0], corner4[1])
+        return [corner1_ecef, corner2_ecef, corner3_ecef, corner4_ecef]
         
         
 def main():
     assert degreesToRadians(90) == np.pi / 2.0
     
     imageName = settings.DATA_DIR + "geocamTiePoint/overlay_images/ISS039-E-1640.JPG"    
-    focalLengthMeters = 100000. #0.4
+    focalLengthMeters = 100000.#100000. #0.4
     issImage = IssImage(imageName, -87.4, 29.3, 409000, focalLengthMeters)
     corners = issImage.getBboxFromImageCorners()
+    print "Four image corners in ECEF:"
+    print corners
     
     # sanity check
-#     if corners[0] != None:
-#         print "Corner " + corners[0] + "should equal to 29degrees 45'23.36 N, 89degrees56'52.85W "
-#     if corners[1] != None:
-#         print "Corner " + corners[1] + "should equal to 29 50 29 82N , 90 21 55 40W "
-#     print "Corner " + str(transformEcefToLonLatAlt(corners[2])) + "should equal to 30degrees 01'03.43N, 89 51 44 15W  "
-#     print "Corner " + str(transformEcefToLonLatAlt(corners[3])) + "should equal to 30 06 31 28N, 90 17 04 01 W"
-#     
+    print "Corner " + str(transformEcefToLonLatAlt(corners[0])) + "should equal to 29degrees 45'23.36 N, 89degrees56'52.85W "
+    print "Corner " + str(transformEcefToLonLatAlt(corners[1])) + "should equal to 29 50 29 82N , 90 21 55 40W "
+    print "Corner " + str(transformEcefToLonLatAlt(corners[2])) + "should equal to 30degrees 01'03.43N, 89 51 44 15W  "
+    print "Corner " + str(transformEcefToLonLatAlt(corners[3])) + "should equal to 30 06 31 28N, 90 17 04 01 W"
+     
 main()
