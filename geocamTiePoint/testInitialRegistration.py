@@ -34,9 +34,10 @@ from geocamUtil.geomath import EARTH_RADIUS_METERS, transformLonLatAltToEcef, tr
 def degreesToRadians(degrees):
     return degrees * (np.pi / 180.)
 
+
 class IssImage(object):
     
-    def __init__(self, filename, cameraLongitude, cameraLatitude, cameraAltitude, focalLength):
+    def __init__(self, filename, longLatAlt, focalLength, sensorSize):
         self.imageName = filename
         self.imageType = 'JPEG'
         self.image = PIL.Image.open(filename).convert('RGBA') # sets alpha to 255
@@ -44,10 +45,30 @@ class IssImage(object):
         self.height = self.image.size[1]
         self.opticalCenterX = int(self.width / 2.0)
         self.opticalCenterY = int(self.height / 2.0)
-        self.focal_length_meters = focalLength
-        self.camera_longitude = cameraLongitude
-        self.camera_latitude = cameraLatitude
-        self.camera_altitude = cameraAltitude
+        self.camera_longitude = longLatAlt[0]
+        self.camera_latitude = longLatAlt[1]
+        self.camera_altitude = longLatAlt[2]
+        self.focalLength = self.getAccurateFocalLengths(focalLength, sensorSize)
+
+    def getAccurateFocalLengths(self, focalLength, sensorSize):
+        """
+        Parameters: image size x,y (pixels), focalLength (meters), sensorSize x,y (meters)
+        
+        Focal length listed on the image exif is unitless...
+        We need focal length in pixels / meters. 
+        Therefore, we scale the exif focal length by number of 
+        pixels per meter on the actual CCD sensor.
+        """
+        w_s = sensorSize[0]  # in meters
+        h_s = sensorSize[0]
+        
+        w_i = self.width  # in pixels
+        h_i = self.height
+        
+        f = focalLength  # unit less
+        
+        focalLengthPixelsPerMeter = (w_i / w_s * f, h_i / h_s * f)
+        return focalLengthPixelsPerMeter    
 
 
     def save(self):
@@ -70,8 +91,8 @@ class IssImage(object):
         - optical center is center of the image
         - focal length in x is equal to focal length in y
         """
-        x = (pixelCoord[0] - self.opticalCenterX) / self.focal_length_meters
-        y = (pixelCoord[1] - self.opticalCenterY) / self.focal_length_meters
+        x = (pixelCoord[0] - self.opticalCenterX) / self.focalLength[0]
+        y = (pixelCoord[1] - self.opticalCenterY) / self.focalLength[1]
         z = 1
         dirVec = Vector3(x,y,z)
         normDir = dirVec.norm()
@@ -114,7 +135,6 @@ class IssImage(object):
         earthCenter = Point3(0,0,0)  # since we use ecef, earth center is 0 0 0
         earth = Sphere(earthCenter, EARTH_RADIUS_METERS)
         t = earth.intersect(ray)
-        print "t: %d" % t
         
         if t != None:
             # convert t to ecef coords
@@ -132,11 +152,6 @@ class IssImage(object):
         corner2 = [self.width, 0]
         corner3 = [0, self.height]
         corner4 = [self.width, self.height]
-#         print "final ecef coordinates of the center of the image"
-#         print self.imageCoordToEcef(self.width/2.0, self.height/2.0)
-#         finalLatLong = transformEcefToLonLatAlt(self.imageCoordToEcef(self.width/2.0, self.height/2.0))
-#         print "final long lat coordinates of the center of the image"
-#         print finalLatLong
 
 #         # this returns None when there is no intersection...
         corner1_ecef = self.imageCoordToEcef(corner1[0], corner1[1])
@@ -144,14 +159,20 @@ class IssImage(object):
         corner3_ecef = self.imageCoordToEcef(corner3[0], corner3[1])
         corner4_ecef = self.imageCoordToEcef(corner4[0], corner4[1])
         return [corner1_ecef, corner2_ecef, corner3_ecef, corner4_ecef]
-        
+    
         
 def main():
     assert degreesToRadians(90) == np.pi / 2.0
     
     imageName = settings.DATA_DIR + "geocamTiePoint/overlay_images/ISS039-E-1640.JPG"    
-    focalLengthMeters = 100000.#100000. #0.4
-    issImage = IssImage(imageName, -87.4, 29.3, 409000, focalLengthMeters)
+    issLongitude = -87.4
+    issLatitude = 29.3
+    issAltitude = 409000
+    longLatAlt = (issLongitude, issLatitude, issAltitude)
+    focalLength = 0.4
+    sensorSize = (.036,.0239)
+    
+    issImage = IssImage(imageName, longLatAlt, focalLength, sensorSize)
     corners = issImage.getBboxFromImageCorners()
     print "Four image corners in ECEF:"
     print corners
