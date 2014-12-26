@@ -34,20 +34,20 @@ from geocamUtil.geomath import EARTH_RADIUS_METERS, transformLonLatAltToEcef, tr
 def degreesToRadians(degrees):
     return degrees * (np.pi / 180.)
 
+#####################################################
+#                    Classes
+#####################################################
 
 class IssImage(object):
     
-    def __init__(self, filename, longLatAlt, focalLength, sensorSize):
+    def __init__(self, filename, lonLatAlt, focalLength, sensorSize):
         self.imageName = filename
         self.imageType = 'JPEG'
         self.image = PIL.Image.open(filename).convert('RGBA') # sets alpha to 255
         self.width = self.image.size[0]
         self.height = self.image.size[1]
-        self.opticalCenterX = int(self.width / 2.0)
-        self.opticalCenterY = int(self.height / 2.0)
-        self.camera_longitude = longLatAlt[0]
-        self.camera_latitude = longLatAlt[1]
-        self.camera_altitude = longLatAlt[2]
+        self.opticalCenter = (int(self.width / 2.0) , int(self.height / 2.0))
+        self.cameraLonLatAlt = lonLatAlt 
         self.focalLength = self.getAccurateFocalLengths(focalLength, sensorSize)
 
     def getAccurateFocalLengths(self, focalLength, sensorSize):
@@ -81,89 +81,116 @@ class IssImage(object):
         imageData.image.save('test.jpg', ContentFile(imageContent), save=False)
         imageData.save()
 
+#####################################################
+#                 Utility Functions
+#####################################################
+def pixelToVector(opticalCenter, focalLength, pixelCoord):
+    """
+    For transforming image 2d pixel coordinates (x,y) to
+    a normalized direction vector in camera coordinates.
+    
+    Assumptions: 
+    - optical center is center of the image
+    - focal length in x is equal to focal length in y
+    """
+    x = (pixelCoord[0] - opticalCenter[0]) / focalLength[0]
+    y = (pixelCoord[1] - opticalCenter[1]) / focalLength[1]
+    z = 1
+    dirVec = Vector3(x,y,z)
+    normDir = dirVec.norm()
+    return normDir
 
-    def pixelToVector(self, pixelCoord):
-        """
-        For transforming image 2d pixel coordinates (x,y) to
-        a normalized direction vector in camera coordinates.
-        
-        Assumptions: 
-        - optical center is center of the image
-        - focal length in x is equal to focal length in y
-        """
-        x = (pixelCoord[0] - self.opticalCenterX) / self.focalLength[0]
-        y = (pixelCoord[1] - self.opticalCenterY) / self.focalLength[1]
-        z = 1
-        dirVec = Vector3(x,y,z)
-        normDir = dirVec.norm()
-        return normDir
-    
-    
-    def getCameraToEcefFrameRotationMatrix(self, camPoseEcef):
-        """
-        Given the camera pose, provides rotation matrix for 
-        transforming a vector from camera frame to ecef frame.
-        """
-        longitude = degreesToRadians(self.camera_longitude)
-        c1 = np.array([-1 * np.sin(longitude), np.cos(longitude), 0])
-        c3 = np.array([-1 * camPoseEcef[0], -1 * camPoseEcef[1], -1 * camPoseEcef[2]])
-        c3 = c3 / LA.norm(c3)  # normalize the vector
-        c2 = np.cross(c3, c1)
-        c2 = c2 / LA.norm(c2)  # normalize
-        rotMatrix = np.matrix([c1, c2, c3])
-        return np.transpose(rotMatrix)
-        
-    
-    def imageCoordToEcef(self, x, y):
-        """
-        Given the camera position in ecef and image coordinates x,y
-        returns the coordinates in ecef frame (x,y,z)
-        """
-        cameraPoseEcef = transformLonLatAltToEcef([self.camera_longitude, self.camera_latitude, self.camera_altitude])
-        cameraPose = Point3(cameraPoseEcef[0], cameraPoseEcef[1], cameraPoseEcef[2])  # ray start is camera position in world coordinates
-        dirVector = self.pixelToVector([x,y])  # vector from center of projection to pixel on image.
-        # rotate the direction vector (center of proj to pixel) from camera frame to ecef frame 
-        rotMatrix = self.getCameraToEcefFrameRotationMatrix(cameraPoseEcef)
-        dirVector_np = np.array([[dirVector.dx], [dirVector.dy], [dirVector.dz]])         
-        dirVecEcef_np = rotMatrix * dirVector_np
-        # normalize the direction vector
-        dirVectorEcef = Vector3(dirVecEcef_np[0], dirVecEcef_np[1], dirVecEcef_np[2])
-        dirVectorEcef = dirVectorEcef.norm()
-        #construct the ray
-        ray = Ray3(cameraPose, dirVectorEcef)
-        #intersect it with Earth
-        earthCenter = Point3(0,0,0)  # since we use ecef, earth center is 0 0 0
-        earth = Sphere(earthCenter, EARTH_RADIUS_METERS)
-        t = earth.intersect(ray)
-        
-        if t != None:
-            # convert t to ecef coords
-            return ray.start + t*ray.dir
-        else: 
-            return None
-        
-        
-    def getBboxFromImageCorners(self):
-        """
-        Calculate 3d world position of four image corners
-        given image and camera params.
-        """
-        corner1 = [0,0]
-        corner2 = [self.width, 0]
-        corner3 = [0, self.height]
-        corner4 = [self.width, self.height]
 
-#         # this returns None when there is no intersection...
-        corner1_ecef = self.imageCoordToEcef(corner1[0], corner1[1])
-        corner2_ecef = self.imageCoordToEcef(corner2[0], corner2[1])
-        corner3_ecef = self.imageCoordToEcef(corner3[0], corner3[1])
-        corner4_ecef = self.imageCoordToEcef(corner4[0], corner4[1])
-        return [corner1_ecef, corner2_ecef, corner3_ecef, corner4_ecef]
+def rotMatrixFromCameraToEcef(longitude, camPoseEcef):
+    """
+    Given the camera pose in ecef and camera longitude, provides rotation matrix for 
+    transforming a vector from camera frame to ecef frame.
+    """
+    longitude = degreesToRadians(longitude)
+    c1 = np.array([-1 * np.sin(longitude), np.cos(longitude), 0])
+    c3 = np.array([-1 * camPoseEcef[0], -1 * camPoseEcef[1], -1 * camPoseEcef[2]])
+    c3 = c3 / LA.norm(c3)  # normalize the vector
+    c2 = np.cross(c3, c1)
+    c2 = c2 / LA.norm(c2)  # normalize
+    rotMatrix = np.matrix([c1, c2, c3])
+    return np.transpose(rotMatrix)
     
+
+#TODO: ALGORITHM
+# TODO: http://gis.stackexchange.com/questions/20780/point-of-intersection-for-a-ray-and-earths-surface
+def imageCoordToEcef(cameraLonLatAlt, pixelCoord, opticalCenter, focalLength):
+    """
+    Given the camera position in ecef and image coordinates x,y
+    returns the coordinates in ecef frame (x,y,z)
+    """
+    cameraPoseEcef = transformLonLatAltToEcef(cameraLonLatAlt)
+    cameraPose = Point3(cameraPoseEcef[0], cameraPoseEcef[1], cameraPoseEcef[2])  # ray start is camera position in world coordinates
+    dirVector = pixelToVector(opticalCenter, focalLength, pixelCoord)  # vector from center of projection to pixel on image.
+    # rotate the direction vector (center of proj to pixel) from camera frame to ecef frame 
+    rotMatrix = rotMatrixFromCameraToEcef(cameraLonLatAlt[0], cameraPoseEcef)
+    dirVector_np = np.array([[dirVector.dx], [dirVector.dy], [dirVector.dz]])         
+    dirVecEcef_np = rotMatrix * dirVector_np
+    # normalize the direction vector
+    dirVectorEcef = Vector3(dirVecEcef_np[0], dirVecEcef_np[1], dirVecEcef_np[2])
+    dirVectorEcef = dirVectorEcef.norm()
+    #construct the ray
+    ray = Ray3(cameraPose, dirVectorEcef)
+    #intersect it with Earth
+    earthCenter = Point3(0,0,0)  # since we use ecef, earth center is 0 0 0
+    earth = Sphere(earthCenter, EARTH_RADIUS_METERS)
+    t = earth.intersect(ray)
+    
+    if t != None:
+        # convert t to ecef coords
+        return ray.start + t*ray.dir
+    else: 
+        return None
+
+
+def getBboxFromImageCorners(image):
+    """
+    Calculate 3d world position of four image corners
+    given image and camera params.
+    """
+    corner1 = [0,0]
+    corner2 = [image.width, 0]
+    corner3 = [0, image.height]
+    corner4 = [image.width, image.height]
+
+    # this returns None when there is no intersection...
+    corner1_ecef = imageCoordToEcef(image.cameraLonLatAlt, corner1, image.opticalCenter, image.focalLength)
+    corner2_ecef = imageCoordToEcef(image.cameraLonLatAlt, corner2, image.opticalCenter, image.focalLength)
+    corner3_ecef = imageCoordToEcef(image.cameraLonLatAlt, corner3, image.opticalCenter, image.focalLength)
+    corner4_ecef = imageCoordToEcef(image.cameraLonLatAlt, corner4, image.opticalCenter, image.focalLength)
+    return [corner1_ecef, corner2_ecef, corner3_ecef, corner4_ecef]
         
-def main():
-    assert degreesToRadians(90) == np.pi / 2.0
-    
+"""
+These are needed when there is meta data and we are generating 
+
+"""
+# def cameraToImageCoord(x, y, z):
+#     pass
+# 
+# def ecefToCameraCoord(xe, ye, ze):
+#     pass 
+# 
+# def lonLatAltToImageCoord(lonLatAlt):
+#     pass        
+# 
+# def getColorValues(imageCorners):
+#     """
+#     Given image corners in long,lat coordinates
+#     iterate over them and find corresponding rgb values from the
+#     iss Image. 
+#     """
+#     pass
+
+        
+#####################################################
+#                    Main
+#####################################################
+
+def main():    
     imageName = settings.DATA_DIR + "geocamTiePoint/overlay_images/ISS039-E-1640.JPG"    
     issLongitude = -87.4
     issLatitude = 29.3
@@ -173,7 +200,9 @@ def main():
     sensorSize = (.036,.0239)
     
     issImage = IssImage(imageName, longLatAlt, focalLength, sensorSize)
-    corners = issImage.getBboxFromImageCorners()
+    corners = getBboxFromImageCorners(issImage)
+    
+    
     print "Four image corners in ECEF:"
     print corners
     
